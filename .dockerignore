@@ -1,0 +1,17 @@
+*.swp
+
+.env
+.git/
+.github/
+
+.dockerignore
+Dockerfile
+Containerfile
+docker-compose.yml
+docker-compose.yaml
+docker-compose.yml.j2
+docker-compose.yaml.j2
+compose.yml
+compose.yaml
+compose.yml.j2
+compose.yaml.j2

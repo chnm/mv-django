@@ -1,0 +1,9 @@
+{
+  "name": "mapping-violence",
+  "version": "0.1.0",
+  "author": "Roy Rosenzweig Center for History and New Media <chnm@gmu.edu> (https://rrchnm.org)",
+  "volta": {
+    "node": "18.15.0",
+    "npm": "9.6.3"
+  }
+}

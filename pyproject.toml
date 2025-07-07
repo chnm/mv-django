@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "mapping_violence"
+version = "0.1.0"
+description = "Mapping Violence: Django application for the Mapping Violence project."
+authors = ["Jason Heppler <jheppler@gmu.edu>"]
+license = "MIT"
+readme = "README.md"
+#requires-python = ">=3.12"
+packages = [{include = "mapping_violence"}]
+
+[tool.poetry.dependencies]
+python = "^3.12.0"
+python-dotenv = "^1.0.1"
+daphne = "^4.1.2"
+whitenoise = "^6.8.2"
+django = "^5.1.4"
+django-environ = "^0.11.2"
+# allauth
+django-allauth = {version="^65.3.1", extras=["slack", "github", "orcid"]}
+
+django-tailwind = "^3.8.0"
+
+# postgres
+psycopg2 = "^2.9.10"
+
+# obj storage
+#django-storages = "^1.14.4"
+#boto3 = "^1.35.27"
+requests = "^2.32.4"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+djhtml = "^3.0.7"
+pre-commit = "^4.0.1"
+django-debug-toolbar = "^4.4.6"
+pytest-django = "^4.9.0"
+pylint-django = "^2.6.1"
+

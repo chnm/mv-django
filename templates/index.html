@@ -1,0 +1,53 @@
+
+
+{% load static tailwind_tags %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Mapping Violence</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+
+		{% tailwind_css %}
+
+
+	</head>
+
+	<body class="bg-gray-50 font-serif leading-normal tracking-normal">
+	  <div class="container mx-auto justify-items-center">
+	    <h1 class="text-4xl">Django + Tailwind = ❤️</h1>
+	    <pre>Hello world!</pre>
+	    <pre>foobar</pre>
+	    <pre>fizzbuzz</pre>
+          </div>
+	  <div class="container px-5 py-5 justify-items-center">
+            <ul class="list-disc">
+              <li><a href="/admin">/admin</a></li>
+              <li><a href="/accounts/">/accounts</a></li>
+            </ul>
+          </div>
+
+
+{% load socialaccount %}
+{% block content %}
+	  <div class="container mx-auto justify-items-center">
+{% if user.is_authenticated %}
+            <p>Username: {{ user.username }}</p>
+	    <p>Email: {{ user.email }}</>
+	    <a href="{% url 'account_logout' %}">Logout</a>
+{% else %}
+            <a class="p-2 text-blue-500 rounded-md border" href="{% url 'account_login' %}">Login</a>
+            <a class="p-2 text-blue-500 rounded-md border" href="{% url 'account_signup' %}">Signup</a>
+            <a class="p-2 text-blue-500 rounded-md border" href="{% provider_login_url 'github' %}">Sign Up with GitHub</a>
+            <a class="p-2 text-blue-500 rounded-md border" href="{% provider_login_url 'slack' %}">Sign Up with Slack</a>
+{% endif %}
+          </div>
+{% endblock content %}
+
+
+	</body>
+</html>

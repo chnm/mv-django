@@ -1,0 +1,58 @@
+---
+name: mapping_violence
+
+services:
+  app:
+    build: .
+    image: "rrchnm/mapping_violence"
+    ports:
+      - 8000:8000
+    volumes:
+      - dj-data:/app
+     #- .:/app
+    environment:
+      - DEBUG=True
+      - DJANGO_SECRET_KEY=thisisnotasecretkey
+      - DJANGO_ALLOWED_HOSTS=localhost
+      - DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=mapping_violence
+      - DB_USER=mapping_violence
+      - DB_PASSWORD=password
+      - ALLAUTH_ORCID_CLIENT_ID=PLACEHOLDER
+      - ALLAUTH_ORCID_CLIENT_SECRET=PLACEHOLDER
+      - ALLAUTH_GITHUB_CLIENT_ID=PLACEHOLDER
+      - ALLAUTH_GITHUB_CLIENT_SECRET=PLACEHOLDER
+      - ALLAUTH_SLACK_CLIENT_ID=PLACEHOLDER
+      - ALLAUTH_SLACK_CLIENT_SECRET=PLACEHOLDER
+      - OBJ_STORAGE=False
+      - OBJ_STORAGE_ACCESS_KEY_ID=PLACEHOLDER
+      - OBJ_STORAGE_SECRET_ACCESS_KEY=PLACEHOLDER
+      - OBJ_STORAGE_BUCKET_NAME=PLACEHOLDER
+      - OBJ_STORAGE_ENDPOINT_URL=https://dev.obj.rrchnm.org
+    command: >
+        sh -c "poetry run python3 manage.py migrate &&
+               poetry run python3 manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17
+    volumes:
+      #- ./initdb:/docker-entrypoint-initdb.d
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=mapping_violence
+      - POSTGRES_USER=mapping_violence
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mapping_violence"]
+      interval: 2s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  dj-data:
+  pg-data:

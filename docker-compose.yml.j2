@@ -1,0 +1,91 @@
+# this is a Jinja2 template file used during the Ansible deployment
+# environment specific configuration can be found in our Ansble scripts
+---
+name: {{ compose_stack_name }}
+
+services:
+
+  {% set service = 'app' %}
+
+  app:
+    image: ghcr.io/{{ template.git.package.image_name }}:{{ template.git.package.tag }}
+    restart: unless-stopped
+    ports:
+      - "{{ template.env.host_app_port }}:8000"
+    environment:
+      - DEBUG={{ template.env.debug_flag }}
+      - DJANGO_SECRET_KEY={{ template.env.secret_key }}
+      - DJANGO_ALLOWED_HOSTS={{ template.env.allowed_hosts }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ template.env.trusted_origins }}
+      - DB_HOST=db
+      - DB_PORT={{ template.env.host_db_port }}
+      - DB_NAME={{ template.env.db_name }}
+      - DB_USER={{ template.env.db_user }}
+      - DB_PASS={{ template.env.db_pass }}
+      - ALLAUTH_ORCID_CLIENT_ID={{ template.env.allauth_orcid_client_id }}
+      - ALLAUTH_ORCID_CLIENT_SECRET={{ template.env.allauth_orcid_client_secret }}
+      - ALLAUTH_GITHUB_CLIENT_ID={{ template.env.allauth_github_client_id }}
+      - ALLAUTH_GITHUB_CLIENT_SECRET={{ template.env.allauth_github_client_secret }}
+      - ALLAUTH_SLACK_CLIENT_ID={{ template.env.allauth_slack_client_id }}
+      - ALLAUTH_SLACK_CLIENT_SECRET={{ template.env.allauth_slack_client_secret }}
+     #- OBJ_STORAGE={{ template.env.obj_storage }}
+     #- OBJ_STORAGE_ACCESS_KEY_ID={{ template.env.obj_storage_access_key_id }}
+     #- OBJ_STORAGE_SECRET_ACCESS_KEY={{ template.env.obj_storage_secret_access_key }}
+     #- OBJ_STORAGE_BUCKET_NAME={{ template.env.obj_storage_bucket_name }}
+     #- OBJ_STORAGE_ENDPOINT_URL={{ template.env.obj_storage_endpoint_url }}
+    command: >
+        sh -c "poetry run python3 manage.py migrate &&
+               poetry run python3 manage.py runserver 0.0.0.0:8000"
+    {% if template.volumes is defined %}
+    {% set vols = (template.volumes | selectattr('service', 'eq', service)) %}
+    {% if vols is iterable and vols | length > 0 %}
+
+    volumes:
+    {% for vol in vols %}
+
+      - {{ vol.name }}:{{ vol.container_path }}
+    {% endfor %}
+    {% endif %}
+    {% endif %}
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+  {% set service = 'db' %}
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB={{ template.env.db_name }}
+      - POSTGRES_USER={{ template.env.db_user }}
+      - POSTGRES_PASSWORD={{ template.env.db_pass }}
+      - POSTGRES_HOST=db
+    {% if template.volumes is defined %}
+    {% set vols = (template.volumes | selectattr('service', 'eq', service)) %}
+    {% if vols is iterable and vols | length > 0 %}
+
+    volumes:
+      #- ./initdb:/docker-entrypoint-initdb.d
+    {% for vol in vols %}
+
+      - {{ vol.name }}:{{ vol.container_path }}
+    {% endfor %}
+    {% endif %}
+    {% endif %}
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ template.env.db_user }}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# external volumes managed and defined by ansible
+volumes:
+{% for vol in template.volumes %}
+
+  {{ vol.name }}:
+    name: "{{ compose_stack_name }}--{{ vol.name }}"
+    #external: true
+{% endfor %}
