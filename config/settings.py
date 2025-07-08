@@ -40,6 +40,9 @@ CSRF_TRUSTED_ORIGINS = env.list(
 
 INSTALLED_APPS = [
     'daphne',
+    # dal must come before contrib.admin
+    'dal',
+    'dal_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,6 +62,8 @@ INSTALLED_APPS = [
 
     # local apps
     'mapping_violence',
+    'locations',
+    'historical_dates',
 ]
 
 MIDDLEWARE = [
