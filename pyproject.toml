@@ -27,6 +27,8 @@ psycopg2 = "^2.9.10"
 #django-storages = "^1.14.4"
 #boto3 = "^1.35.27"
 requests = "^2.32.4"
+django-autocomplete-light = "^3.12.1"
+edtf = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
