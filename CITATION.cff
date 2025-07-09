@@ -1,0 +1,31 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Mapping Early Modern Violence
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jason
+    family-names: Heppler
+    email: jheppler@gmu.edu
+    affiliation: Roy Rosenzweig Center for History and New Media
+    orcid: 'https://orcid.org/0000-0003-4158-6186'
+  - given-names: Amanda
+    family-names: Madden
+    email: amadden8@gmu.edu
+    affiliation: Roy Rosenzweig Center for History and New Media
+repository-code: 'https://github.com/chnm/mv-django'
+url: 'https://earlymodernviolence.org'
+abstract: >-
+  Mapping Violence in Early Modern Italy is a collaborative
+  digital spatial history project focused on comparative and
+  collaborative analysis of violent crime between 1500 and
+  1700.
+keywords:
+  - digital history
+  - python
+  - django
+license: MIT
