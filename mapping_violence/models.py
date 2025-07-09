@@ -1,15 +1,17 @@
 from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.admin.models import LogEntry
 
 from historical_dates.fields import HistoricalDateField
 from locations.models import Location
 
+
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
+    # definition = models.TextField(blank=True)
+    # category = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
+
 
 class Person(models.Model):
     first_name = models.CharField(blank=True, max_length=255)
@@ -22,7 +24,7 @@ class Person(models.Model):
         related_name="related_to",
         symmetrical=False,
         through="PersonRelation",
-        verbose_name="Related People"
+        verbose_name="Related People",
     )
 
     # gender options
@@ -44,6 +46,7 @@ class Person(models.Model):
         else:
             return self.last_name
 
+
 class Crime(models.Model):
     victim = models.ManyToManyField(Person, related_name="crime_victim")
     perpetrator = models.ManyToManyField(Person, related_name="crime_perpetrator")
@@ -52,10 +55,12 @@ class Crime(models.Model):
     weapon = models.ForeignKey(Weapon, null=True, on_delete=models.SET_NULL)
     date = models.DateField()
     historical_date = HistoricalDateField()
-    feast_day = models.CharField(blank=True, max_length=255)
+    liturgical_occasion = models.CharField(blank=True, max_length=255)
     time_of_day = models.CharField(blank=True, max_length=255)
     address = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
-    violence_caused_death = models.BooleanField(verbose_name="Did the crime cause the victim to die?")
+    violence_caused_death = models.BooleanField(
+        verbose_name="Did the crime cause the victim to die?"
+    )
     pardoned = models.BooleanField(verbose_name="Was the perpetrator pardoned?")
     convicted = models.BooleanField(verbose_name="Was the perpetrator convicted?")
     judge = models.ForeignKey(Person, null=True, on_delete=models.SET_NULL)
@@ -64,6 +69,10 @@ class Crime(models.Model):
     def __str__(self) -> str:
         return self.crime
 
+    class Meta:
+        verbose_name = "Violence Event"
+
+
 # Modeling person relationships, based off Geniza:
 # https://github.com/Princeton-CDH/geniza/
 class PersonRelationTypeManager(models.Manager):
@@ -71,10 +80,13 @@ class PersonRelationTypeManager(models.Manager):
         "natural key lookup, based on name"
         return self.get(name_en=name)
 
+
 class PersonRelationType(models.Model):
     """Controlled vocabulary of people's relationships to other people."""
 
-    name = models.CharField(max_length=255, unique=True, help_text="Name of this relationship.")
+    name = models.CharField(
+        max_length=255, unique=True, help_text="Name of this relationship."
+    )
     converse_name = models.CharField(
         max_length=255,
         blank=True,
@@ -153,4 +165,3 @@ class PersonRelation(models.Model):
             else self.type
         )
         return f"{relation_type} relation: {self.to_person} and {self.from_person}"
-

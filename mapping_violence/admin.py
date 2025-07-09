@@ -1,14 +1,19 @@
 from itertools import groupby
 
 from django.contrib import admin
-from django.forms import ModelChoiceField, ValidationError
+from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
 
-from mapping_violence.models import Person, Weapon, Crime, PersonRelation, PersonRelationType
 from locations.models import Location
 from mapping_violence.forms import PersonForm
+from mapping_violence.models import (
+    Crime,
+    Person,
+    PersonRelation,
+    PersonRelationType,
+    Weapon,
+)
 
-admin.site.register(Weapon)
 
 class PersonRelationTypeChoiceIterator(ModelChoiceIterator):
     """Override ModelChoiceIterator in order to group Person-Person
@@ -30,10 +35,11 @@ class PersonRelationTypeChoiceIterator(ModelChoiceIterator):
 
 
 class PersonRelationTypeChoiceField(ModelChoiceField):
-    """Override ModelChoiceField's iterator property to use our ModelChoiceIterator
+    """Override ModelChoiceField's iterator property to use ModelChoiceIterator
     override"""
 
     iterator = PersonRelationTypeChoiceIterator
+
 
 class PersonInline(admin.TabularInline):
     """Person-Person relationships inline for the Person admin"""
@@ -52,7 +58,7 @@ class PersonInline(admin.TabularInline):
         formset.form.base_fields["type"] = PersonRelationTypeChoiceField(
             queryset=PersonRelationType.objects.all(),
             empty_label="Select relationship type...",
-            required=False
+            required=False,
         )
         return formset
 
@@ -77,44 +83,27 @@ class PersonReverseInline(admin.TabularInline):
         """Get the relationship type's converse name, if it exists, or else the type name"""
         return (obj.type.converse_name or str(obj.type)) if obj else None
 
-"""
-Register admin views
-"""
 
 @admin.register(PersonRelationType)
 class PersonRelationTypeAdmin(admin.ModelAdmin):
     """Admin for managing the controlled vocabulary of relationships"""
 
-    list_display = (
-        "__str__",
-        "converse_name",
-        "category"
-    )
-    list_filter = (
-        "name",
-        "category"
-    )
+    list_display = ("__str__", "converse_name", "category")
+    list_filter = ("name", "category")
     search_fields = ("name", "converse_name")
     ordering = ("name",)
-    
+
     fieldsets = (
-        ("Relationship Names", {
-            "fields": ("name", "converse_name")
-        }),
-        ("Classification", {
-            "fields": ("category",)
-        }),
+        ("Relationship Names", {"fields": ("name", "converse_name")}),
+        ("Classification", {"fields": ("category",)}),
     )
+
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     """Admin for Location entities"""
-    list_display = (
-        "name",
-        "parish",
-        "city",
-        "street"
-    )
+
+    list_display = ("name", "parish", "city", "street")
     list_filter = (
         "parish",
         "city",
@@ -128,7 +117,7 @@ class CrimeAdmin(admin.ModelAdmin):
     list_display = (
         "__str__",
         "get_victims",
-        "get_perpetrators", 
+        "get_perpetrators",
         "weapon",
         "historical_date",
         "get_location",
@@ -138,85 +127,87 @@ class CrimeAdmin(admin.ModelAdmin):
         "convicted",
         "pardoned",
         "weapon",
-        "historical_date"
+        "historical_date",
     )
     search_fields = ("crime", "motive")
     date_hierarchy = "date"
-    
+
     fieldsets = (
-        ("Crime Details", {
-            "fields": ("crime", "motive", "weapon")
-        }),
-        ("People Involved", {
-            "fields": ("victim", "perpetrator", "judge"),
-            "classes": ("collapse",)
-        }),
-        ("Time & Place", {
-            "fields": ("date", "historical_date", "feast_day", "time_of_day", "address")
-        }),
-        ("Outcomes", {
-            "fields": ("violence_caused_death", "convicted", "pardoned"),
-            "classes": ("collapse",)
-        }),
-        ("Sources", {
-            "fields": ("source",),
-            "classes": ("collapse",)
-        }),
+        ("Crime Details", {"fields": ("crime", "motive", "weapon")}),
+        (
+            "People Involved",
+            {"fields": ("victim", "perpetrator", "judge"), "classes": ("collapse",)},
+        ),
+        (
+            "Time & Place",
+            {
+                "fields": (
+                    "date",
+                    "historical_date",
+                    "liturgical_occasion",
+                    "time_of_day",
+                    "address",
+                )
+            },
+        ),
+        (
+            "Outcomes",
+            {
+                "fields": ("violence_caused_death", "convicted", "pardoned"),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Sources", {"fields": ("source",), "classes": ("collapse",)}),
     )
-    
+
     def get_victims(self, obj):
         """Display comma-separated list of victims"""
         return ", ".join([str(victim) for victim in obj.victim.all()]) or "No victims"
+
     get_victims.short_description = "Victims"
-    
+
     def get_perpetrators(self, obj):
         """Display comma-separated list of perpetrators"""
-        return ", ".join([str(perp) for perp in obj.perpetrator.all()]) or "No perpetrators"
+        return (
+            ", ".join([str(perp) for perp in obj.perpetrator.all()])
+            or "No perpetrators"
+        )
+
     get_perpetrators.short_description = "Perpetrators"
-    
+
     def get_location(self, obj):
         """Display location if available"""
         return str(obj.address) if obj.address else "Unknown location"
-    get_location.short_description = "Location"
 
+    get_location.short_description = "Location"
 
 
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     """Admin for Person entities"""
 
-    list_display = (
-        "__str__",
-        "gender",
-        "citizenship",
-        "occupation"
+    list_display = ("__str__", "gender", "citizenship", "occupation")
+    list_filter = ("gender", "citizenship", "occupation")
+    search_fields = (
+        "first_name",
+        "last_name",
     )
-    list_filter = (
-        "gender",
-        "citizenship",
-        "occupation"
-    )
-    search_fields = ("first_name", "last_name",)
-    
+
     fieldsets = (
-        ("Basic Information", {
-            "fields": ("first_name", "last_name", "gender")
-        }),
-        ("Background", {
-            "fields": ("occupation", "citizenship", "identifying_information"),
-            "classes": ("collapse",)
-        }),
-        ("Notes", {
-            "fields": ("notes",),
-            "classes": ("collapse",)
-        }),
+        ("Basic Information", {"fields": ("first_name", "last_name", "gender")}),
+        (
+            "Background",
+            {
+                "fields": ("occupation", "citizenship", "identifying_information"),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
     )
-    
-    inlines = (
-        PersonInline,
-    )
+
+    inlines = (PersonInline,)
     own_pk = None
-    
+
     def get_form(self, request, obj=None, **kwargs):
         """For Person-Person autocomplete on the PersonAdmin form, keep track of own pk"""
         if obj:
@@ -226,3 +217,5 @@ class PersonAdmin(admin.ModelAdmin):
             self.own_pk = None
         return super().get_form(request, obj, **kwargs)
 
+
+admin.site.register(Weapon)
