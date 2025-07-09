@@ -1,53 +1,287 @@
-
-
 {% load static tailwind_tags %}
-
 
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>Mapping Violence</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <head>
+        <title>Mapping Early Modern Violence</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+        {% tailwind_css %}
+
+    </head>
+
+    <body class="bg-gray-50 font-serif leading-normal tracking-normal">
+        {% if request.get_host == 'localhost:8000' or request.get_host == 'localhost' or request.get_host == '127.0.0.1:8000' or request.get_host == '127.0.0.1' or request.get_host == 'dev.earlymodernviolence.org' %}
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">
+                            This beta site is a work in progress. The live site can be viewed at <a href="https://earlymodernviolence.org" class="underline text-yellow-800">https://earlymodernviolence.org</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+		<!-- Navigation -->
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Mapping Early Modern Violence</h1>
+                    </div>
+					<!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-4">
+            <!--
+						<a href="#about" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">About</a>
+						<a href="#explore" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Explore</a>
+						<a href="#research" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Research</a>
+            -->
+                    </div>
+					<!-- Mobile menu button -->
+                    <div class="md:hidden flex items-center">
+                        <button id="mobile-menu-button" class="text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+				<!-- Mobile Navigation Menu -->
+                <div id="mobile-menu" class="md:hidden hidden">
+                    <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+            <!--
+						<a href="#about" class="block text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium">About</a>
+						<a href="#explore" class="block text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium">Explore</a>
+						<a href="#research" class="block text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium">Research</a>
+            -->
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+		<!-- Hero Section -->
+        <div class="bg-cover bg-center text-white relative" style="background-image: url('{% static 'images/website_image.jpg' %}')">
+            <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 relative z-10">
+                <div class="text-center">
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+                        Mapping Violence in Early Modern Italy
+                    </h1>
+                    <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+                        Explore patterns of violence and conflict across Italy through interactive maps and scholarly research.
+                    </p>
+          <!--
+					<div class="flex flex-col sm:flex-row gap-4 justify-center px-4 sm:px-0">
+						<a href="#explore" class="bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200 text-center">
+							Explore the Map
+						</a>
+						<a href="#about" class="border-2 border-white text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-200 text-center">
+							Learn More
+						</a>
+					</div>
+          -->
+                </div>
+            </div>
+        </div>
+
+		<!-- About Section -->
+        <div id="about" class="py-12 sm:py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-8 sm:mb-12">
+                    <h2 class="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8">About the Project</h2>
+
+                    <div class="grid lg:grid-cols-3 gap-8 mb-8">
+            {# About text column #}
+                        <div class="lg:col-span-2">
+                            <p class="pb-4 text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+                                This digital history project maps instances of violence across early modern Italy, providing researchers and the public with new ways to understand historical patterns of conflict.
+                            </p>
+
+                            <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                                This project’s main comparative and collaborative work aim will facilitate understanding the social, cultural, and political impacts of crime in various contexts. Due to the extensiveness of Italian judicial archives, multiple political configurations and governmental structures useful for comparisons, and some of the largest urban centers pre-1750, early modern Italy provides a valuable laboratory for the study of crime and violence. In addition, for most cities, chronicles, letters, and avvisi provide narrative commentary and context. Our central research questions include but are not limited to: What patterns in violent crime can we discern using GIS analysis and large datasets? How do spatial factors influence acts of violence? Has the spatial dimensions of violent crimes informed policing and punishment? How do relations between space and violence alter over time, and what can comparisons reveal?
+                            </p>
+
+                            <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                                The cathedral in Florence, the ponte dei pugni in Venice, the streets of Verona, the contrade di Siena–all of these are infamous sites of assassinations, battles, street fights, and violent rivalries during the premodern period in Italy. While Italy had higher rates of violence during the premodern period, the reasons for this are imperfectly understood. An understanding of the social, political, economic, and cultural factors which led to the amount and types of violence could provide insight into violent crime today, particularly in urban centers. Spatial analysis using digital tools will be particularly fruitful.
+                            </p>
+
+                            <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                                Using datasets compiled from court records, letters, chronicles, diplomatic dispatches, poems, histories, and family papers, from Bologna, Florence, Modena, Venice, Verona, Padua, and Vicenza, this project aims to allow researchers to to identify and analyze patterns and long-term trends in violence between 1500 and 1700. A central outcome of the project will be a database with publicly available datasets that enables researchers to obtain and contribute data for their own research purposes and pedagogical uses. A related aim of the project is to train students and researchers in GIS and spatial methodologies, making these tools more accessible.
+                            </p>
+
+                        </div>
+
+            {# Contributors column #}
+                        <div class="lg:col-span-1">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Contributors</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Amanda Madden</p>
+                                        <p class="text-sm text-gray-600">Lead Researcher</p>
+                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Colin Rose</p>
+                                        <p class="text-sm text-gray-600">Co-PI</p>
+                                        <p class="text-xs text-gray-500">Brock University, Canada, <br>2024—present</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Jason A. Heppler</p>
+                                        <p class="text-sm text-gray-600">Senior Developer</p>
+                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Brandan P. Buck</p>
+                                        <p class="text-sm text-gray-600">GIS Consultant</p>
+                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="pb-6 pt-6">
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Interactive Mapping</h3>
+                        <p class="text-gray-600">Explore historical violence through interactive maps with detailed geographic and temporal data.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Scholarly Research</h3>
+                        <p class="text-gray-600">Access research and analysis on patterns of early modern violence.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Open Data</h3>
+                        <p class="text-gray-600">Access and download our curated dataset for your own research and analysis.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
-		{% tailwind_css %}
+		<!-- Footer -->
+        <footer class="bg-gray-800 text-white py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div>
+                        <p class="text-gray-400 text-sm pb-4">
+                            Mapping Early Modern Violence is a an endevor of the <a class="underline hover:text-white" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
+                        </p>
+                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo.png"/>
+                    </div>
+                    <div>
+            {# empty for spacing #}
+                    </div>
+                    <div>
+          <!--
+          <ul class="space-y-2 text-gray-400">
+							<li><a href="#about" class="underline hover:text-white">About</a></li>
+							<li><a href="#research" class="underline hover:text-white">Research</a></li>
+							<li><a href="/admin" class="underline hover:text-white">Admin</a></li>
+						</ul>
+          -->
+
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                    <p>&copy; 2024—{% now "Y" %} Mapping Early Modern Violence</p>
+                </div>
+            </div>
+            {% load socialaccount %}
+            {% block content %}
+                <div class="container mx-auto justify-items-center text-gray-400">
+                    {% if user.is_authenticated %}
+                        <p>Logged in as <code>{{ user.username }}</code> | <a class="underline hover:text-white" href="{% url 'account_logout' %}">Logout</a></p>
+                    {% else %}
+                        <a class="p-2 text-blue-500 rounded-md border" href="{% url 'account_login' %}">Login</a>
+                        <a class="p-2 text-blue-500 rounded-md border" href="{% url 'account_signup' %}">Signup</a>
+                        <a class="p-2 text-blue-500 rounded-md border" href="{% provider_login_url 'github' %}">Sign Up with GitHub</a>
+                        <a class="p-2 text-blue-500 rounded-md border" href="{% provider_login_url 'slack' %}">Sign Up with Slack</a>
+                    {% endif %}
+                </div>
+            {% endblock content %}
 
 
-	</head>
+        </footer>
 
-	<body class="bg-gray-50 font-serif leading-normal tracking-normal">
-	  <div class="container mx-auto justify-items-center">
-	    <h1 class="text-4xl">Django + Tailwind = ❤️</h1>
-	    <pre>Hello world!</pre>
-	    <pre>foobar</pre>
-	    <pre>fizzbuzz</pre>
-          </div>
-	  <div class="container px-5 py-5 justify-items-center">
-            <ul class="list-disc">
-              <li><a href="/admin">/admin</a></li>
-              <li><a href="/accounts/">/accounts</a></li>
-            </ul>
-          </div>
+        <script>
+			// Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
 
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            });
 
-{% load socialaccount %}
-{% block content %}
-	  <div class="container mx-auto justify-items-center">
-{% if user.is_authenticated %}
-            <p>Username: {{ user.username }}</p>
-	    <p>Email: {{ user.email }}</>
-	    <a href="{% url 'account_logout' %}">Logout</a>
-{% else %}
-            <a class="p-2 text-blue-500 rounded-md border" href="{% url 'account_login' %}">Login</a>
-            <a class="p-2 text-blue-500 rounded-md border" href="{% url 'account_signup' %}">Signup</a>
-            <a class="p-2 text-blue-500 rounded-md border" href="{% provider_login_url 'github' %}">Sign Up with GitHub</a>
-            <a class="p-2 text-blue-500 rounded-md border" href="{% provider_login_url 'slack' %}">Sign Up with Slack</a>
-{% endif %}
-          </div>
-{% endblock content %}
+			// Close mobile menu when clicking on links
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                });
+            });
+        </script>
 
-
-	</body>
+    </body>
 </html>
