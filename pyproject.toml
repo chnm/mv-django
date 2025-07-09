@@ -29,6 +29,7 @@ psycopg2 = "^2.9.10"
 requests = "^2.32.4"
 django-autocomplete-light = "^3.12.1"
 edtf = "^5.0.0"
+geopy = "^2.4.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
@@ -37,4 +38,3 @@ pre-commit = "^4.0.1"
 django-debug-toolbar = "^4.4.6"
 pytest-django = "^4.9.0"
 pylint-django = "^2.6.1"
-
