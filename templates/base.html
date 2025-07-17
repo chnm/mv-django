@@ -1,0 +1,124 @@
+{% load static tailwind_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}Mapping Early Modern Violence{% endblock %}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+        {% tailwind_css %}
+        {% block extra_css %}{% endblock %}
+    </head>
+
+    <body class="bg-gray-50 font-serif leading-normal tracking-normal">
+        {% if request.get_host == 'localhost:8000' or request.get_host == 'localhost' or request.get_host == '127.0.0.1:8000' or request.get_host == '127.0.0.1' or request.get_host == 'dev.earlymodernviolence.org' %}
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">
+                            This beta site is a work in progress. The live site can be viewed at <a href="https://earlymodernviolence.org" class="underline text-yellow-800">https://earlymodernviolence.org</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Navigation -->
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900"><a href="{% url "index" %}">Mapping Early Modern Violence</a></h1>
+                    </div>
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        {% block nav_links %}{% endblock %}
+                    </div>
+                    <!-- Mobile menu button -->
+                    <div class="md:hidden flex items-center">
+                        <button id="mobile-menu-button" class="text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Mobile Navigation Menu -->
+                <div id="mobile-menu" class="md:hidden hidden">
+                    <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+                        {% block mobile_nav_links %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div>
+                        <p class="text-gray-400 text-sm pb-4">
+                            Mapping Early Modern Violence is a an endevor of the <a class="underline hover:text-white" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
+                        </p>
+                    </div>
+                    <div>
+                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo.png"/>
+                    </div>
+                    <div>
+                        {% block footer_links %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+            {% load socialaccount %}
+            {% block footer_content %}
+                <div class="container mx-auto text-center text-gray-400 text-sm mt-8 pt-8 border-t border-gray-700">
+                    {% if user.is_authenticated %}
+                        <p>Logged in as <code class="text-gray-300">{{ user.username }}</code> | <a class="underline hover:text-white" href="{% url 'account_logout' %}">Logout</a></p>
+                    {% else %}
+                        <div class="space-x-4">
+                            <a class="underline hover:text-white" href="{% url 'account_login' %}">Admin Login</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endblock footer_content %}
+        </footer>
+
+        <script>
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            });
+
+            // Close mobile menu when clicking on links
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                });
+            });
+        </script>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html>
