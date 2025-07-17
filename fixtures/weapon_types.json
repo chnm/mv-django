@@ -1,0 +1,120 @@
+[
+  {
+    "model": "mapping_violence.weaponcategory",
+    "pk": 1,
+    "fields": {
+      "name": "Firearm"
+    }
+  },
+  {
+    "model": "mapping_violence.weaponcategory",
+    "pk": 2,
+    "fields": {
+      "name": "Edged Weapon"
+    }
+  },
+  {
+    "model": "mapping_violence.weaponcategory",
+    "pk": 3,
+    "fields": {
+      "name": "Bludgeon"
+    }
+  },
+  {
+    "model": "mapping_violence.weaponcategory",
+    "pk": 4,
+    "fields": {
+      "name": "Projectile"
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 1,
+    "fields": {
+      "name": "Rifle",
+      "definition": "A long-barreled firearm designed for accurate shooting",
+      "category": 1
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 2,
+    "fields": {
+      "name": "Sword",
+      "definition": "A bladed weapon with a long metal blade and a handle",
+      "category": 2
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 3,
+    "fields": {
+      "name": "Club",
+      "definition": "A heavy stick or similar weapon used for striking",
+      "category": 3
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 4,
+    "fields": {
+      "name": "Pistol",
+      "definition": "A short-barreled handheld firearm",
+      "category": 1
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 5,
+    "fields": {
+      "name": "Knife",
+      "definition": "A short-bladed cutting tool or weapon",
+      "category": 2
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 6,
+    "fields": {
+      "name": "Mace",
+      "definition": "A heavy club with a metal head",
+      "category": 3
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 7,
+    "fields": {
+      "name": "Musket",
+      "definition": "A smoothbore long gun used in the 16th to 19th centuries",
+      "category": 1
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 8,
+    "fields": {
+      "name": "Dagger",
+      "definition": "A short knife with a pointed blade",
+      "category": 2
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 9,
+    "fields": {
+      "name": "Staff",
+      "definition": "A long stick used as a weapon",
+      "category": 3
+    }
+  },
+  {
+    "model": "mapping_violence.weapon",
+    "pk": 10,
+    "fields": {
+      "name": "Bow",
+      "definition": "A ranged weapon that fires arrows",
+      "category": 4
+    }
+  }
+]
