@@ -9,3 +9,6 @@ migrate :
 
 tailwind :
 	poetry run python manage.py tailwind start
+
+fixtures :
+	poetry run python manage.py loaddata fixtures/weapon_types.json
