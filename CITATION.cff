@@ -8,15 +8,19 @@ message: >-
   metadata from this file.
 type: software
 authors:
+  - given-names: Amanda
+    family-names: Madden
+    email: amadden8@gmu.edu
+    affiliation: Roy Rosenzweig Center for History and New Media
+  - given-names: Colin
+    family-names: Rose
+    email: crose@brocku.ca
+    affiliation: Brock University
   - given-names: Jason
     family-names: Heppler
     email: jheppler@gmu.edu
     affiliation: Roy Rosenzweig Center for History and New Media
     orcid: 'https://orcid.org/0000-0003-4158-6186'
-  - given-names: Amanda
-    family-names: Madden
-    email: amadden8@gmu.edu
-    affiliation: Roy Rosenzweig Center for History and New Media
 repository-code: 'https://github.com/chnm/mv-django'
 url: 'https://earlymodernviolence.org'
 abstract: >-
