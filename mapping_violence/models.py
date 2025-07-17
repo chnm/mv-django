@@ -4,10 +4,17 @@ from historical_dates.fields import HistoricalDateField
 from locations.models import Location
 
 
+class WeaponCategory(models.Model):
+    name = models.CharField(max_length=500)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
-    # definition = models.TextField(blank=True)
-    # category = models.TextField(blank=True)
+    definition = models.TextField(blank=True)
+    category = models.ForeignKey(WeaponCategory, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name
@@ -47,6 +54,16 @@ class Person(models.Model):
             return self.last_name
 
 
+class Witness(models.Model):
+    name = models.ForeignKey(Person, null=True, on_delete=models.SET_NULL)
+    crime = models.ForeignKey(
+        "Crime", null=True, on_delete=models.SET_NULL, related_name="witnesses"
+    )
+    date_of_testimony = HistoricalDateField()
+    claims = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+
+
 class Crime(models.Model):
     victim = models.ManyToManyField(Person, related_name="crime_victim")
     perpetrator = models.ManyToManyField(Person, related_name="crime_perpetrator")
@@ -63,6 +80,10 @@ class Crime(models.Model):
     )
     pardoned = models.BooleanField(verbose_name="Was the perpetrator pardoned?")
     convicted = models.BooleanField(verbose_name="Was the perpetrator convicted?")
+    accord = models.BooleanField(verbose_name="Did the case end with a peace accord?")
+    accord_date = models.DateField(
+        null=True, blank=True, help_text="If an accord was reached, what was the date?"
+    )
     judge = models.ForeignKey(Person, null=True, on_delete=models.SET_NULL)
     source = models.CharField(blank=True, max_length=255)
 

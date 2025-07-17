@@ -12,6 +12,7 @@ from mapping_violence.models import (
     PersonRelation,
     PersonRelationType,
     Weapon,
+    Witness,
 )
 
 
@@ -84,6 +85,16 @@ class PersonReverseInline(admin.TabularInline):
         return (obj.type.converse_name or str(obj.type)) if obj else None
 
 
+class WitnessInline(admin.StackedInline):
+    """Witness inline for the Crime admin"""
+
+    model = Witness
+    extra = 1
+    fields = ("name", "date_of_testimony", "claims", "notes")
+    verbose_name = "Witness"
+    verbose_name_plural = "Witnesses"
+
+
 @admin.register(PersonRelationType)
 class PersonRelationTypeAdmin(admin.ModelAdmin):
     """Admin for managing the controlled vocabulary of relationships"""
@@ -131,6 +142,7 @@ class CrimeAdmin(admin.ModelAdmin):
     )
     search_fields = ("crime", "motive")
     date_hierarchy = "date"
+    inlines = (WitnessInline,)
 
     fieldsets = (
         ("Crime Details", {"fields": ("crime", "motive", "weapon")}),
@@ -153,7 +165,13 @@ class CrimeAdmin(admin.ModelAdmin):
         (
             "Outcomes",
             {
-                "fields": ("violence_caused_death", "convicted", "pardoned"),
+                "fields": (
+                    "violence_caused_death",
+                    "convicted",
+                    "pardoned",
+                    "accord",
+                    "accord_date",
+                ),
                 "classes": ("collapse",),
             },
         ),
@@ -218,4 +236,9 @@ class PersonAdmin(admin.ModelAdmin):
         return super().get_form(request, obj, **kwargs)
 
 
-admin.site.register(Weapon)
+@admin.register(Weapon)
+class WeaponAdmin(admin.ModelAdmin):
+    """Admin for Weapon entities"""
+
+    list_display = ("__str__", "definition", "category")
+    list_filter = ("name", "category")
