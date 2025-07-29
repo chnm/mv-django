@@ -66,12 +66,12 @@
         </main>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-white py-12">
+        <footer class="bg-gray-800 text-white pt-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid md:grid-cols-3 gap-8">
                     <div>
                         <p class="text-gray-400 text-sm pb-4">
-                            Mapping Early Modern Violence is a an endevor of the <a class="underline hover:text-white" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
+                            Mapping Early Modern Violence is a an endeavor of the <a class="underline hover:text-white" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
                         </p>
                     </div>
                     <div>
@@ -84,9 +84,9 @@
             </div>
             {% load socialaccount %}
             {% block footer_content %}
-                <div class="container mx-auto text-center text-gray-400 text-sm mt-8 pt-8 border-t border-gray-700">
+                <div class="container mx-auto text-center text-gray-400 text-sm mt-8 py-4 border-t border-gray-700">
                     {% if user.is_authenticated %}
-                        <p>Logged in as <code class="text-gray-300">{{ user.username }}</code> | <a class="underline hover:text-white" href="{% url 'account_logout' %}">Logout</a></p>
+                        <p>Logged in as <code class="text-gray-300">{{ user.username }}</code> &middot; <a class="underline hover:text-white" href="/admin/">Admin</a> | <a class="underline hover:text-white" href="{% url 'account_logout' %}">Logout</a></p>
                     {% else %}
                         <div class="space-x-4">
                             <a class="underline hover:text-white" href="{% url 'account_login' %}">Admin Login</a>
@@ -94,6 +94,11 @@
                     {% endif %}
                 </div>
             {% endblock footer_content %}
+            {% block copyright %}
+                <div class="bg-gray-900 text-white text-center text-sm py-4">
+                    &copy; 2024&mdash;2025 | Roy Rosenzweig Center for History and New Media
+                </div>
+            {% endblock copyright%}
         </footer>
 
         <script>
