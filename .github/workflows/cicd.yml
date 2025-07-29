@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - "main"
+      - "preview"
     paths:
       - "**"
       - "!.github/**"
@@ -20,13 +21,13 @@ jobs:
 
       django-context-root: "."
 
-     #website-devl-fqdn: "PLACEHOLDER"
-     #website-prod-fqdn: "PLACEHOLDER"
+      website-devl-fqdn: "dev.earlymodernviolence.org"
+      website-prod-fqdn: "earlymodernviolence.org"
 
   deploy:
     uses: chnm/.github/.github/workflows/django--deploy.yml@main
     needs: [build-publish]
     secrets: inherit
     with:
-     #website-devl-fqdn: "PLACEHOLDER"
-     #website-prod-fqdn: "PLACEHOLDER"
+      website-devl-fqdn: "dev.earlymodernviolence.org"
+      website-prod-fqdn: "earlymodernviolence.org"
