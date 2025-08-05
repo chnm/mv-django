@@ -8,6 +8,7 @@ from locations.models import Location
 from mapping_violence.forms import PersonForm
 from mapping_violence.models import (
     Crime,
+    Event,
     Person,
     PersonRelation,
     PersonRelationType,
@@ -110,15 +111,35 @@ class PersonRelationTypeAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    """Admin for Event entities"""
+
+    list_display = ("name", "event_type", "date", "location")
+    list_filter = ("event_type", "date")
+    search_fields = ("name", "event_type", "description")
+    date_hierarchy = "date"
+
+    fieldsets = (
+        (
+            "Basic Information",
+            {"fields": ("name", "event_type", "date", "historical_date")},
+        ),
+        ("Details", {"fields": ("description", "location"), "classes": ("collapse",)}),
+    )
+
+
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     """Admin for Location entities"""
 
-    list_display = ("name", "parish", "city", "street")
+    list_display = ("name", "category_of_space", "parish", "city", "street")
     list_filter = (
+        "category_of_space",
         "parish",
         "city",
     )
+    search_fields = ("name", "current_name", "category_of_space", "city", "parish")
 
 
 @admin.register(Crime)
@@ -126,46 +147,83 @@ class CrimeAdmin(admin.ModelAdmin):
     """Admin for Crime entities"""
 
     list_display = (
-        "__str__",
+        "number",
+        "crime",
         "get_victims",
         "get_perpetrators",
         "weapon",
-        "historical_date",
+        "date",
+        "fatality",
         "get_location",
     )
     list_filter = (
+        "fatality",
         "violence_caused_death",
         "convicted",
         "pardoned",
+        "arbitration",
+        "sentence_enforced",
         "weapon",
-        "historical_date",
+        "year",
+        "input_by",
     )
-    search_fields = ("crime", "motive")
+    search_fields = ("number", "crime", "motive", "description_of_case")
     date_hierarchy = "date"
     inlines = (WitnessInline,)
+    readonly_fields = ("year", "month", "day", "day_of_week", "date_of_entry")
 
     fieldsets = (
-        ("Crime Details", {"fields": ("crime", "motive", "weapon")}),
+        ("Basic Information", {"fields": ("number", "crime", "description_of_case")}),
         (
-            "People Involved",
-            {"fields": ("victim", "perpetrator", "judge"), "classes": ("collapse",)},
+            "Court & Legal Information",
+            {
+                "fields": (
+                    "court",
+                    "court_classification",
+                    "trial_phase",
+                    "arbitration",
+                    "sentence",
+                    "sentence_enforced",
+                ),
+                "classes": ("collapse",),
+            },
         ),
         (
-            "Time & Place",
+            "Date & Time Information",
             {
                 "fields": (
                     "date",
                     "historical_date",
+                    "year",
+                    "month",
+                    "day",
+                    "day_of_week",
+                    "time",
                     "liturgical_occasion",
-                    "time_of_day",
-                    "address",
-                )
+                    "connected_event",
+                ),
             },
         ),
         (
-            "Outcomes",
+            "People Involved",
             {
                 "fields": (
+                    "victim",
+                    "victim_description",
+                    "perpetrator",
+                    "assailant_description",
+                    "judge",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Case Details", {"fields": ("motive", "relationship", "weapon")}),
+        ("Location Information", {"fields": ("address",)}),
+        (
+            "Outcome Information",
+            {
+                "fields": (
+                    "fatality",
                     "violence_caused_death",
                     "convicted",
                     "pardoned",
@@ -175,7 +233,17 @@ class CrimeAdmin(admin.ModelAdmin):
                 "classes": ("collapse",),
             },
         ),
-        ("Sources", {"fields": ("source",), "classes": ("collapse",)}),
+        (
+            "Source & Archival Information",
+            {
+                "fields": ("source", "archival_location", "reference"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Metadata",
+            {"fields": ("input_by", "date_of_entry"), "classes": ("collapse",)},
+        ),
     )
 
     def get_victims(self, obj):
@@ -214,9 +282,14 @@ class PersonAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Basic Information", {"fields": ("first_name", "last_name", "gender")}),
         (
-            "Background",
+            "Description & Background",
             {
-                "fields": ("occupation", "citizenship", "identifying_information"),
+                "fields": (
+                    "description",
+                    "occupation",
+                    "citizenship",
+                    "identifying_information",
+                ),
                 "classes": ("collapse",),
             },
         ),
