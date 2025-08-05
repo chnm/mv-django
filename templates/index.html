@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load wagtailimages_tags %}
 
 {% block content %}
         <!-- Hero Section -->
@@ -7,96 +8,148 @@
         <div class="absolute inset-0 bg-black bg-opacity-70"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 relative z-10">
             <div class="text-center">
-                <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
-                    Explore patterns of violence and conflict across Italy through interactive maps and scholarly research.
-                </p>
-          <!--
-					<div class="flex flex-col sm:flex-row gap-4 justify-center px-4 sm:px-0">
-						<a href="#explore" class="bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200 text-center">
-							Explore the Map
-						</a>
-						<a href="#about" class="border-2 border-white text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-200 text-center">
-							Learn More
-						</a>
-					</div>
-          -->
+                {% if home_content %}
+                    <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+                        {{ home_content.lede|safe }}
+                    </p>
+                {% else %}
+                    <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+                        Explore patterns of violence and conflict across Italy through interactive maps and scholarly research.
+                    </p>
+                {% endif %}
             </div>
         </div>
     </div>
 
-		<!-- About Section -->
+	<!-- About Section -->
     <div id="about" class="py-12 sm:py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8 sm:mb-12">
                 <div class="grid lg:grid-cols-3 gap-8 mb-8">
             {# About text column #}
                     <div class="lg:col-span-2">
-                        <p class="pb-4 text-xl sm:text-xl text-gray-600 max-w-3xl mx-auto">
-                            This digital history project maps instances of violence across early modern Italy, providing researchers and the public with new ways to understand historical patterns of conflict.
-                        </p>
+                        {% if home_content %}
+                            <div class="prose prose-lg max-w-none text-gray-600">
+                                {{ home_content.main_content|safe }}
+                            </div>
+                        {% else %}
+                            <p class="pb-4 text-xl sm:text-xl text-gray-600 max-w-3xl mx-auto">
+                                This digital history project maps instances of violence across early modern Italy, providing researchers and the public with new ways to understand historical patterns of conflict.
+                            </p>
 
-                        <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-                            This project’s main comparative and collaborative work aim will facilitate understanding the social, cultural, and political impacts of crime in various contexts. Due to the extensiveness of Italian judicial archives, multiple political configurations and governmental structures useful for comparisons, and some of the largest urban centers pre-1750, early modern Italy provides a valuable laboratory for the study of crime and violence. In addition, for most cities, chronicles, letters, and avvisi provide narrative commentary and context. Our central research questions include but are not limited to: What patterns in violent crime can we discern using GIS analysis and large datasets? How do spatial factors influence acts of violence? Has the spatial dimensions of violent crimes informed policing and punishment? How do relations between space and violence alter over time, and what can comparisons reveal?
-                        </p>
+                            <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                                This project's main comparative and collaborative work aim will facilitate understanding the social, cultural, and political impacts of crime in various contexts. Due to the extensiveness of Italian judicial archives, multiple political configurations and governmental structures useful for comparisons, and some of the largest urban centers pre-1750, early modern Italy provides a valuable laboratory for the study of crime and violence. In addition, for most cities, chronicles, letters, and avvisi provide narrative commentary and context. Our central research questions include but are not limited to: What patterns in violent crime can we discern using GIS analysis and large datasets? How do spatial factors influence acts of violence? Has the spatial dimensions of violent crimes informed policing and punishment? How do relations between space and violence alter over time, and what can comparisons reveal?
+                            </p>
 
-                        <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-                            The cathedral in Florence, the ponte dei pugni in Venice, the streets of Verona, the contrade di Siena–all of these are infamous sites of assassinations, battles, street fights, and violent rivalries during the premodern period in Italy. While Italy had higher rates of violence during the premodern period, the reasons for this are imperfectly understood. An understanding of the social, political, economic, and cultural factors which led to the amount and types of violence could provide insight into violent crime today, particularly in urban centers. Spatial analysis using digital tools will be particularly fruitful.
-                        </p>
+                            <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                                The cathedral in Florence, the ponte dei pugni in Venice, the streets of Verona, the contrade di Siena–all of these are infamous sites of assassinations, battles, street fights, and violent rivalries during the premodern period in Italy. While Italy had higher rates of violence during the premodern period, the reasons for this are imperfectly understood. An understanding of the social, political, economic, and cultural factors which led to the amount and types of violence could provide insight into violent crime today, particularly in urban centers. Spatial analysis using digital tools will be particularly fruitful.
+                            </p>
 
-                        <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-                            Using datasets compiled from court records, letters, chronicles, diplomatic dispatches, poems, histories, and family papers, from Bologna, Florence, Modena, Venice, Verona, Padua, and Vicenza, this project aims to allow researchers to to identify and analyze patterns and long-term trends in violence between 1500 and 1700. A central outcome of the project will be a database with publicly available datasets that enables researchers to obtain and contribute data for their own research purposes and pedagogical uses. A related aim of the project is to train students and researchers in GIS and spatial methodologies, making these tools more accessible.
-                        </p>
-
+                            <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                                Using datasets compiled from court records, letters, chronicles, diplomatic dispatches, poems, histories, and family papers, from Bologna, Florence, Modena, Venice, Verona, Padua, and Vicenza, this project aims to allow researchers to to identify and analyze patterns and long-term trends in violence between 1500 and 1700. A central outcome of the project will be a database with publicly available datasets that enables researchers to obtain and contribute data for their own research purposes and pedagogical uses. A related aim of the project is to train students and researchers in GIS and spatial methodologies, making these tools more accessible.
+                            </p>
+                        {% endif %}
                     </div>
 
             {# Contributors column #}
                     <div class="lg:col-span-1">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Contributors</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-start space-x-3">
-                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
-                                    <img src="/static/images/head-madden.jpg" class="w-full h-full object-cover"/>
-                                </div>
-                                <div>
-                                    <p class="text-base font-medium text-gray-900">Amanda Madden</p>
-                                    <p class="text-sm text-gray-600">Lead Researcher</p>
-                                    <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
-                                </div>
+                        {% if project_team %}
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Project Team</h3>
+                            <div class="space-y-4 mb-6">
+                                {% for person in project_team %}
+                                    <div class="flex items-start space-x-3">
+                                        <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                            {% if person.profile_photo %}
+                                                {% image person.profile_photo width-40 height-40 class="w-full h-full object-cover" %}
+                                            {% else %}
+                                                <div class="w-full h-full bg-gray-300 flex items-center justify-center">
+                                                    <span class="text-xs text-gray-500">{{ person.name|first }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <p class="text-base font-medium text-gray-900">{{ person.name }}</p>
+                                            {% if person.role %}
+                                                <p class="text-sm text-gray-600">{{ person.role }}</p>
+                                            {% endif %}
+                                            <p class="text-xs text-gray-500">{{ person.university }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
+                        {% endif %}
 
-                            <div class="flex items-start space-x-3">
-                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
-                                    <img src="/static/images/head-rose.jpg" class="w-full h-full object-cover"/>
-                                </div>
-                                <div>
-                                    <p class="text-base font-medium text-gray-900">Colin Rose</p>
-                                    <p class="text-sm text-gray-600">Co-Principal Investigator</p>
-                                    <p class="text-xs text-gray-500">Brock University, Canada, <br>2024—present</p>
-                                </div>
+                        {% if advisory_board %}
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Advisory Board</h3>
+                            <div class="space-y-4">
+                                {% for person in advisory_board %}
+                                    <div class="flex items-start space-x-3">
+                                        <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full overflow-hidden">
+                                            {% if person.profile_photo %}
+                                                {% image person.profile_photo width-40 height-40 class="w-full h-full object-cover" %}
+                                            {% else %}
+                                                <div class="w-full h-full bg-gray-300 flex items-center justify-center">
+                                                    <span class="text-xs text-gray-500">{{ person.name|first }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <p class="text-base font-medium text-gray-900">{{ person.name }}</p>
+                                            {% if person.role %}
+                                                <p class="text-sm text-gray-600">{{ person.role }}</p>
+                                            {% endif %}
+                                            <p class="text-xs text-gray-500">{{ person.university }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
+                        {% endif %}
 
-                            <div class="flex items-start space-x-3">
-                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
-                                    <img src="/static/images/head-heppler.jpg" class="w-full h-full object-cover"/>
+                        {% if not project_team and not advisory_board %}
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">Contributors</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                        <img src="/static/images/head-madden.jpg" class="w-full h-full object-cover"/>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Amanda Madden</p>
+                                        <p class="text-sm text-gray-600">Lead Researcher</p>
+                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-base font-medium text-gray-900">Jason A. Heppler</p>
-                                    <p class="text-sm text-gray-600">Senior Developer-Scholar</p>
-                                    <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                        <img src="/static/images/head-rose.jpg" class="w-full h-full object-cover"/>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Colin Rose</p>
+                                        <p class="text-sm text-gray-600">Co-Principal Investigator</p>
+                                        <p class="text-xs text-gray-500">Brock University, Canada, <br>2024—present</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                        <img src="/static/images/head-heppler.jpg" class="w-full h-full object-cover"/>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Jason A. Heppler</p>
+                                        <p class="text-sm text-gray-600">Senior Developer-Scholar</p>
+                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                        <img src="/static/images/head-buck.jpg" class="w-full h-full object-cover"/>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-900">Brandan P. Buck</p>
+                                        <p class="text-sm text-gray-600">GIS Consultant</p>
+                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024</p>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="flex items-start space-x-3">
-                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
-                                    <img src="/static/images/head-buck.jpg" class="w-full h-full object-cover"/>
-                                </div>
-                                <div>
-                                    <p class="text-base font-medium text-gray-900">Brandan P. Buck</p>
-                                    <p class="text-sm text-gray-600">GIS Consultant</p>
-                                    <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024</p>
-                                </div>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
