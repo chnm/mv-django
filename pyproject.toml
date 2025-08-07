@@ -30,6 +30,8 @@ requests = "^2.32.4"
 django-autocomplete-light = "^3.12.1"
 edtf = "^5.0.0"
 geopy = "^2.4.1"
+wagtail = "^7.1"
+pillow = "^11.3.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"

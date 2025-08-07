@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load wagtailimages_tags %}
+
+{% block title %}Preview: {{ person.name }}{% endblock %}
+
+{% block content %}
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl">
+            <div class="flex items-start space-x-6 mb-6">
+                {% if person.profile_photo %}
+                    {% image person.profile_photo width-150 class="rounded-full" %}
+                {% else %}
+                    <div class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span class="text-gray-500 text-sm">No Photo</span>
+                    </div>
+                {% endif %}
+                <div>
+                    <h1 class="text-2xl font-bold">{{ person.name }}</h1>
+                    <p class="text-lg text-gray-600">{{ person.role }}</p>
+                    <p class="text-gray-500">{{ person.university }}</p>
+                </div>
+            </div>
+            {% if person.bio %}
+                <div class="prose">
+                    {{ person.bio|safe }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
