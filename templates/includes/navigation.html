@@ -1,0 +1,6 @@
+<!-- Desktop Navigation Links -->
+{% for page in nav_pages %}
+    <a href="{{ page.url }}" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+        {{ page.title }}
+    </a>
+{% endfor %}
