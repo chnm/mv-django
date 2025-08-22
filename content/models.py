@@ -1,8 +1,46 @@
 from django.db import models
+from wagtail import blocks
 from wagtail.admin.panels import FieldPanel
-from wagtail.fields import RichTextField
-from wagtail.models import PreviewableMixin
+from wagtail.fields import RichTextField, StreamField
+from wagtail.images.blocks import ImageChooserBlock
+from wagtail.models import Page, PreviewableMixin
 from wagtail.snippets.models import register_snippet
+
+# TODO:
+# Pages:
+# - Further resources/links
+# - About page
+# - Researching Violence page / Guide to the sources (sources, process, archival context)
+#   - historical background
+# each page setup:
+# - title
+# - text field (image gallery, etc.)
+# page-wide gallery of content/transcriptions
+
+
+class ImageGalleryBlock(blocks.StructBlock):
+    """A gallery block for displaying multiple images with captions."""
+
+    title = blocks.CharBlock(required=False, help_text="Optional title for the gallery")
+    images = blocks.ListBlock(
+        blocks.StructBlock(
+            [
+                ("image", ImageChooserBlock(required=True)),
+                (
+                    "caption",
+                    blocks.RichTextBlock(
+                        required=False, help_text="Optional caption for the image"
+                    ),
+                ),
+            ]
+        ),
+        help_text="Add images to the gallery",
+    )
+
+    class Meta:
+        template = "content/blocks/image_gallery.html"
+        icon = "image"
+        label = "Image Gallery"
 
 
 @register_snippet
@@ -126,3 +164,32 @@ class ProjectPerson(PreviewableMixin, models.Model):
 
     def get_preview_context(self, request, mode_name):
         return {"person": self}
+
+
+class GeneralPage(Page):
+    """
+    Page model for general pages content.
+    """
+
+    content = StreamField(
+        [
+            ("paragraph", blocks.RichTextBlock(help_text="Rich text content")),
+            ("image_gallery", ImageGalleryBlock()),
+        ],
+        use_json_field=True,
+        help_text="Main content for the page",
+    )
+
+    content_panels = Page.content_panels + [
+        FieldPanel("content"),
+    ]
+
+    def save(self, *args, **kwargs):
+        # Default to showing in menus
+        if not self.pk:  # Only on creation
+            self.show_in_menus = True
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "About Page"
+        verbose_name_plural = "About Pages"

@@ -172,6 +172,8 @@ class Crime(models.Model):
         help_text="If sentence was carried about, check Y. If not, leave unchecked.",
     )
 
+    # TODO: image fields
+
     # Date and time information
     date = models.DateField(
         verbose_name="Date (Modern Format)",
