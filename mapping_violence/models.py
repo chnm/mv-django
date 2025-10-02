@@ -6,6 +6,20 @@ from locations.models import Location
 
 User = get_user_model()
 
+# TODO: court model, with location arrangement
+#   locations: event; court; crime
+#       lets incorporate PostGIS / polygon materials
+
+# TODO: In the person model
+#   - see also record number xx for a person who is a repeat offender
+#   - repeat_offender flag y/n
+#
+# TODO: Thinking over names:
+# - colleague on Roman criminal cases
+# - found a name of a famous senator, sent AM information about it
+#
+# TODO: do we detail things like hiring people (i.e., assassins?) -- this is on hold
+
 
 class WeaponCategory(models.Model):
     name = models.CharField(max_length=500)
@@ -17,6 +31,7 @@ class WeaponCategory(models.Model):
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
     definition = models.TextField(blank=True)
+    # TODO: Make category non-required
     category = models.ForeignKey(WeaponCategory, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -346,8 +361,6 @@ class Crime(models.Model):
         verbose_name = "Violence Event"
 
 
-# Modeling person relationships, based off Geniza:
-# https://github.com/Princeton-CDH/geniza/
 class PersonRelationTypeManager(models.Manager):
     def get_by_natural_key(self, name):
         "natural key lookup, based on name"
@@ -372,6 +385,8 @@ class PersonRelationType(models.Model):
     BY_MARRIAGE = "M"
     BUSINESS = "B"
     AMBIGUITY = "A"
+    # TODO: Add Romanic relationships
+    # TODO: Can we modify this to allow users to add people and categories?
     CATEGORY_CHOICES = (
         (IMMEDIATE_FAMILY, ("Immediate family relations")),
         (EXTENDED_FAMILY, ("Extended family")),

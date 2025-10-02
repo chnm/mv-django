@@ -6,17 +6,6 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page, PreviewableMixin
 from wagtail.snippets.models import register_snippet
 
-# TODO:
-# Pages:
-# - Further resources/links
-# - About page
-# - Researching Violence page / Guide to the sources (sources, process, archival context)
-#   - historical background
-# each page setup:
-# - title
-# - text field (image gallery, etc.)
-# page-wide gallery of content/transcriptions
-
 
 class ImageGalleryBlock(blocks.StructBlock):
     """A gallery block for displaying multiple images with captions."""

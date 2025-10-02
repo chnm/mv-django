@@ -3,6 +3,7 @@ from itertools import groupby
 from django.contrib import admin
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
+from import_export.admin import ImportExportModelAdmin
 
 from locations.models import Location
 from mapping_violence.forms import PersonForm
@@ -15,6 +16,7 @@ from mapping_violence.models import (
     Weapon,
     Witness,
 )
+from mapping_violence.resources import CrimeResource
 
 
 class PersonRelationTypeChoiceIterator(ModelChoiceIterator):
@@ -143,8 +145,10 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Crime)
-class CrimeAdmin(admin.ModelAdmin):
-    """Admin for Crime entities"""
+class CrimeAdmin(ImportExportModelAdmin):
+    """Admin for Crime entities with import/export functionality"""
+
+    resource_class = CrimeResource
 
     list_display = (
         "number",
