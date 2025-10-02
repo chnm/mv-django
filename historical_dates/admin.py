@@ -1,6 +1,10 @@
 from django.contrib import admin
-from .models import HistoricalDate
+
 from .forms import HistoricalDateForm
+from .models import HistoricalDate
+
+# TODO: Integrate new tailwind admin layout
+
 
 @admin.register(HistoricalDate)
 class HistoricalDateAdmin(admin.ModelAdmin):
@@ -9,4 +13,3 @@ class HistoricalDateAdmin(admin.ModelAdmin):
     ordering = ("start_date",)
     list_filter = ("certainty",)
     search_fields = ("display_date", "edtf_date", "notes")
-

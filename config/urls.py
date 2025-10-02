@@ -18,6 +18,7 @@ urlpatterns = [
     # allauth
     path("accounts/", include("allauth.urls")),
     path("accounts/profile/", TemplateView.as_view(template_name="profile.html")),
+    path("schema-viewer/", include("schema_viewer.urls")),
     # Wagtail pages - must be last to act as catch-all
     path("", include(wagtail_urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

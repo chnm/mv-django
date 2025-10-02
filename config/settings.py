@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "import_export",
     # allauth
     "allauth",
     "allauth.account",
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     # local apps
+    "schema_viewer",
     "mapping_violence",
     "locations",
     "historical_dates",
