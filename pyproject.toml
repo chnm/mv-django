@@ -34,6 +34,10 @@ pillow = "^11.3.0"
 django-schema-viewer = "^0.5.3"
 django-import-export = "^4.3.10"
 psycopg2-binary = "^2.9.10"
+django-extensions = "^4.1"
+pyparsing = "^3.2.5"
+pydot = "^4.0.1"
+pygraphviz = "^1.14"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
