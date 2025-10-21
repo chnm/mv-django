@@ -92,7 +92,7 @@ class WitnessInline(admin.StackedInline):
     """Witness inline for the Crime admin"""
 
     model = Witness
-    extra = 1
+    extra = 0
     fields = ("name", "date_of_testimony", "claims", "notes")
     verbose_name = "Witness"
     verbose_name_plural = "Witnesses"
@@ -174,7 +174,15 @@ class CrimeAdmin(ImportExportModelAdmin):
     search_fields = ("number", "crime", "motive", "description_of_case")
     date_hierarchy = "date"
     inlines = (WitnessInline,)
-    readonly_fields = ("year", "month", "day", "day_of_week", "date_of_entry")
+    readonly_fields = (
+        "year",
+        "month",
+        "day",
+        "day_of_week",
+        "date_of_entry",
+        "input_by",
+        "updated_by",
+    )
 
     fieldsets = (
         ("Basic Information", {"fields": ("number", "crime", "description_of_case")}),
@@ -246,7 +254,10 @@ class CrimeAdmin(ImportExportModelAdmin):
         ),
         (
             "Metadata",
-            {"fields": ("input_by", "date_of_entry"), "classes": ("collapse",)},
+            {
+                "fields": ("input_by", "updated_by", "date_of_entry"),
+                "classes": ("collapse",),
+            },
         ),
     )
 
@@ -270,6 +281,23 @@ class CrimeAdmin(ImportExportModelAdmin):
         return str(obj.address) if obj.address else "Unknown location"
 
     get_location.short_description = "Location"
+
+    def save_model(self, request, obj, form, change):
+        # Auto-populate date components from the main date field
+        if obj.date:
+            obj.year = str(obj.date.year)
+            obj.month = str(obj.date.month)
+            obj.day = str(obj.date.day)
+            obj.day_of_week = obj.date.strftime("%A")
+
+        # Record the user who created the object
+        if not change:
+            obj.input_by = request.user
+        # And record who edited the object
+        else:
+            obj.updated_by = request.user
+
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Person)

@@ -85,3 +85,31 @@ superuser:
 # Collect static files (for production)
 collectstatic:
 	poetry run python manage.py collectstatic --noinput
+
+# Generate model relationship graph for core apps
+models-graph:
+	poetry run python manage.py graph_models mapping_violence locations historical_dates -g -o models_graph.png
+	@echo "Model graph generated as models_graph.png"
+
+# Show available commands
+help:
+	@echo "Available commands:"
+	@echo "  preview         - Start Django development server"
+	@echo "  check           - Check Django configuration"
+	@echo "  shell           - Open Django shell"
+	@echo ""
+	@echo "Database Management:"
+	@echo "  mm              - Create migration files"
+	@echo "  migrate         - Apply migrations"
+	@echo "  show-migrations - Show migration status"
+	@echo "  clean-db        - Clear database (DESTRUCTIVE)"
+	@echo "  reset-db        - Reset and recreate database"
+	@echo "  backup-db       - Create database backup"
+	@echo "  restore-db      - Restore from backup"
+	@echo "  fixtures        - Load weapon types fixture data"
+	@echo ""
+	@echo "Utility Commands:"
+	@echo "  superuser       - Create superuser account"
+	@echo "  collectstatic   - Collect static files"
+	@echo "  models-graph    - Generate model relationship diagram"
+	@echo "  tailwind        - Start Tailwind CSS watcher"

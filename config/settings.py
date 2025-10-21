@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "wagtail",
     "modelcluster",
     "taggit",
+    "django_extensions",
     # tailwind
     "tailwind",
     "theme",
