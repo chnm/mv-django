@@ -191,10 +191,12 @@ class Crime(models.Model):
 
     # Date and time information
     date = models.DateField(
+        null=True,
+        blank=True,
         verbose_name="Date (Modern Format)",
         help_text="Input modern format of date. Example: October 23, 1615 should be converted to 1615-10-23",
     )
-    historical_date = HistoricalDateField()
+    historical_date = HistoricalDateField(null=True, blank=True)
     year = models.CharField(
         blank=True,
         max_length=255,
@@ -272,13 +274,16 @@ class Crime(models.Model):
     weapon = models.ForeignKey(
         Weapon,
         null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         verbose_name="Type of Weapon",
         help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, hands)",
     )
 
     # Location
-    address = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
+    address = models.ForeignKey(
+        Location, null=True, blank=True, on_delete=models.SET_NULL
+    )
     sestiere = models.CharField(
         blank=True, max_length=255, help_text="If Venetian crime, input neighborhood"
     )
@@ -308,7 +313,7 @@ class Crime(models.Model):
     accord_date = models.DateField(
         null=True, blank=True, help_text="If an accord was reached, what was the date?"
     )
-    judge = models.ForeignKey(Person, null=True, on_delete=models.SET_NULL)
+    judge = models.ForeignKey(Person, null=True, blank=True, on_delete=models.SET_NULL)
 
     # Source and archival information
     source = models.CharField(blank=True, max_length=255)
@@ -327,25 +332,25 @@ class Crime(models.Model):
     input_by = models.ForeignKey(
         User,
         null=True,
-        on_delete=models.SET_NULL,
-        verbose_name="Input by (user)",
-        help_text="Person who entered record. Example: Last Name, first initial: Madden, A",
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="created_by",
+        verbose_name="Created by",
+        editable=False,
     )
     date_of_entry = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Date of Entry",
         help_text="Date case entered into database - automatically populated",
     )
-
-    def save(self, *args, **kwargs):
-        # Auto-populate date components from the main date field
-        if self.date:
-            self.year = self.date.year
-            self.month = self.date.month
-            self.day = self.date.day
-            self.day_of_week = self.date.strftime("%A")
-
-        super().save(*args, **kwargs)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="updated_by",
+        editable=False,
+    )
 
     def __str__(self) -> str:
         if self.number and self.crime:
