@@ -1,19 +1,45 @@
 from itertools import groupby
 
 from django.contrib import admin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group, User
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
+from import_export.admin import ImportExportModelAdmin
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
-from locations.models import Location
+from locations.models import City, Location
 from mapping_violence.forms import PersonForm
 from mapping_violence.models import (
     Crime,
+    Event,
     Person,
     PersonRelation,
     PersonRelationType,
     Weapon,
     Witness,
 )
+from mapping_violence.resources import CrimeResource
+
+# Unregister then re-register to get Unfold styling applied
+admin.site.unregister(User)
+admin.site.unregister(Group)
+
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin, ModelAdmin):
+    # Forms loaded from `unfold.forms`
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
+
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
+    pass
 
 
 class PersonRelationTypeChoiceIterator(ModelChoiceIterator):
@@ -42,7 +68,7 @@ class PersonRelationTypeChoiceField(ModelChoiceField):
     iterator = PersonRelationTypeChoiceIterator
 
 
-class PersonInline(admin.TabularInline):
+class PersonInline(TabularInline):
     """Person-Person relationships inline for the Person admin"""
 
     model = PersonRelation
@@ -64,7 +90,7 @@ class PersonInline(admin.TabularInline):
         return formset
 
 
-class PersonReverseInline(admin.TabularInline):
+class PersonReverseInline(TabularInline):
     """Person-Person reverse relationships inline for the Person admin"""
 
     model = PersonRelation
@@ -85,18 +111,18 @@ class PersonReverseInline(admin.TabularInline):
         return (obj.type.converse_name or str(obj.type)) if obj else None
 
 
-class WitnessInline(admin.StackedInline):
+class WitnessInline(StackedInline):
     """Witness inline for the Crime admin"""
 
     model = Witness
-    extra = 1
+    extra = 0
     fields = ("name", "date_of_testimony", "claims", "notes")
     verbose_name = "Witness"
     verbose_name_plural = "Witnesses"
 
 
 @admin.register(PersonRelationType)
-class PersonRelationTypeAdmin(admin.ModelAdmin):
+class PersonRelationTypeAdmin(ModelAdmin):
     """Admin for managing the controlled vocabulary of relationships"""
 
     list_display = ("__str__", "converse_name", "category")
@@ -110,62 +136,192 @@ class PersonRelationTypeAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(Event)
+class EventAdmin(ModelAdmin):
+    """Admin for Event entities"""
+
+    list_display = ("name", "event_type", "date", "location")
+    list_filter = ("event_type", "date")
+    search_fields = ("name", "event_type", "description")
+    date_hierarchy = "date"
+
+    fieldsets = (
+        (
+            "Basic Information",
+            {"fields": ("name", "event_type", "date", "historical_date")},
+        ),
+        ("Details", {"fields": ("description", "location"), "classes": ("collapse",)}),
+    )
+
+
+@admin.register(City)
+class CityAdmin(ModelAdmin):
+    """Admin for City entities"""
+
+    list_display = ("name", "parish", "latitude", "longitude")
+    list_filter = ("parish",)
+    search_fields = ("name", "parish")
+
+    fieldsets = (
+        ("Basic Information", {"fields": ("name", "parish")}),
+        (
+            "Coordinates",
+            {"fields": ("latitude", "longitude"), "classes": ("collapse",)},
+        ),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
+    )
+
+
 @admin.register(Location)
-class LocationAdmin(admin.ModelAdmin):
+class LocationAdmin(ModelAdmin):
     """Admin for Location entities"""
 
-    list_display = ("name", "parish", "city", "street")
+    list_display = ("name", "city", "category_of_space", "get_coordinates")
     list_filter = (
-        "parish",
         "city",
+        "category_of_space",
+        "city__parish",
     )
+    search_fields = (
+        "name",
+        "current_name",
+        "category_of_space",
+        "city__name",
+        "description_of_location",
+    )
+
+    fieldsets = (
+        ("Basic Information", {"fields": ("name", "city", "current_name")}),
+        (
+            "Location Details",
+            {"fields": ("category_of_space", "description_of_location")},
+        ),
+        (
+            "Address Components",
+            {
+                "fields": ("address", "street", "landmark", "sestiere"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Specific Coordinates",
+            {"fields": ("latitude", "longitude"), "classes": ("collapse",)},
+        ),
+        (
+            "Miscellaneous Fields",
+            {
+                "fields": ("admin_unit", "parish_religious_order"),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
+    )
+
+    def get_coordinates(self, obj):
+        """Display effective coordinates (specific or city fallback)"""
+        lat = obj.effective_latitude
+        lon = obj.effective_longitude
+        if lat and lon:
+            return f"{lat:.4f}, {lon:.4f}"
+        return "No coordinates"
+
+    get_coordinates.short_description = "Coordinates"
 
 
 @admin.register(Crime)
-class CrimeAdmin(admin.ModelAdmin):
-    """Admin for Crime entities"""
+class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
+    """Admin for Crime entities with import/export functionality"""
+
+    resource_class = CrimeResource
+    import_form_class = ImportForm
+    export_form_class = ExportForm
 
     list_display = (
-        "__str__",
+        "number",
+        "crime",
         "get_victims",
         "get_perpetrators",
         "weapon",
-        "historical_date",
+        "date",
+        "fatality",
         "get_location",
     )
     list_filter = (
+        "fatality",
         "violence_caused_death",
         "convicted",
         "pardoned",
+        "arbitration",
+        "sentence_enforced",
         "weapon",
-        "historical_date",
+        "year",
+        "input_by",
     )
-    search_fields = ("crime", "motive")
+    search_fields = ("number", "crime", "motive", "description_of_case")
     date_hierarchy = "date"
     inlines = (WitnessInline,)
+    readonly_fields = (
+        "year",
+        "month",
+        "day",
+        "day_of_week",
+        "date_of_entry",
+        "input_by",
+        "updated_by",
+    )
 
     fieldsets = (
-        ("Crime Details", {"fields": ("crime", "motive", "weapon")}),
+        ("Basic Information", {"fields": ("number", "crime", "description_of_case")}),
         (
-            "People Involved",
-            {"fields": ("victim", "perpetrator", "judge"), "classes": ("collapse",)},
+            "Court & Legal Information",
+            {
+                "fields": (
+                    "court",
+                    "court_classification",
+                    "trial_phase",
+                    "arbitration",
+                    "sentence",
+                    "sentence_enforced",
+                ),
+                "classes": ("collapse",),
+            },
         ),
         (
-            "Time & Place",
+            "Date & Time Information",
             {
                 "fields": (
                     "date",
                     "historical_date",
+                    "year",
+                    "month",
+                    "day",
+                    "day_of_week",
+                    "time",
                     "liturgical_occasion",
-                    "time_of_day",
-                    "address",
-                )
+                    "connected_event",
+                ),
             },
         ),
         (
-            "Outcomes",
+            "People Involved",
             {
                 "fields": (
+                    "victim",
+                    "victim_description",
+                    "perpetrator",
+                    "assailant_description",
+                    "judge",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Case Details", {"fields": ("motive", "relationship", "weapon")}),
+        ("Location Information", {"fields": ("address",)}),
+        (
+            "Outcome Information",
+            {
+                "fields": (
+                    "fatality",
                     "violence_caused_death",
                     "convicted",
                     "pardoned",
@@ -175,7 +331,20 @@ class CrimeAdmin(admin.ModelAdmin):
                 "classes": ("collapse",),
             },
         ),
-        ("Sources", {"fields": ("source",), "classes": ("collapse",)}),
+        (
+            "Source & Archival Information",
+            {
+                "fields": ("source", "archival_location", "reference"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("input_by", "updated_by", "date_of_entry"),
+                "classes": ("collapse",),
+            },
+        ),
     )
 
     def get_victims(self, obj):
@@ -199,9 +368,26 @@ class CrimeAdmin(admin.ModelAdmin):
 
     get_location.short_description = "Location"
 
+    def save_model(self, request, obj, form, change):
+        # Auto-populate date components from the main date field
+        if obj.date:
+            obj.year = str(obj.date.year)
+            obj.month = str(obj.date.month)
+            obj.day = str(obj.date.day)
+            obj.day_of_week = obj.date.strftime("%A")
+
+        # Record the user who created the object
+        if not change:
+            obj.input_by = request.user
+        # And record who edited the object
+        else:
+            obj.updated_by = request.user
+
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
+class PersonAdmin(ModelAdmin):
     """Admin for Person entities"""
 
     list_display = ("__str__", "gender", "citizenship", "occupation")
@@ -214,9 +400,14 @@ class PersonAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Basic Information", {"fields": ("first_name", "last_name", "gender")}),
         (
-            "Background",
+            "Description & Background",
             {
-                "fields": ("occupation", "citizenship", "identifying_information"),
+                "fields": (
+                    "description",
+                    "occupation",
+                    "citizenship",
+                    "identifying_information",
+                ),
                 "classes": ("collapse",),
             },
         ),
@@ -237,7 +428,7 @@ class PersonAdmin(admin.ModelAdmin):
 
 
 @admin.register(Weapon)
-class WeaponAdmin(admin.ModelAdmin):
+class WeaponAdmin(ModelAdmin):
     """Admin for Weapon entities"""
 
     list_display = ("__str__", "definition", "category")

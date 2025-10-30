@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page.title }} - Mapping Early Modern Violence{% endblock %}
+
+{% block content %}
+    <div class="bg-white py-12 sm:py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{{ page.title }}</h1>
+            </div>
+
+            <div class="prose prose-lg prose-gray max-w-none">
+                {{ page.content|safe }}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

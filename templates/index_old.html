@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load wagtailimages_tags %}
+
+{% block content %}
+        <!-- Hero Section -->
+    <div class="bg-cover bg-center text-white relative" style="background-image: url('{% static 'images/website_image.jpg' %}')">
+        <div class="absolute inset-0 bg-black bg-opacity-70"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 relative z-10">
+            <div class="text-center">
+                {% if home_content %}
+                    <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+                        {{ home_content.lede|safe }}
+                    </p>
+                {% else %}
+                    <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+                        Explore patterns of violence and conflict across Italy through interactive maps and scholarly research.
+                    </p>
+                {% endif %}
+          <!--
+					<div class="flex flex-col sm:flex-row gap-4 justify-center px-4 sm:px-0">
+						<a href="#explore" class="bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200 text-center">
+							Explore the Map
+						</a>
+						<a href="#about" class="border-2 border-white text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-200 text-center">
+							Learn More
+						</a>
+					</div>
+          -->
+            </div>
+        </div>
+    </div>
+
+		<!-- About Section -->
+    <div id="about" class="py-12 sm:py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8 sm:mb-12">
+                <div class="grid lg:grid-cols-3 gap-8 mb-8">
+            {# About text column #}
+                    <div class="lg:col-span-2">
+                        <p class="pb-4 text-xl sm:text-xl text-gray-600 max-w-3xl mx-auto">
+                            This digital history project maps instances of violence across early modern Italy, providing researchers and the public with new ways to understand historical patterns of conflict.
+                        </p>
+
+                        <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                            This project’s main comparative and collaborative work aim will facilitate understanding the social, cultural, and political impacts of crime in various contexts. Due to the extensiveness of Italian judicial archives, multiple political configurations and governmental structures useful for comparisons, and some of the largest urban centers pre-1750, early modern Italy provides a valuable laboratory for the study of crime and violence. In addition, for most cities, chronicles, letters, and avvisi provide narrative commentary and context. Our central research questions include but are not limited to: What patterns in violent crime can we discern using GIS analysis and large datasets? How do spatial factors influence acts of violence? Has the spatial dimensions of violent crimes informed policing and punishment? How do relations between space and violence alter over time, and what can comparisons reveal?
+                        </p>
+
+                        <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                            The cathedral in Florence, the ponte dei pugni in Venice, the streets of Verona, the contrade di Siena–all of these are infamous sites of assassinations, battles, street fights, and violent rivalries during the premodern period in Italy. While Italy had higher rates of violence during the premodern period, the reasons for this are imperfectly understood. An understanding of the social, political, economic, and cultural factors which led to the amount and types of violence could provide insight into violent crime today, particularly in urban centers. Spatial analysis using digital tools will be particularly fruitful.
+                        </p>
+
+                        <p class="pb-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+                            Using datasets compiled from court records, letters, chronicles, diplomatic dispatches, poems, histories, and family papers, from Bologna, Florence, Modena, Venice, Verona, Padua, and Vicenza, this project aims to allow researchers to to identify and analyze patterns and long-term trends in violence between 1500 and 1700. A central outcome of the project will be a database with publicly available datasets that enables researchers to obtain and contribute data for their own research purposes and pedagogical uses. A related aim of the project is to train students and researchers in GIS and spatial methodologies, making these tools more accessible.
+                        </p>
+
+                    </div>
+
+            {# Contributors column #}
+                    <div class="lg:col-span-1">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Contributors</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                    <img src="/static/images/head-madden.jpg" class="w-full h-full object-cover"/>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-900">Amanda Madden</p>
+                                    <p class="text-sm text-gray-600">Lead Researcher</p>
+                                    <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                    <img src="/static/images/head-rose.jpg" class="w-full h-full object-cover"/>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-900">Colin Rose</p>
+                                    <p class="text-sm text-gray-600">Co-Principal Investigator</p>
+                                    <p class="text-xs text-gray-500">Brock University, Canada, <br>2024—present</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                    <img src="/static/images/head-heppler.jpg" class="w-full h-full object-cover"/>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-900">Jason A. Heppler</p>
+                                    <p class="text-sm text-gray-600">Senior Developer-Scholar</p>
+                                    <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full overflow-hidden">
+                                    <img src="/static/images/head-buck.jpg" class="w-full h-full object-cover"/>
+                                </div>
+                                <div>
+                                    <p class="text-base font-medium text-gray-900">Brandan P. Buck</p>
+                                    <p class="text-sm text-gray-600">GIS Consultant</p>
+                                    <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="pb-6 pt-6">
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <div class="text-center">
+                    <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Interactive Mapping</h3>
+                    <p class="text-gray-600">Explore historical violence through interactive maps with detailed geographic and temporal data.</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Scholarly Research</h3>
+                    <p class="text-gray-600">Access research and analysis on patterns of early modern violence.</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Open Data</h3>
+                    <p class="text-gray-600">Access and download our curated dataset for your own research and analysis.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

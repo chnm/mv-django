@@ -1,5 +1,4 @@
 import os
-import platform
 from pathlib import Path
 
 import environ
@@ -39,48 +38,67 @@ CSRF_TRUSTED_ORIGINS = env.list(
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
+    "unfold.contrib.inlines",
+    "unfold.contrib.import_export",
+    "daphne",
     # dal must come before contrib.admin
-    'dal',
-    'dal_select2',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "dal",
+    "dal_select2",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "import_export",
     # allauth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.orcid',
-    'allauth.socialaccount.providers.github',
-    'allauth.socialaccount.providers.slack',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.orcid",
+    "allauth.socialaccount.providers.github",
+    "allauth.socialaccount.providers.slack",
+    # wagtail
+    "wagtail.contrib.forms",
+    "wagtail.contrib.redirects",
+    "wagtail.embeds",
+    "wagtail.sites",
+    "wagtail.users",
+    "wagtail.snippets",
+    "wagtail.documents",
+    "wagtail.images",
+    "wagtail.search",
+    "wagtail.admin",
+    "wagtail",
+    "modelcluster",
+    "taggit",
+    "django_extensions",
     # tailwind
-    'tailwind',
-    'theme',
-
+    "tailwind",
+    "theme",
     # local apps
-    'mapping_violence',
-    'locations',
-    'historical_dates',
+    "schema_viewer",
+    "mapping_violence",
+    "locations",
+    "historical_dates",
+    "content",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     # allauth
-    'allauth.account.middleware.AccountMiddleware',
-
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-
+    "allauth.account.middleware.AccountMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -98,42 +116,39 @@ DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TEMPLATE_CONTEXT": True,
 }
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "templates"],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "content.context_processors.navigation",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-
-#       'ENGINE': 'django.db.backends.sqlite3',
-#       'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
         "ENGINE": "django.db.backends.postgresql",
         "HOST": env("DB_HOST", default="localhost"),
         "PORT": env("DB_PORT", default="5432"),
         "NAME": env("DB_NAME", default="mapping_violence"),
         "USER": env("DB_USER", default="mapping_violence"),
         "PASSWORD": env("DB_PASS", default="password"),
-
     }
 }
 
@@ -143,74 +158,92 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-
-
+    "django.contrib.auth.backends.ModelBackend",
     # allauth specific authentication methods, such as login by email
-    'allauth.account.auth_backends.AuthenticationBackend',
-
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 
-# allauth: this is required for slack
-ACCOUNT_DEFAULT_HTTP_PROTOCOL='https'
+# allauth
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+ACCOUNT_EMAIL_VERIFICATION = (
+    "optional"  # Changed from 'mandatory' to fix ConnectionRefusedError
+)
+ACCOUNT_LOGIN_METHODS = {"email", "username"}
+ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+ACCOUNT_SESSION_REMEMBER = True
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+# Custom adapter to prevent any signups unless invited
+ACCOUNT_ADAPTER = "config.adapters.NoSignupAdapter"
 
 # allauth: provider specific settings
 SOCIALACCOUNT_PROVIDERS = {
-    'orcid': {
-        'BASE_DOMAIN':'orcid.org',
-        'MEMBER_API': False,
+    "orcid": {
+        "BASE_DOMAIN": "orcid.org",
+        "MEMBER_API": False,
         "APP": {
             "client_id": env("ALLAUTH_ORCID_CLIENT_ID", default="PLACEHOLDER"),
             "secret": env("ALLAUTH_ORCID_CLIENT_SECRET", default="PLACEHOLDER"),
         },
     },
-    'github': {
+    "github": {
         "VERIFIED_EMAIL": True,
         "APP": {
             "client_id": env("ALLAUTH_GITHUB_CLIENT_ID", default="PLACEHOLDER"),
             "secret": env("ALLAUTH_GITHUB_CLIENT_SECRET", default="PLACEHOLDER"),
         },
     },
-    'slack': {
-        'VERIFIED_EMAIL': True,
-        'APP': {
+    "slack": {
+        "VERIFIED_EMAIL": True,
+        "APP": {
             "client_id": env("ALLAUTH_SLACK_CLIENT_ID", default="PLACEHOLDER"),
             "secret": env("ALLAUTH_SLACK_CLIENT_SECRET", default="PLACEHOLDER"),
             "key": "",
-            "settings": {
-                "scope": [
-                    "openid",
-                    "profile",
-                    "email"
-                ]
-            }
-        }
-    }
+            "settings": {"scope": ["openid", "profile", "email"]},
+        },
+    },
 }
 
+# Email settings for development and production
+if DEBUG:
+    # In development, print emails to console instead of sending them
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    # In production, configure proper SMTP settings
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+    EMAIL_PORT = env("EMAIL_PORT", default=587)
+    EMAIL_USE_TLS = env("EMAIL_USE_TLS", default=True)
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@example.com")
+SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 USE_TZ = True
@@ -219,7 +252,7 @@ TAILWIND_APP_NAME = "theme"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
@@ -253,4 +286,139 @@ else:
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Wagtail settings
+WAGTAIL_SITE_NAME = "Mapping Violence"
+WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", default="http://localhost:8000")
+
+# Django Unfold Admin Configuration
+UNFOLD = {
+    "SITE_TITLE": "Mapping Violence Admin",
+    "SITE_HEADER": "Mapping Violence",
+    "SITE_URL": "/",
+    "COLORS": {
+        "primary": {
+            "50": "250 245 255",
+            "100": "243 232 255",
+            "200": "233 213 255",
+            "300": "216 180 254",
+            "400": "196 144 254",
+            "500": "168 85 247",
+            "600": "147 51 234",
+            "700": "126 34 206",
+            "800": "107 33 168",
+            "900": "88 28 135",
+        },
+    },
+    "EXTENSIONS": {
+        "modeltranslation": {
+            "flags": {
+                "en": "🇬🇧",
+                "fr": "🇫🇷",
+                "nl": "🇳🇱",
+            },
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Data Management",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Violence Events",
+                        "icon": "gavel",
+                        "link": "/admin/mapping_violence/crime/",
+                    },
+                    {
+                        "title": "People",
+                        "icon": "people",
+                        "link": "/admin/mapping_violence/person/",
+                    },
+                ],
+            },
+            {
+                "title": "Reference Data",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Cities",
+                        "icon": "location_city",
+                        "link": "/admin/locations/city/",
+                    },
+                    {
+                        "title": "Locations",
+                        "icon": "place",
+                        "link": "/admin/locations/location/",
+                    },
+                    {
+                        "title": "Events",
+                        "icon": "event",
+                        "link": "/admin/mapping_violence/event/",
+                    },
+                    {
+                        "title": "Weapons",
+                        "icon": "dangerous",
+                        "link": "/admin/mapping_violence/weapon/",
+                    },
+                    {
+                        "title": "Historical Dates",
+                        "icon": "date_range",
+                        "link": "/admin/historical_dates/historicaldate/",
+                    },
+                ],
+            },
+            {
+                "title": "Website Content",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Content Management",
+                        "icon": "edit",
+                        "link": "/cms/",
+                    },
+                ],
+            },
+            {
+                "title": "System Configuration",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": "/admin/auth/user/",
+                    },
+                    {
+                        "title": "Groups",
+                        "icon": "group",
+                        "link": "/admin/auth/group/",
+                    },
+                ],
+            },
+            {
+                "title": "Social Authentication",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Social Applications",
+                        "icon": "apps",
+                        "link": "/admin/socialaccount/socialapp/",
+                    },
+                    {
+                        "title": "Social Accounts",
+                        "icon": "account_circle",
+                        "link": "/admin/socialaccount/socialaccount/",
+                    },
+                ],
+            },
+        ],
+    },
+}
