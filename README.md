@@ -13,7 +13,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Crime Database**: Comprehensive cataloging of violent crimes with detailed metadata
 - **Person Registry**: Network of individuals involved in criminal cases (victims, perpetrators, witnesses, judges)
 - **Historical Date Handling**: Specialized fields for managing uncertain and approximate historical dates
-- **Geographic Data**: Location-based analysis using historical place names and modern coordinates
+- **Geographic Data**: Hierarchical location system with cities and specific locations, supporting historical place names and modern coordinates
 - **Content Management**: Wagtail CMS integration for managing static content and project information
 - **Data Import/Export**: CSV-based data ingestion and export capabilities
 - **Advanced Search**: Multi-faceted search and filtering across crimes, people, and locations
@@ -33,7 +33,8 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Person**: Individuals involved in cases (victims, perpetrators, witnesses, court officials)
 - **Event**: Ceremonial or social events connected to crimes (feast days, weddings, etc.)
 - **Weapon**: Categorized inventory of weapons used in violent acts
-- **Location**: Geographic entities with historical and modern place names
+- **City**: Towns and cities with general coordinates and administrative information
+- **Location**: Specific places within cities, including category of space and detailed descriptions
 
 ## Installation
 
@@ -48,7 +49,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone git@github.com:chnm/mv-django.git
 cd mapping_violence
 ```
 
@@ -119,9 +120,6 @@ npm run build
 ```bash
 # Run tests
 poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=mapping_violence
 ```
 
 ## Project Structure
@@ -146,7 +144,7 @@ The application centers around documenting violent crimes with rich contextual i
 
 - **Crimes** are linked to **People** (victims, perpetrators, witnesses)
 - **Historical dates** handle uncertainty in early modern records
-- **Locations** provide geographic context with modern coordinates
+- **Cities** and **Locations** provide hierarchical geographic context, allowing multiple location types within the same city
 - **Events** connect crimes to social and religious occasions
 - **Weapons** are categorized and defined for analysis
 
