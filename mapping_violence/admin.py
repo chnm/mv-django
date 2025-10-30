@@ -1,11 +1,17 @@
 from itertools import groupby
 
 from django.contrib import admin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group, User
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
 from import_export.admin import ImportExportModelAdmin
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
-from locations.models import Location
+from locations.models import City, Location
 from mapping_violence.forms import PersonForm
 from mapping_violence.models import (
     Crime,
@@ -17,6 +23,23 @@ from mapping_violence.models import (
     Witness,
 )
 from mapping_violence.resources import CrimeResource
+
+# Unregister then re-register to get Unfold styling applied
+admin.site.unregister(User)
+admin.site.unregister(Group)
+
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin, ModelAdmin):
+    # Forms loaded from `unfold.forms`
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
+
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
+    pass
 
 
 class PersonRelationTypeChoiceIterator(ModelChoiceIterator):
@@ -45,7 +68,7 @@ class PersonRelationTypeChoiceField(ModelChoiceField):
     iterator = PersonRelationTypeChoiceIterator
 
 
-class PersonInline(admin.TabularInline):
+class PersonInline(TabularInline):
     """Person-Person relationships inline for the Person admin"""
 
     model = PersonRelation
@@ -67,7 +90,7 @@ class PersonInline(admin.TabularInline):
         return formset
 
 
-class PersonReverseInline(admin.TabularInline):
+class PersonReverseInline(TabularInline):
     """Person-Person reverse relationships inline for the Person admin"""
 
     model = PersonRelation
@@ -88,7 +111,7 @@ class PersonReverseInline(admin.TabularInline):
         return (obj.type.converse_name or str(obj.type)) if obj else None
 
 
-class WitnessInline(admin.StackedInline):
+class WitnessInline(StackedInline):
     """Witness inline for the Crime admin"""
 
     model = Witness
@@ -99,7 +122,7 @@ class WitnessInline(admin.StackedInline):
 
 
 @admin.register(PersonRelationType)
-class PersonRelationTypeAdmin(admin.ModelAdmin):
+class PersonRelationTypeAdmin(ModelAdmin):
     """Admin for managing the controlled vocabulary of relationships"""
 
     list_display = ("__str__", "converse_name", "category")
@@ -114,7 +137,7 @@ class PersonRelationTypeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(ModelAdmin):
     """Admin for Event entities"""
 
     list_display = ("name", "event_type", "date", "location")
@@ -131,24 +154,87 @@ class EventAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(City)
+class CityAdmin(ModelAdmin):
+    """Admin for City entities"""
+
+    list_display = ("name", "parish", "latitude", "longitude")
+    list_filter = ("parish",)
+    search_fields = ("name", "parish")
+
+    fieldsets = (
+        ("Basic Information", {"fields": ("name", "parish")}),
+        (
+            "Coordinates",
+            {"fields": ("latitude", "longitude"), "classes": ("collapse",)},
+        ),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
+    )
+
+
 @admin.register(Location)
-class LocationAdmin(admin.ModelAdmin):
+class LocationAdmin(ModelAdmin):
     """Admin for Location entities"""
 
-    list_display = ("name", "category_of_space", "parish", "city", "street")
+    list_display = ("name", "city", "category_of_space", "get_coordinates")
     list_filter = (
-        "category_of_space",
-        "parish",
         "city",
+        "category_of_space",
+        "city__parish",
     )
-    search_fields = ("name", "current_name", "category_of_space", "city", "parish")
+    search_fields = (
+        "name",
+        "current_name",
+        "category_of_space",
+        "city__name",
+        "description_of_location",
+    )
+
+    fieldsets = (
+        ("Basic Information", {"fields": ("name", "city", "current_name")}),
+        (
+            "Location Details",
+            {"fields": ("category_of_space", "description_of_location")},
+        ),
+        (
+            "Address Components",
+            {
+                "fields": ("address", "street", "landmark", "sestiere"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Specific Coordinates",
+            {"fields": ("latitude", "longitude"), "classes": ("collapse",)},
+        ),
+        (
+            "Miscellaneous Fields",
+            {
+                "fields": ("admin_unit", "parish_religious_order"),
+                "classes": ("collapse",),
+            },
+        ),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
+    )
+
+    def get_coordinates(self, obj):
+        """Display effective coordinates (specific or city fallback)"""
+        lat = obj.effective_latitude
+        lon = obj.effective_longitude
+        if lat and lon:
+            return f"{lat:.4f}, {lon:.4f}"
+        return "No coordinates"
+
+    get_coordinates.short_description = "Coordinates"
 
 
 @admin.register(Crime)
-class CrimeAdmin(ImportExportModelAdmin):
+class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     """Admin for Crime entities with import/export functionality"""
 
     resource_class = CrimeResource
+    import_form_class = ImportForm
+    export_form_class = ExportForm
 
     list_display = (
         "number",
@@ -301,7 +387,7 @@ class CrimeAdmin(ImportExportModelAdmin):
 
 
 @admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
+class PersonAdmin(ModelAdmin):
     """Admin for Person entities"""
 
     list_display = ("__str__", "gender", "citizenship", "occupation")
@@ -342,7 +428,7 @@ class PersonAdmin(admin.ModelAdmin):
 
 
 @admin.register(Weapon)
-class WeaponAdmin(admin.ModelAdmin):
+class WeaponAdmin(ModelAdmin):
     """Admin for Weapon entities"""
 
     list_display = ("__str__", "definition", "category")
