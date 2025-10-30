@@ -38,6 +38,11 @@ CSRF_TRUSTED_ORIGINS = env.list(
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
+    "unfold.contrib.inlines",
+    "unfold.contrib.import_export",
     "daphne",
     # dal must come before contrib.admin
     "dal",
@@ -138,8 +143,6 @@ ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
     "default": {
-        #       'ENGINE': 'django.db.backends.sqlite3',
-        #       'NAME': BASE_DIR / 'db.sqlite3',
         "ENGINE": "django.db.backends.postgresql",
         "HOST": env("DB_HOST", default="localhost"),
         "PORT": env("DB_PORT", default="5432"),
@@ -176,8 +179,20 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-# allauth: this is required for slack
+# allauth
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+ACCOUNT_EMAIL_VERIFICATION = (
+    "optional"  # Changed from 'mandatory' to fix ConnectionRefusedError
+)
+ACCOUNT_LOGIN_METHODS = {"email", "username"}
+ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+ACCOUNT_SESSION_REMEMBER = True
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+# Custom adapter to prevent any signups unless invited
+ACCOUNT_ADAPTER = "config.adapters.NoSignupAdapter"
 
 # allauth: provider specific settings
 SOCIALACCOUNT_PROVIDERS = {
@@ -206,6 +221,22 @@ SOCIALACCOUNT_PROVIDERS = {
         },
     },
 }
+
+# Email settings for development and production
+if DEBUG:
+    # In development, print emails to console instead of sending them
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    # In production, configure proper SMTP settings
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+    EMAIL_PORT = env("EMAIL_PORT", default=587)
+    EMAIL_USE_TLS = env("EMAIL_USE_TLS", default=True)
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@example.com")
+SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 
 
 # Internationalization
@@ -260,3 +291,134 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Wagtail settings
 WAGTAIL_SITE_NAME = "Mapping Violence"
 WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", default="http://localhost:8000")
+
+# Django Unfold Admin Configuration
+UNFOLD = {
+    "SITE_TITLE": "Mapping Violence Admin",
+    "SITE_HEADER": "Mapping Violence",
+    "SITE_URL": "/",
+    "COLORS": {
+        "primary": {
+            "50": "250 245 255",
+            "100": "243 232 255",
+            "200": "233 213 255",
+            "300": "216 180 254",
+            "400": "196 144 254",
+            "500": "168 85 247",
+            "600": "147 51 234",
+            "700": "126 34 206",
+            "800": "107 33 168",
+            "900": "88 28 135",
+        },
+    },
+    "EXTENSIONS": {
+        "modeltranslation": {
+            "flags": {
+                "en": "🇬🇧",
+                "fr": "🇫🇷",
+                "nl": "🇳🇱",
+            },
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Data Management",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Violence Events",
+                        "icon": "gavel",
+                        "link": "/admin/mapping_violence/crime/",
+                    },
+                    {
+                        "title": "People",
+                        "icon": "people",
+                        "link": "/admin/mapping_violence/person/",
+                    },
+                ],
+            },
+            {
+                "title": "Reference Data",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Cities",
+                        "icon": "location_city",
+                        "link": "/admin/locations/city/",
+                    },
+                    {
+                        "title": "Locations",
+                        "icon": "place",
+                        "link": "/admin/locations/location/",
+                    },
+                    {
+                        "title": "Events",
+                        "icon": "event",
+                        "link": "/admin/mapping_violence/event/",
+                    },
+                    {
+                        "title": "Weapons",
+                        "icon": "dangerous",
+                        "link": "/admin/mapping_violence/weapon/",
+                    },
+                    {
+                        "title": "Historical Dates",
+                        "icon": "date_range",
+                        "link": "/admin/historical_dates/historicaldate/",
+                    },
+                ],
+            },
+            {
+                "title": "Website Content",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Content Management",
+                        "icon": "edit",
+                        "link": "/cms/",
+                    },
+                ],
+            },
+            {
+                "title": "System Configuration",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": "/admin/auth/user/",
+                    },
+                    {
+                        "title": "Groups",
+                        "icon": "group",
+                        "link": "/admin/auth/group/",
+                    },
+                ],
+            },
+            {
+                "title": "Social Authentication",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Social Applications",
+                        "icon": "apps",
+                        "link": "/admin/socialaccount/socialapp/",
+                    },
+                    {
+                        "title": "Social Accounts",
+                        "icon": "account_circle",
+                        "link": "/admin/socialaccount/socialaccount/",
+                    },
+                ],
+            },
+        ],
+    },
+}

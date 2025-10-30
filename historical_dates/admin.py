@@ -1,13 +1,12 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .forms import HistoricalDateForm
 from .models import HistoricalDate
 
-# TODO: Integrate new tailwind admin layout
-
 
 @admin.register(HistoricalDate)
-class HistoricalDateAdmin(admin.ModelAdmin):
+class HistoricalDateAdmin(ModelAdmin):
     form = HistoricalDateForm
     list_display = ("display_date", "edtf_date", "start_date", "end_date", "certainty")
     ordering = ("start_date",)
