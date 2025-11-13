@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Map - Mapping Early Modern Violence{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <style>
+        .map-container {
+            position: relative;
+            height: calc(100vh - 80px);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .filter-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .filter-panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .filter-panel .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-panel label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .filter-panel select,
+        .filter-panel input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .filter-panel button {
+            width: 100%;
+            padding: 10px;
+            background-color: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .filter-panel button:hover {
+            background-color: #5D2906;
+        }
+
+        .filter-panel button.reset {
+            background-color: #6b7280;
+        }
+
+        .filter-panel button.reset:hover {
+            background-color: #4b5563;
+        }
+
+        .leaflet-popup-content {
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        .leaflet-popup-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .leaflet-popup-content p {
+            margin: 5px 0;
+        }
+
+        .leaflet-popup-content .label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .leaflet-popup-content .crime-list {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .leaflet-popup-content .crime-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .leaflet-popup-content .crime-item:last-child {
+            border-bottom: none;
+        }
+
+        .leaflet-popup-content .crime-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .leaflet-popup-content .crime-link:hover {
+            color: #1e40af;
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="map-container">
+        <div class="filter-panel">
+            <h3>Filter Crimes</h3>
+
+            <div class="filter-group">
+                <label for="city-filter">City</label>
+                <select id="city-filter">
+                    <option value="">All Cities</option>
+                    {% for city in cities %}
+                        <option value="{{ city.id }}">{{ city.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="crime-type-filter">Crime Type</label>
+                <select id="crime-type-filter">
+                    <option value="">All Crime Types</option>
+                    {% for crime_type in crime_types %}
+                        <option value="{{ crime_type }}">{{ crime_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="year-from-filter">Year From</label>
+                <input type="number" id="year-from-filter" placeholder="e.g., 1500" min="1400" max="2000">
+            </div>
+
+            <div class="filter-group">
+                <label for="year-to-filter">Year To</label>
+                <input type="number" id="year-to-filter" placeholder="e.g., 1700" min="1400" max="2000">
+            </div>
+
+            <button id="apply-filters">Apply Filters</button>
+            <button id="reset-filters" class="reset">Reset Filters</button>
+        </div>
+
+        <div id="map"></div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <script>
+    // Initialize the map centered on Italy
+        const map = L.map('map').setView([43.0, 12.0], 6);
+
+    // Add CartoDB Dark Matter tile layer (dark theme)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        let markersLayer = null;
+
+    // Function to load location data with filters
+        function loadLocations() {
+        // Get filter values
+            const city = document.getElementById('city-filter').value;
+            const crimeType = document.getElementById('crime-type-filter').value;
+            const yearFrom = document.getElementById('year-from-filter').value;
+            const yearTo = document.getElementById('year-to-filter').value;
+
+        // Build query string
+            const params = new URLSearchParams();
+            if (city) params.append('city', city);
+            if (crimeType) params.append('crime_type', crimeType);
+            if (yearFrom) params.append('year_from', yearFrom);
+            if (yearTo) params.append('year_to', yearTo);
+
+            const url = '{% url "locations_geojson" %}' + (params.toString() ? '?' + params.toString() : '');
+
+        // Remove existing markers
+            if (markersLayer) {
+                map.removeLayer(markersLayer);
+            }
+
+        // Load location data
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                // Add GeoJSON layer to map
+                    markersLayer = L.geoJSON(data, {
+                        pointToLayer: function (feature, latlng) {
+                        // Scale marker size based on crime count
+                            const crimeCount = feature.properties.crime_count || 1;
+                            const radius = Math.min(6 + (crimeCount * 2), 20); // Scale between 6 and 20
+
+                            return L.circleMarker(latlng, {
+                                radius: radius,
+                                fillColor: "#F59E0B", // Warm amber/orange
+                                color: "#FBBF24", // Lighter amber border
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            });
+                        },
+                        onEachFeature: function (feature, layer) {
+                        // Create popup content
+                            let popupContent = '<div>';
+                            popupContent += '<h3>' + feature.properties.name + '</h3>';
+
+                            if (feature.properties.city) {
+                                popupContent += '<p><span class="label">City:</span> ' + feature.properties.city + '</p>';
+                            }
+
+                            if (feature.properties.category) {
+                                popupContent += '<p><span class="label">Category:</span> ' + feature.properties.category + '</p>';
+                            }
+
+                            if (feature.properties.description) {
+                                popupContent += '<p><span class="label">Description:</span> ' + feature.properties.description + '</p>';
+                            }
+
+                            if (feature.properties.current_name) {
+                                popupContent += '<p><span class="label">Current Name:</span> ' + feature.properties.current_name + '</p>';
+                            }
+
+                            if (feature.properties.sestiere) {
+                                popupContent += '<p><span class="label">Sestiere:</span> ' + feature.properties.sestiere + '</p>';
+                            }
+
+                        // Crime information
+                            if (feature.properties.crime_count > 0) {
+                                popupContent += '<div class="crime-list">';
+                                popupContent += '<p><span class="label">Crimes at this location:</span> ' + feature.properties.crime_count + '</p>';
+
+                                feature.properties.crimes.forEach(crime => {
+                                    popupContent += '<div class="crime-item">';
+                                    popupContent += '<a href="/crime/' + crime.id + '/" class="crime-link">';
+                                    if (crime.number) {
+                                        popupContent += '<strong>Case #' + crime.number + '</strong><br>';
+                                    }
+                                    if (crime.crime) {
+                                        popupContent += crime.crime;
+                                    }
+                                    if (crime.year) {
+                                        popupContent += ' (' + crime.year + ')';
+                                    }
+                                    popupContent += '</a>';
+                                    popupContent += '</div>';
+                                });
+
+                                popupContent += '</div>';
+                            }
+
+                            popupContent += '</div>';
+
+                            layer.bindPopup(popupContent, {
+                                maxWidth: 300
+                            });
+                        }
+                    }).addTo(map);
+                })
+                .catch(error => {
+                    console.error('Error loading location data:', error);
+                });
+        }
+
+    // Load initial data
+        loadLocations();
+
+    // Filter button handlers
+        document.getElementById('apply-filters').addEventListener('click', function() {
+            loadLocations();
+        });
+
+        document.getElementById('reset-filters').addEventListener('click', function() {
+            document.getElementById('city-filter').value = '';
+            document.getElementById('crime-type-filter').value = '';
+            document.getElementById('year-from-filter').value = '';
+            document.getElementById('year-to-filter').value = '';
+            loadLocations();
+        });
+    </script>
+{% endblock %}

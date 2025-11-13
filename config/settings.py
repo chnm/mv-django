@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_tables2",
+    "django_filters",
     "import_export",
     # allauth
     "allauth",
@@ -338,6 +340,11 @@ UNFOLD = {
                         "title": "People",
                         "icon": "people",
                         "link": "/admin/mapping_violence/person/",
+                    },
+                    {
+                        "title": "Relationship Types",
+                        "icon": "people",
+                        "link": "/admin/mapping_violence/personrelationtype/",
                     },
                 ],
             },
