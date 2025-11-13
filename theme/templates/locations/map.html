@@ -177,7 +177,7 @@
             crossorigin=""></script>
     <script>
     // Initialize the map centered on Italy
-        const map = L.map('map').setView([43.0, 12.0], 6);
+        const map = L.map('map').setView([43.0, 12.0], 7);
 
     // Add CartoDB Dark Matter tile layer (dark theme)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -243,16 +243,8 @@
                                 popupContent += '<p><span class="label">Category:</span> ' + feature.properties.category + '</p>';
                             }
 
-                            if (feature.properties.description) {
-                                popupContent += '<p><span class="label">Description:</span> ' + feature.properties.description + '</p>';
-                            }
-
                             if (feature.properties.current_name) {
                                 popupContent += '<p><span class="label">Current Name:</span> ' + feature.properties.current_name + '</p>';
-                            }
-
-                            if (feature.properties.sestiere) {
-                                popupContent += '<p><span class="label">Sestiere:</span> ' + feature.properties.sestiere + '</p>';
                             }
 
                         // Crime information
