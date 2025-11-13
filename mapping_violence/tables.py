@@ -7,9 +7,9 @@ class CrimeTable(tables.Table):
     """Table for displaying Crime data"""
 
     number = tables.Column(
-        linkify=("crime_detail", {"crime_id": tables.A("pk")}), verbose_name="Case #"
+        linkify=("crime_detail", {"crime_id": tables.A("pk")}), verbose_name="Case"
     )
-    crime = tables.Column(verbose_name="Crime Type")
+    crime = tables.Column(verbose_name="Violence Type")
     date = tables.DateColumn(format="Y-m-d", verbose_name="Date")
     city = tables.Column(accessor="address__city__name", verbose_name="City")
     victims = tables.Column(empty_values=(), orderable=False, verbose_name="Victim(s)")
