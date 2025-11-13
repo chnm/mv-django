@@ -25,7 +25,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Database**: PostgreSQL 16 with PostGIS support
 - **Frontend**: Tailwind CSS with Django templates
 - **Authentication**: Django Allauth with social login support
-- **Development**: Poetry for dependency management, Black for code formatting
+- **Development**: `uv` for dependency management, Black for code formatting
 
 ## Key Models
 
@@ -43,7 +43,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 - Python 3.12+
 - PostgreSQL 16+
 - Node.js (for frontend dependencies)
-- Poetry (Python package manager)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
 
 ### Setup
 
@@ -55,7 +55,7 @@ cd mapping_violence
 
 2. Install Python dependencies:
 ```bash
-poetry install
+uv sync
 ```
 
 3. Install frontend dependencies:
@@ -71,18 +71,18 @@ cp .env.example .env
 
 5. Set up the database:
 ```bash
-poetry run python manage.py migrate
-poetry run python manage.py createsuperuser
+uv run manage.py migrate
+uv run manage.py createsuperuser
 ```
 
 6. Load initial data (optional):
 ```bash
-poetry run python manage.py loaddata fixtures/weapon_types.json
+uv run manage.py loaddata fixtures/weapon_types.json
 ```
 
 7. Run the development server:
 ```bash
-poetry run python manage.py runserver
+uv run manage.py runserver
 ```
 
 ## Development
@@ -93,13 +93,13 @@ This project uses Black for Python code formatting and follows Django best pract
 
 ```bash
 # Format code
-poetry run black .
+uv run black .
 
 # Run linting
-poetry run pylint mapping_violence/
+uv run pylint mapping_violence/
 
 # Format HTML templates
-poetry run djhtml templates/
+uv run djhtml templates/
 ```
 
 ### Frontend Development
@@ -119,7 +119,7 @@ npm run build
 
 ```bash
 # Run tests
-poetry run pytest
+uv run pytest
 ```
 
 ## Project Structure
