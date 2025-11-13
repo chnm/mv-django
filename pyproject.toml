@@ -1,46 +1,38 @@
-[tool.poetry]
+[project]
 name = "mapping_violence"
 version = "0.1.0"
 description = "Mapping Violence: Django application for the Mapping Violence project."
 authors = ["Jason Heppler <jheppler@gmu.edu>"]
 license = "MIT"
 readme = "README.md"
-#requires-python = ">=3.12"
-packages = [{include = "mapping_violence"}]
+requires-python = ">=3.12"
+dependencies = [
+    "daphne>=4.2.1",
+    "django>=5.2.7",
+    "django-allauth>=65.12.1",
+    "django-autocomplete-light>=3.12.1",
+    "django-environ>=0.12.0",
+    "django-extensions>=4.1",
+    "django-import-export>=4.3.12",
+    "django-schema-viewer>=0.5.3",
+    "django-tailwind>=4.3.1",
+    "django-unfold>=0.69.0",
+    "edtf>=5.0.0",
+    "geopy>=2.4.1",
+    "pillow>=11.3.0",
+    "psycopg2-binary>=2.9.11",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+    "wagtail>=7.1.2",
+    "whitenoise>=6.11.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12.0"
-python-dotenv = "^1.0.1"
-daphne = "^4.1.2"
-whitenoise = "^6.8.2"
-django = "^5.1.4"
-django-environ = "^0.11.2"
-# allauth
-django-allauth = {version="^65.3.1", extras=["slack", "github", "orcid"]}
-
-django-tailwind = "^3.8.0"
-
-# postgres
-
-# obj storage
-#django-storages = "^1.14.4"
-#boto3 = "^1.35.27"
-requests = "^2.32.4"
-django-autocomplete-light = "^3.12.1"
-edtf = "^5.0.0"
-geopy = "^2.4.1"
-wagtail = "^7.1"
-pillow = "^11.3.0"
-django-schema-viewer = "^0.5.3"
-django-import-export = "^4.3.10"
-psycopg2-binary = "^2.9.10"
-django-extensions = "^4.1"
-django-unfold = "^0.69.0"
-
-[tool.poetry.group.dev.dependencies]
-black = "^24.10.0"
-djhtml = "^3.0.7"
-pre-commit = "^4.0.1"
-django-debug-toolbar = "^4.4.6"
-pytest-django = "^4.9.0"
-pylint-django = "^2.6.1"
+[dependency-groups]
+dev = [
+    "black>=25.9.0",
+    "django-debug-toolbar>=6.1.0",
+    "djhtml>=3.0.10",
+    "pre-commit>=4.3.0",
+    "pylint-django>=2.6.1",
+    "pytest-django>=4.11.1",
+]
