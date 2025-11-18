@@ -125,11 +125,157 @@
             color: #1e40af;
             text-decoration: underline;
         }
+
+        /* Drawer Styles */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer {
+            position: fixed;
+            background: white;
+            z-index: 2001;
+            overflow-y: auto;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        /* Desktop: slide from left */
+        @media (min-width: 768px) {
+            .drawer {
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 400px;
+            }
+        }
+
+        /* Mobile: slide from bottom */
+        @media (max-width: 767px) {
+            .drawer {
+                left: 0;
+                right: 0;
+                bottom: 0;
+                max-height: 80vh;
+            }
+        }
+
+        .drawer-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .drawer-content {
+            padding: 20px;
+        }
+
+        .close-drawer {
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .close-drawer:hover {
+            background: #4b5563;
+        }
+
+        .drawer h2 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .drawer .info-item {
+            margin: 12px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .drawer .info-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .drawer .info-value {
+            color: #1f2937;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .drawer .crimes-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .drawer .crimes-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+
+        .drawer .crime-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .drawer .crime-card:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .drawer .crime-card a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .drawer .crime-card a:hover {
+            color: #1e40af;
+            text-decoration: underline;
+        }
+
+        .drawer .crime-type {
+            color: #4b5563;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .drawer .crime-year {
+            color: #6b7280;
+            font-size: 13px;
+            font-style: italic;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
-    <div class="map-container">
+    <div class="map-container" x-data="locationDrawer()">
         <div class="filter-panel">
             <h3>Filter Crimes</h3>
 
@@ -168,14 +314,122 @@
         </div>
 
         <div id="map"></div>
+
+        <!-- Drawer Overlay -->
+        <div x-show="isOpen"
+             x-transition.opacity
+             @click="close()"
+             class="drawer-overlay"></div>
+
+        <!-- Drawer -->
+        <div class="drawer"
+             x-show="isOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="transform -translate-x-full md:translate-y-0 md:-translate-x-full translate-y-full"
+             x-transition:enter-end="transform translate-x-0 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="transform translate-x-0 translate-y-0"
+             x-transition:leave-end="transform -translate-x-full md:translate-y-0 md:-translate-x-full translate-y-full">
+
+            <div class="drawer-header">
+                <h2 x-text="location.name"></h2>
+                <button @click="close()" class="close-drawer">Close</button>
+            </div>
+
+            <div class="drawer-content">
+                <!-- Location Information -->
+                <template x-if="location.city">
+                    <div class="info-item">
+                        <div class="info-label">City</div>
+                        <div class="info-value" x-text="location.city"></div>
+                    </div>
+                </template>
+
+                <template x-if="location.category">
+                    <div class="info-item">
+                        <div class="info-label">Category</div>
+                        <div class="info-value" x-text="location.category"></div>
+                    </div>
+                </template>
+
+                <template x-if="location.current_name">
+                    <div class="info-item">
+                        <div class="info-label">Current Name</div>
+                        <div class="info-value" x-text="location.current_name"></div>
+                    </div>
+                </template>
+
+                <!-- Crimes Section -->
+                <template x-if="location.crimes && location.crimes.length > 0">
+                    <div class="crimes-section">
+                        <div class="crimes-header">
+                            Crimes at this location (<span x-text="location.crime_count"></span>)
+                        </div>
+
+                        <template x-for="crime in location.crimes" :key="crime.id">
+                            <div class="crime-card">
+                                <a :href="'/crime/' + crime.id + '/'" x-html="formatCrimeTitle(crime)"></a>
+                                <div class="crime-type" x-show="crime.crime" x-text="crime.crime"></div>
+                                <div class="crime-year" x-show="crime.year" x-text="'Year: ' + crime.year"></div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
 {% block extra_js %}
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     <script>
+    // Global drawer controller for access from Leaflet
+        window.drawerController = null;
+
+    // Alpine.js component for location drawer
+        function locationDrawer() {
+            return {
+                isOpen: false,
+                location: {
+                    name: '',
+                    city: '',
+                    category: '',
+                    current_name: '',
+                    crime_count: 0,
+                    crimes: []
+                },
+
+                init() {
+                // Store reference globally so Leaflet can access it
+                    window.drawerController = this;
+                },
+
+                open(locationData) {
+                    this.location = locationData;
+                    this.isOpen = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                close() {
+                    this.isOpen = false;
+                    document.body.style.overflow = 'auto';
+                },
+
+                formatCrimeTitle(crime) {
+                    let title = '';
+                    if (crime.number) {
+                        title += '<strong>Case #' + crime.number + '</strong>';
+                    }
+                    return title || 'View Crime Details';
+                }
+            };
+        }
+
     // Initialize the map centered on Italy
         const map = L.map('map').setView([43.0, 12.0], 7);
 
@@ -231,50 +485,12 @@
                             });
                         },
                         onEachFeature: function (feature, layer) {
-                        // Create popup content
-                            let popupContent = '<div>';
-                            popupContent += '<h3>' + feature.properties.name + '</h3>';
-
-                            if (feature.properties.city) {
-                                popupContent += '<p><span class="label">City:</span> ' + feature.properties.city + '</p>';
-                            }
-
-                            if (feature.properties.category) {
-                                popupContent += '<p><span class="label">Category:</span> ' + feature.properties.category + '</p>';
-                            }
-
-                            if (feature.properties.current_name) {
-                                popupContent += '<p><span class="label">Current Name:</span> ' + feature.properties.current_name + '</p>';
-                            }
-
-                        // Crime information
-                            if (feature.properties.crime_count > 0) {
-                                popupContent += '<div class="crime-list">';
-                                popupContent += '<p><span class="label">Crimes at this location:</span> ' + feature.properties.crime_count + '</p>';
-
-                                feature.properties.crimes.forEach(crime => {
-                                    popupContent += '<div class="crime-item">';
-                                    popupContent += '<a href="/crime/' + crime.id + '/" class="crime-link">';
-                                    if (crime.number) {
-                                        popupContent += '<strong>Case #' + crime.number + '</strong><br>';
-                                    }
-                                    if (crime.crime) {
-                                        popupContent += crime.crime;
-                                    }
-                                    if (crime.year) {
-                                        popupContent += ' (' + crime.year + ')';
-                                    }
-                                    popupContent += '</a>';
-                                    popupContent += '</div>';
-                                });
-
-                                popupContent += '</div>';
-                            }
-
-                            popupContent += '</div>';
-
-                            layer.bindPopup(popupContent, {
-                                maxWidth: 300
+                        // Add click handler to open drawer
+                            layer.on('click', function() {
+                                // Use global drawer controller reference
+                                if (window.drawerController) {
+                                    window.drawerController.open(feature.properties);
+                                }
                             });
                         }
                     }).addTo(map);
