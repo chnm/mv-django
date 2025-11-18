@@ -32,8 +32,8 @@ services:
       - OBJ_STORAGE_BUCKET_NAME=PLACEHOLDER
       - OBJ_STORAGE_ENDPOINT_URL=https://dev.obj.rrchnm.org
     command: >
-        sh -c "poetry run python3 manage.py migrate &&
-               poetry run python3 manage.py runserver 0.0.0.0:8000"
+        sh -c "uv run manage.py migrate &&
+               uv run manage.py runserver 0.0.0.0:8000"
     depends_on:
       db:
         condition: service_healthy

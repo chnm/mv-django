@@ -34,8 +34,8 @@ services:
      #- OBJ_STORAGE_BUCKET_NAME={{ template.env.obj_storage_bucket_name }}
      #- OBJ_STORAGE_ENDPOINT_URL={{ template.env.obj_storage_endpoint_url }}
     command: >
-        sh -c "poetry run python3 manage.py migrate &&
-               poetry run python3 manage.py runserver 0.0.0.0:8000"
+        sh -c "uv run manage.py migrate &&
+               uv run manage.py runserver 0.0.0.0:8000"
     {% if template.volumes is defined %}
     {% set vols = (template.volumes | selectattr('service', 'eq', service)) %}
     {% if vols is iterable and vols | length > 0 %}

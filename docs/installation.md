@@ -48,18 +48,18 @@ Then edit `.env.local` to customize any settings as needed.
 
 For development outside of Docker, you can set up a local Python environment using Poetry.
 
-This project requires Python 3.12+ and [Poetry](https://python-poetry.org/) for dependency management.
+This project requires Python 3.12+ and [uv](https://docs.astral.sh/uv/) for dependency management.
 
-Install Poetry if you haven't already:
+Install uv if you haven't already:
 
 ```sh
-curl -sSL https://install.python-poetry.org | python3 -
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 Install the project dependencies:
 
 ```sh
-poetry install
+uv sync
 ```
 
 ### Configure VSCode formatters (optional)
@@ -73,8 +73,8 @@ This repository includes a `.vscode/settings.json` file that sets the [Prettier 
 We use `pre-commit` to automatically run our linting tools before a commit takes place. To install `pre-commit`, run the following commands from within the `mapping_violence` directory:
 
 ```sh
-poetry install  # if not already done
-poetry run pre-commit install
+uv install  # if not already done
+uv run pre-commit install
 ```
 
 Before each commit, `pre-commit` will execute and run our linting checks. If any task fails, it will attempt to resolve the issue automatically and ask you to re-stage the changed files.
@@ -106,7 +106,7 @@ make tailwind
 Or using Poetry directly:
 
 ```sh
-poetry run python manage.py tailwind start
+uv run manage.py tailwind start
 ```
 
 ### Set up and run the Docker containers
@@ -173,8 +173,8 @@ createuser -s mapping_violence
 With PostgreSQL running, you can start the Django development server:
 
 ```sh
-poetry run python manage.py migrate
-poetry run python manage.py runserver
+uv run manage.py migrate
+uv run manage.py runserver
 ```
 
 Or using the Makefile:
@@ -206,10 +206,10 @@ To create a superuser for the Django admin interface:
 
 ```sh
 # Using Docker
-docker-compose exec app poetry run python manage.py createsuperuser
+docker-compose exec app uv run manage.py createsuperuser
 
 # Or locally
-poetry run python manage.py createsuperuser
+uv run manage.py createsuperuser
 ```
 
 The Django admin will be available at <http://localhost:8000/admin/>.
@@ -220,10 +220,10 @@ The project includes fixtures for initial data such as weapon types. After runni
 
 ```sh
 # Using Docker
-docker-compose exec app poetry run python manage.py loaddata fixtures/weapon_types.json
+docker-compose exec app uv run manage.py loaddata fixtures/weapon_types.json
 
 # Or locally
-poetry run python manage.py loaddata fixtures/weapon_types.json
+uv run manage.py loaddata fixtures/weapon_types.json
 
 # Or using the Makefile
 make fixtures
@@ -257,10 +257,10 @@ To run the test suite:
 
 ```sh
 # Using Docker
-docker-compose exec app poetry run python manage.py test
+docker-compose exec app uv run manage.py test
 
 # Or locally
-poetry run python manage.py test
+uv run manage.py test
 ```
 
 ### Code formatting
@@ -268,8 +268,8 @@ poetry run python manage.py test
 The project uses Black for Python code formatting and djhtml for Django template formatting:
 
 ```sh
-poetry run black .
-poetry run djhtml templates/
+uv run black .
+uv run djhtml templates/
 ```
 
 These tools will run automatically via pre-commit hooks when you commit changes.

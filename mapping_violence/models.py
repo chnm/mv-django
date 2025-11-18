@@ -6,20 +6,6 @@ from locations.models import Location
 
 User = get_user_model()
 
-# TODO: court model, with location arrangement
-#   locations: event; court; crime
-#       lets incorporate PostGIS / polygon materials
-
-# TODO: In the person model
-#   - see also record number xx for a person who is a repeat offender
-#   - repeat_offender flag y/n
-#
-# TODO: Thinking over names:
-# - colleague on Roman criminal cases
-# - found a name of a famous senator, sent AM information about it
-#
-# TODO: do we detail things like hiring people (i.e., assassins?) -- this is on hold
-
 
 class WeaponCategory(models.Model):
     name = models.CharField(max_length=500)
@@ -31,7 +17,6 @@ class WeaponCategory(models.Model):
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
     definition = models.TextField(blank=True)
-    # TODO: Make category non-required
     category = models.ForeignKey(WeaponCategory, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -79,6 +64,7 @@ class Person(models.Model):
         blank=True, max_length=1, choices=GENDER_CHOICES, help_text="Input gender: M/F"
     )
     citizenship = models.CharField(max_length=255, null=True, blank=True)
+    repeat_offender = models.BooleanField(default=False)
     notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
@@ -149,7 +135,7 @@ class Crime(models.Model):
         max_length=255,
         verbose_name="Crime",
         help_text="Input type of crime according to modern taxonomy, e.g., assault, homicide, battery",
-    )
+    )  # TODO: possibly convert to a model for a controlled vocab
     description_of_case = models.TextField(
         blank=True,
         verbose_name="Description of Case",

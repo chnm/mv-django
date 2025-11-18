@@ -124,7 +124,7 @@ module.exports = {
           900: "#525252", // Dark gray
         },
 
-        // Secondary palette - Mediterranean blues (keeping for existing usage)
+        // Secondary palette - Mediterranean blues
         mediterranean: {
           50: "#f0f9ff", // Lightest blue tint
           100: "#e0f2fe", // Very light blue
@@ -132,20 +132,20 @@ module.exports = {
           300: "#7dd3fc", // Medium light blue
           400: "#38bdf8", // Bright blue
           500: "#0ea5e9", // Medium blue
-          600: "#0077be", // Primary Mediterranean blue
+          600: "#0077be", // Primary - Mediterranean blue
           700: "#0369a1", // Deep blue
           800: "#075985", // Dark blue
           900: "#0c4a6e", // Darkest blue
         },
 
-        // Legacy lemon palette (keeping for existing usage)
+        // Lemon palette
         lemon: {
           50: "#fffef7", // Lightest lemon tint
           100: "#fffae0", // Very light lemon
           200: "#fff3b8", // Light lemon cream
           300: "#ffe985", // Medium light lemon
           400: "#ffdc4d", // Bright lemon
-          500: "#ffd700", // Primary lemon yellow
+          500: "#ffd700", // Primary - lemon yellow
           600: "#e6c200", // Deep lemon
           700: "#cc9f00", // Golden lemon
           800: "#a67f00", // Dark golden yellow
