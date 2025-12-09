@@ -13,7 +13,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Crime Database**: Comprehensive cataloging of violent crimes with detailed metadata
 - **Person Registry**: Network of individuals involved in criminal cases (victims, perpetrators, witnesses, judges)
 - **Historical Date Handling**: Specialized fields for managing uncertain and approximate historical dates
-- **Geographic Data**: Location-based analysis using historical place names and modern coordinates
+- **Geographic Data**: Hierarchical location system with cities and specific locations, supporting historical place names and modern coordinates
 - **Content Management**: Wagtail CMS integration for managing static content and project information
 - **Data Import/Export**: CSV-based data ingestion and export capabilities
 - **Advanced Search**: Multi-faceted search and filtering across crimes, people, and locations
@@ -25,7 +25,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Database**: PostgreSQL 16 with PostGIS support
 - **Frontend**: Tailwind CSS with Django templates
 - **Authentication**: Django Allauth with social login support
-- **Development**: Poetry for dependency management, Black for code formatting
+- **Development**: `uv` for dependency management, Black for code formatting
 
 ## Key Models
 
@@ -33,7 +33,8 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Person**: Individuals involved in cases (victims, perpetrators, witnesses, court officials)
 - **Event**: Ceremonial or social events connected to crimes (feast days, weddings, etc.)
 - **Weapon**: Categorized inventory of weapons used in violent acts
-- **Location**: Geographic entities with historical and modern place names
+- **City**: Towns and cities with general coordinates and administrative information
+- **Location**: Specific places within cities, including category of space and detailed descriptions
 
 ## Installation
 
@@ -42,19 +43,19 @@ Mapping Violence is a collaborative research project that examines violent crime
 - Python 3.12+
 - PostgreSQL 16+
 - Node.js (for frontend dependencies)
-- Poetry (Python package manager)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
 
 ### Setup
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone git@github.com:chnm/mv-django.git
 cd mapping_violence
 ```
 
 2. Install Python dependencies:
 ```bash
-poetry install
+uv sync
 ```
 
 3. Install frontend dependencies:
@@ -70,18 +71,18 @@ cp .env.example .env
 
 5. Set up the database:
 ```bash
-poetry run python manage.py migrate
-poetry run python manage.py createsuperuser
+uv run manage.py migrate
+uv run manage.py createsuperuser
 ```
 
 6. Load initial data (optional):
 ```bash
-poetry run python manage.py loaddata fixtures/weapon_types.json
+uv run manage.py loaddata fixtures/weapon_types.json
 ```
 
 7. Run the development server:
 ```bash
-poetry run python manage.py runserver
+uv run manage.py runserver
 ```
 
 ## Development
@@ -92,13 +93,13 @@ This project uses Black for Python code formatting and follows Django best pract
 
 ```bash
 # Format code
-poetry run black .
+uv run black .
 
 # Run linting
-poetry run pylint mapping_violence/
+uv run pylint mapping_violence/
 
 # Format HTML templates
-poetry run djhtml templates/
+uv run djhtml templates/
 ```
 
 ### Frontend Development
@@ -118,10 +119,7 @@ npm run build
 
 ```bash
 # Run tests
-poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=mapping_violence
+uv run pytest
 ```
 
 ## Project Structure
@@ -146,7 +144,7 @@ The application centers around documenting violent crimes with rich contextual i
 
 - **Crimes** are linked to **People** (victims, perpetrators, witnesses)
 - **Historical dates** handle uncertainty in early modern records
-- **Locations** provide geographic context with modern coordinates
+- **Cities** and **Locations** provide hierarchical geographic context, allowing multiple location types within the same city
 - **Events** connect crimes to social and religious occasions
 - **Weapons** are categorized and defined for analysis
 
