@@ -18,23 +18,23 @@
 
         <!-- Matomo -->
         <script>
-          var _paq = window._paq = window._paq || [];
+            var _paq = window._paq = window._paq || [];
           /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-          _paq.push(['trackPageView']);
-          _paq.push(['enableLinkTracking']);
-          (function() {
-            var u="https://stats.rrchnm.org/";
-            _paq.push(['setTrackerUrl', u+'matomo.php']);
-            _paq.push(['setSiteId', '120']);
-            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-            g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-          })();
+            _paq.push(['trackPageView']);
+            _paq.push(['enableLinkTracking']);
+            (function() {
+                var u="https://stats.rrchnm.org/";
+                _paq.push(['setTrackerUrl', u+'matomo.php']);
+                _paq.push(['setSiteId', '120']);
+                var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+            })();
         </script>
         <!-- End Matomo Code -->
 
     </head>
 
-    <body class="bg-white-100 font-serif leading-normal tracking-normal text-gray-900">
+    <body class="bg-white-100 font-serif leading-normal tracking-normal">
         {% if request.get_host == 'localhost:8000' or request.get_host == 'localhost' or request.get_host == '127.0.0.1:8000' or request.get_host == '127.0.0.1' or request.get_host == 'dev.earlymodernviolence.org' %}
             <div class="bg-lemon-100 border-l-4 border-lemon-500 text-lemon-800 p-4">
                 <div class="flex items-center">
@@ -89,6 +89,12 @@
                                 </a>
                             {% endif %}
                         {% endfor %}
+                        <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                            Map
+                        </a>
+                        <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                            Data
+                        </a>
                         {% block nav_links %}{% endblock %}
                     </div>
                     <!-- Mobile menu button -->
@@ -109,6 +115,12 @@
                                 {{ page.title }}
                             </a>
                         {% endfor %}
+                        <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                            Map
+                        </a>
+                        <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                            Data
+                        </a>
                         {% block mobile_nav_links %}{% endblock %}
                     </div>
                 </div>
@@ -155,7 +167,7 @@
                         </p>
                     </div>
                     <div>
-                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo.png"/>
+                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo-black.png"/>
                     </div>
                     <div>
                         {% block footer_links %}{% endblock %}

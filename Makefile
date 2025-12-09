@@ -3,34 +3,34 @@
 
 # Start the Django development server
 preview:
-	poetry run python manage.py runserver
+	uv run manage.py runserver
 
 # Check for any issues with the Django configuration
 check:
-	poetry run python manage.py check
+	uv run manage.py check
 
 # Open Django shell for interactive debugging
 shell:
-	poetry run python manage.py shell
+	uv run manage.py shell
 
 # Database Management
 # ==================
 
 # Create new migration files based on model changes
 mm:
-	poetry run python manage.py makemigrations
+	uv run manage.py makemigrations
 
 # Apply migrations to the database
 migrate:
-	poetry run python manage.py migrate
+	uv run manage.py migrate
 
 # Show migration status
 show-migrations:
-	poetry run python manage.py showmigrations
+	uv run manage.py showmigrations
 
 # CSS
 tailwind :
-	poetry run python manage.py tailwind start
+	uv run manage.py tailwind start
 
 # Database Reset & Cleanup
 # ========================
@@ -40,12 +40,12 @@ tailwind :
 clean-db:
 	@echo "WARNING: This will delete all database data!"
 	@read -p "Are you sure? Type 'yes' to continue: " confirm && [ "$$confirm" = "yes" ] || exit 1
-	poetry run python manage.py flush --noinput
+	uv run manage.py flush --noinput
 	@echo "Database cleared. Run 'make setup-fresh-db' to recreate with migrations."
 
 # Reset database and apply all migrations from scratch
 reset-db: clean-db
-	poetry run python manage.py migrate
+	uv run manage.py migrate
 	@echo "Fresh database created with all migrations applied."
 
 # Data setup
@@ -53,7 +53,7 @@ reset-db: clean-db
 backup-db:
 	@echo "Creating database backup..."
 	@mkdir -p backups
-	@poetry run python -c "from django.conf import settings; import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); db = settings.DATABASES['default']; print(f\"pg_dump -h {db['HOST']} -p {db['PORT']} -U {db['USER']} -d {db['NAME']} > backups/backup_$$(date +%Y%m%d_%H%M%S).sql\")" | sh
+	@uv run -c "from django.conf import settings; import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); db = settings.DATABASES['default']; print(f\"pg_dump -h {db['HOST']} -p {db['PORT']} -U {db['USER']} -d {db['NAME']} > backups/backup_$$(date +%Y%m%d_%H%M%S).sql\")" | sh
 	@echo "Database backup created in backups/ directory"
 
 # Restore database from backup
@@ -69,26 +69,26 @@ restore-db:
 	echo "WARNING: This will replace all current database data with backup data!" && \
 	read -p "Are you sure? Type 'yes' to continue: " confirm && [ "$$confirm" = "yes" ] || exit 1 && \
 	echo "Restoring database from backups/$$backup_file..." && \
-	poetry run python -c "from django.conf import settings; import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); db = settings.DATABASES['default']; print(f\"psql -h {db['HOST']} -p {db['PORT']} -U {db['USER']} -d {db['NAME']} < backups/$$backup_file\")" | sh && \
+	uv run -c "from django.conf import settings; import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); db = settings.DATABASES['default']; print(f\"psql -h {db['HOST']} -p {db['PORT']} -U {db['USER']} -d {db['NAME']} < backups/$$backup_file\")" | sh && \
 	echo "Database restored successfully from backups/$$backup_file"
 
 fixtures :
-	poetry run python manage.py loaddata fixtures/weapon_types.json
+	uv run manage.py loaddata fixtures/weapon_types.json
 
 # Utility Commands
 # ================
 
 # Create a superuser account
 superuser:
-	poetry run python manage.py createsuperuser
+	uv run manage.py createsuperuser
 
 # Collect static files (for production)
 collectstatic:
-	poetry run python manage.py collectstatic --noinput
+	uv run manage.py collectstatic --noinput
 
 # Generate model relationship graph for core apps
 models-graph:
-	poetry run python manage.py graph_models mapping_violence locations historical_dates -g -o models_graph.png
+	uv run manage.py graph_models mapping_violence locations historical_dates -g -o models_graph.png
 	@echo "Model graph generated as models_graph.png"
 
 # Show available commands
