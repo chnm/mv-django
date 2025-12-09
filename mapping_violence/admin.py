@@ -12,7 +12,7 @@ from unfold.contrib.import_export.forms import ExportForm, ImportForm
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from locations.models import City, Location
-from mapping_violence.forms import PersonForm
+from mapping_violence.forms import CrimeForm, PersonForm
 from mapping_violence.models import (
     Crime,
     Event,
@@ -232,6 +232,7 @@ class LocationAdmin(ModelAdmin):
 class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     """Admin for Crime entities with import/export functionality"""
 
+    form = CrimeForm
     resource_class = CrimeResource
     import_form_class = ImportForm
     export_form_class = ExportForm
