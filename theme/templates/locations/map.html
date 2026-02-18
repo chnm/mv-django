@@ -18,22 +18,77 @@
             width: 100%;
         }
 
+        /* Filter panel */
         .filter-panel {
             position: absolute;
             top: 20px;
             right: 20px;
             background: white;
-            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             z-index: 1000;
             max-width: 300px;
+            width: 260px;
+            overflow: hidden;
         }
 
-        .filter-panel h3 {
-            margin: 0 0 15px 0;
-            font-size: 18px;
+        /* Clickable header with integrated caret */
+        .filter-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            cursor: pointer;
+            user-select: none;
+            background: #8B4513;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .filter-panel-header:hover {
+            background: #7a3c10;
+        }
+
+        .filter-panel-header h3 {
+            margin: 0;
+            font-size: 15px;
             font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .filter-caret {
+            font-size: 11px;
+            transition: transform 0.25s ease;
+            line-height: 1;
+        }
+
+        .filter-panel.panel-collapsed .filter-caret {
+            transform: rotate(180deg);
+        }
+
+        /* Collapsible body */
+        .filter-panel-body {
+            padding: 16px 20px 20px;
+            max-height: 800px;
+            overflow: hidden;
+            transition: max-height 0.25s ease, padding 0.25s ease;
+        }
+
+        .filter-panel.panel-collapsed .filter-panel-body {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .filter-section-header {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            margin: 16px 0 8px 0;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
         }
 
         .filter-panel .filter-group {
@@ -48,12 +103,13 @@
         }
 
         .filter-panel select,
-        .filter-panel input {
+        .filter-panel input:not([type="radio"]):not([type="checkbox"]) {
             width: 100%;
             padding: 8px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 14px;
+            box-sizing: border-box;
         }
 
         .filter-panel button {
@@ -80,6 +136,70 @@
             background-color: #4b5563;
         }
 
+        /* Gender sub-option radio labels */
+        #gender-field-group .radio-row {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+        }
+
+        #gender-field-group .radio-row label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        /* Legend box */
+        .legend-box {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+            min-width: 140px;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Empty state overlay */
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.92);
+            padding: 24px 32px;
+            border-radius: 10px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+            z-index: 999;
+            font-size: 16px;
+            font-weight: 500;
+            color: #374151;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        /* Popup styles */
         .leaflet-popup-content {
             font-size: 14px;
             max-width: 300px;
@@ -98,32 +218,6 @@
         .leaflet-popup-content .label {
             font-weight: 600;
             color: #374151;
-        }
-
-        .leaflet-popup-content .crime-list {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .leaflet-popup-content .crime-item {
-            padding: 5px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .leaflet-popup-content .crime-item:last-child {
-            border-bottom: none;
-        }
-
-        .leaflet-popup-content .crime-link {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .leaflet-popup-content .crime-link:hover {
-            color: #1e40af;
-            text-decoration: underline;
         }
 
         /* Drawer Styles */
@@ -266,6 +360,17 @@
             margin-top: 4px;
         }
 
+        .crime-filter-link {
+            color: #8B4513;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .crime-filter-link:hover {
+            color: #5D2906;
+            text-decoration: underline;
+        }
+
         .drawer .crime-year {
             color: #6b7280;
             font-size: 13px;
@@ -276,44 +381,91 @@
 
 {% block content %}
     <div class="map-container" x-data="locationDrawer()">
-        <div class="filter-panel">
-            <h3>Filter Crimes</h3>
 
-            <div class="filter-group">
-                <label for="city-filter">City</label>
-                <select id="city-filter">
-                    <option value="">All Cities</option>
-                    {% for city in cities %}
-                        <option value="{{ city.id }}">{{ city.name }}</option>
-                    {% endfor %}
-                </select>
+        <!-- Filter panel with integrated header toggle -->
+        <div class="filter-panel" id="filter-panel">
+
+            <div class="filter-panel-header" id="filter-toggle">
+                <h3>Filter Crimes</h3>
+                <span class="filter-caret">&#9650;</span>
             </div>
 
-            <div class="filter-group">
-                <label for="crime-type-filter">Crime Type</label>
-                <select id="crime-type-filter">
-                    <option value="">All Crime Types</option>
-                    {% for crime_type in crime_types %}
-                        <option value="{{ crime_type }}">{{ crime_type }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+            <div class="filter-panel-body">
+                <div class="filter-group">
+                    <label for="city-filter">City</label>
+                    <select id="city-filter">
+                        <option value="">All Cities</option>
+                        {% for city in cities %}
+                            <option value="{{ city.id }}">{{ city.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="filter-group">
-                <label for="year-from-filter">Year From</label>
-                <input type="number" id="year-from-filter" placeholder="e.g., 1500" min="1400" max="2000">
-            </div>
+                <div class="filter-group">
+                    <label for="crime-type-filter">Crime Type</label>
+                    <select id="crime-type-filter">
+                        <option value="">All Crime Types</option>
+                        {% for crime_type in crime_types %}
+                            <option value="{{ crime_type }}">{{ crime_type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="filter-group">
-                <label for="year-to-filter">Year To</label>
-                <input type="number" id="year-to-filter" placeholder="e.g., 1700" min="1400" max="2000">
-            </div>
+                <div class="filter-group">
+                    <label for="weapon-category-filter">Weapon Category</label>
+                    <select id="weapon-category-filter">
+                        <option value="">All Weapon Categories</option>
+                        {% for value, label in weapon_categories %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <button id="apply-filters">Apply Filters</button>
-            <button id="reset-filters" class="reset">Reset Filters</button>
+                <div class="filter-group">
+                    <label for="year-from-filter">Year From</label>
+                    <input type="number" id="year-from-filter" placeholder="e.g., 1500" min="1400" max="2000">
+                </div>
+
+                <div class="filter-group">
+                    <label for="year-to-filter">Year To</label>
+                    <input type="number" id="year-to-filter" placeholder="e.g., 1700" min="1400" max="2000">
+                </div>
+
+                <!-- Color by section -->
+                <div class="filter-section-header">Color by</div>
+
+                <div class="filter-group">
+                    <label for="color-by-select">Visualization</label>
+                    <select id="color-by-select">
+                        <option value="none">None (default)</option>
+                        <option value="crime_type">Crime Type</option>
+                        <option value="fatality">Fatal / Non-fatal</option>
+                        <option value="gender">Gender</option>
+                    </select>
+                </div>
+
+                <!-- Gender sub-option, shown only when color-by=gender -->
+                <div class="filter-group" id="gender-field-group" style="display:none">
+                    <label>Gender of:</label>
+                    <div class="radio-row">
+                        <label><input type="radio" name="gender_field" value="victim" checked> Victim</label>
+                        <label><input type="radio" name="gender_field" value="perpetrator"> Perpetrator</label>
+                    </div>
+                </div>
+
+                <button id="filter-action-btn">Apply Filters</button>
+            </div>
         </div>
 
-        <div id="map"></div>
+        <div id="map">
+            <!-- Empty state overlay -->
+            <div id="empty-state" class="empty-state" style="display:none">
+                No violence events match the current filters.
+            </div>
+        </div>
+
+        <!-- Legend box -->
+        <div id="legend-box" class="legend-box" style="display:none"></div>
 
         <!-- Drawer Overlay -->
         <div x-show="isOpen"
@@ -369,7 +521,11 @@
                         <template x-for="crime in location.crimes" :key="crime.id">
                             <div class="crime-card">
                                 <a :href="'/crime/' + crime.id + '/'" x-html="formatCrimeTitle(crime)"></a>
-                                <div class="crime-type" x-show="crime.crime" x-text="crime.crime"></div>
+                                <div class="crime-type" x-show="crime.crime">
+                                    <a :href="crimeListUrl + '?crime=' + encodeURIComponent(crime.crime)"
+                                       x-text="crime.crime"
+                                       class="crime-filter-link"></a>
+                                </div>
                                 <div class="crime-year" x-show="crime.year" x-text="'Year: ' + crime.year"></div>
                             </div>
                         </template>
@@ -388,10 +544,20 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     <script>
-    // Global drawer controller for access from Leaflet
+        const crimeListUrl  = '{% url "crime_list" %}';
+        const GENDER_LABELS = { M: "Male", F: "Female", U: "Unknown" };
+        const GENDER_COLORS = { M: "#3b82f6", F: "#ec4899", U: "#6b7280" };
+        const FATALITY_COLORS = { true: "#ef4444", false: "#22c55e" };
+        const TYPE_PALETTE = [
+            "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
+            "#a65628","#f781bf","#999999","#66c2a5","#fc8d62"
+        ];
+        let crimeTypeColorMap = {};
+        let paletteIndex = 0;
+
+        // ── Global drawer controller ──────────────────────────────────────────
         window.drawerController = null;
 
-    // Alpine.js component for location drawer
         function locationDrawer() {
             return {
                 isOpen: false,
@@ -405,7 +571,6 @@
                 },
 
                 init() {
-                // Store reference globally so Leaflet can access it
                     window.drawerController = this;
                 },
 
@@ -421,19 +586,85 @@
                 },
 
                 formatCrimeTitle(crime) {
-                    let title = '';
                     if (crime.number) {
-                        title += '<strong>Case #' + crime.number + '</strong>';
+                        return '<strong>Case #' + crime.number + '</strong>';
                     }
-                    return title || 'View Crime Details';
+                    return 'View Crime Details';
                 }
             };
         }
 
-    // Initialize the map centered on Italy
+        // ── Color helpers ─────────────────────────────────────────────────────
+        function getCrimeTypeColor(type) {
+            if (!type) return "#6b7280";
+            if (!crimeTypeColorMap[type]) {
+                crimeTypeColorMap[type] = TYPE_PALETTE[paletteIndex++ % TYPE_PALETTE.length];
+            }
+            return crimeTypeColorMap[type];
+        }
+
+        function getMarkerColor(crime, colorBy, genderField) {
+            if (colorBy === "fatality")   return crime.fatality ? "#ef4444" : "#22c55e";
+            if (colorBy === "gender")     return GENDER_COLORS[crime[genderField + "_gender"]] || "#6b7280";
+            if (colorBy === "crime_type") return getCrimeTypeColor(crime.crime);
+            return "#F59E0B"; // default amber
+        }
+
+        function jitterCoords(lat, lng, index, total) {
+            if (total <= 1) return [lat, lng];
+            const angle  = (2 * Math.PI * index) / total;
+            const radius = 0.002;
+            return [lat + radius * Math.sin(angle), lng + radius * Math.cos(angle)];
+        }
+
+        // ── URL state ─────────────────────────────────────────────────────────
+        function readUrlParams() {
+            const p = new URLSearchParams(window.location.search);
+            return {
+                city:         p.get("city")          || "",
+                crime_type:   p.get("crime_type")    || "",
+                weapon_cat:   p.get("weapon_cat")    || "",
+                year_from:    p.get("year_from")     || "",
+                year_to:      p.get("year_to")       || "",
+                color_by:     p.get("color_by")      || "none",
+                gender_field: p.get("gender_field")  || "victim",
+            };
+        }
+
+        function pushUrlState(params) {
+            const p = new URLSearchParams();
+            Object.entries(params).forEach(([k, v]) => {
+                if (v && v !== "none") p.set(k, v);
+            });
+            history.replaceState(null, "", "?" + p.toString());
+        }
+
+        // ── Legend ────────────────────────────────────────────────────────────
+        function buildLegend(colorBy, genderField) {
+            const box = document.getElementById("legend-box");
+            if (colorBy === "none") { box.style.display = "none"; return; }
+
+            let entries = [];
+            if (colorBy === "fatality") {
+                entries = [["#ef4444", "Fatal"], ["#22c55e", "Non-fatal"]];
+            } else if (colorBy === "gender") {
+                entries = Object.entries(GENDER_COLORS).map(([k, c]) => [c, GENDER_LABELS[k]]);
+            } else if (colorBy === "crime_type") {
+                entries = Object.entries(crimeTypeColorMap).map(([type, c]) => [c, type || "Unknown"]);
+            }
+
+            box.innerHTML = entries.map(([color, label]) =>
+                '<div class="legend-item">' +
+                '<span class="legend-dot" style="background:' + color + '"></span>' +
+                label +
+                '</div>'
+            ).join("");
+            box.style.display = "block";
+        }
+
+        // ── Map setup ─────────────────────────────────────────────────────────
         const map = L.map('map').setView([43.0, 12.0], 7);
 
-    // Add CartoDB Dark Matter tile layer (dark theme)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -442,78 +673,200 @@
 
         let markersLayer = null;
 
-    // Function to load location data with filters
+        // ── Load locations ────────────────────────────────────────────────────
         function loadLocations() {
-        // Get filter values
-            const city = document.getElementById('city-filter').value;
-            const crimeType = document.getElementById('crime-type-filter').value;
-            const yearFrom = document.getElementById('year-from-filter').value;
-            const yearTo = document.getElementById('year-to-filter').value;
+            const city          = document.getElementById('city-filter').value;
+            const crimeType     = document.getElementById('crime-type-filter').value;
+            const weaponCat     = document.getElementById('weapon-category-filter').value;
+            const yearFrom      = document.getElementById('year-from-filter').value;
+            const yearTo        = document.getElementById('year-to-filter').value;
+            const colorBy       = document.getElementById('color-by-select').value;
+            const genderField   = document.querySelector('input[name="gender_field"]:checked').value;
 
-        // Build query string
+            // Persist all state to URL (color-by is client-side only, not sent to API)
+            pushUrlState({
+                city,
+                crime_type: crimeType,
+                weapon_cat: weaponCat,
+                year_from:  yearFrom,
+                year_to:    yearTo,
+                color_by:   colorBy,
+                gender_field: genderField,
+            });
+
+            // Build GeoJSON API query (no color-by — it's client-side)
             const params = new URLSearchParams();
-            if (city) params.append('city', city);
-            if (crimeType) params.append('crime_type', crimeType);
-            if (yearFrom) params.append('year_from', yearFrom);
-            if (yearTo) params.append('year_to', yearTo);
+            if (city)        params.append('city', city);
+            if (crimeType)   params.append('crime_type', crimeType);
+            if (weaponCat)   params.append('weapon_category', weaponCat);
+            if (yearFrom)    params.append('year_from', yearFrom);
+            if (yearTo)      params.append('year_to', yearTo);
 
             const url = '{% url "locations_geojson" %}' + (params.toString() ? '?' + params.toString() : '');
 
-        // Remove existing markers
             if (markersLayer) {
                 map.removeLayer(markersLayer);
+                markersLayer = null;
             }
 
-        // Load location data
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                // Add GeoJSON layer to map
-                    markersLayer = L.geoJSON(data, {
-                        pointToLayer: function (feature, latlng) {
-                        // Scale marker size based on crime count
-                            const crimeCount = feature.properties.crime_count || 1;
-                            const radius = Math.min(6 + (crimeCount * 2), 20); // Scale between 6 and 20
+                    const emptyState = document.getElementById('empty-state');
 
-                            return L.circleMarker(latlng, {
-                                radius: radius,
-                                fillColor: "#F59E0B", // Warm amber/orange
-                                color: "#FBBF24", // Lighter amber border
-                                weight: 2,
-                                opacity: 1,
-                                fillOpacity: 0.8
+                    if (!data.features || data.features.length === 0) {
+                        emptyState.style.display = 'block';
+                        buildLegend("none", genderField);
+                        return;
+                    }
+                    emptyState.style.display = 'none';
+
+                    // Reset color palette for consistent colors per load
+                    crimeTypeColorMap = {};
+                    paletteIndex = 0;
+
+                    if (colorBy === "none") {
+                        // Default: location-level markers sized by crime count
+                        markersLayer = L.geoJSON(data, {
+                            pointToLayer: function (feature, latlng) {
+                                const crimeCount = feature.properties.crime_count || 1;
+                                const radius = Math.min(6 + (crimeCount * 2), 20);
+                                return L.circleMarker(latlng, {
+                                    radius: radius,
+                                    fillColor: "#F59E0B",
+                                    color: "#FBBF24",
+                                    weight: 2,
+                                    opacity: 1,
+                                    fillOpacity: 0.8
+                                });
+                            },
+                            onEachFeature: function (feature, layer) {
+                                layer.on('click', function () {
+                                    if (window.drawerController) {
+                                        window.drawerController.open(feature.properties);
+                                    }
+                                });
+                            }
+                        }).addTo(map);
+                    } else {
+                        // Color-by mode: individual jittered markers per crime
+                        markersLayer = L.layerGroup().addTo(map);
+
+                        data.features.forEach(function (feature) {
+                            const crimes = feature.properties.crimes || [];
+                            const baseLat = feature.geometry.coordinates[1];
+                            const baseLng = feature.geometry.coordinates[0];
+                            const total   = crimes.length;
+
+                            crimes.forEach(function (crime, index) {
+                                const [lat, lng] = jitterCoords(baseLat, baseLng, index, total);
+                                const color = getMarkerColor(crime, colorBy, genderField);
+
+                                const marker = L.circleMarker([lat, lng], {
+                                    radius: 7,
+                                    fillColor: color,
+                                    color: "#fff",
+                                    weight: 1.5,
+                                    opacity: 1,
+                                    fillOpacity: 0.85
+                                });
+
+                                // Drawer data: single-crime view using location properties
+                                marker.on('click', function () {
+                                    if (window.drawerController) {
+                                        const drawerData = Object.assign({}, feature.properties, {
+                                            crimes: [crime],
+                                            crime_count: 1,
+                                        });
+                                        window.drawerController.open(drawerData);
+                                    }
+                                });
+
+                                marker.addTo(markersLayer);
                             });
-                        },
-                        onEachFeature: function (feature, layer) {
-                        // Add click handler to open drawer
-                            layer.on('click', function() {
-                                // Use global drawer controller reference
-                                if (window.drawerController) {
-                                    window.drawerController.open(feature.properties);
-                                }
-                            });
-                        }
-                    }).addTo(map);
+                        });
+                    }
+
+                    buildLegend(colorBy, genderField);
                 })
-                .catch(error => {
+                .catch(function (error) {
                     console.error('Error loading location data:', error);
                 });
         }
 
-    // Load initial data
-        loadLocations();
+        // ── Restore state from URL and load ───────────────────────────────────
+        (function initFromUrl() {
+            const p = readUrlParams();
 
-    // Filter button handlers
-        document.getElementById('apply-filters').addEventListener('click', function() {
+            // Restore filter inputs
+            if (p.city)       document.getElementById('city-filter').value = p.city;
+            if (p.crime_type) document.getElementById('crime-type-filter').value = p.crime_type;
+            if (p.weapon_cat) document.getElementById('weapon-category-filter').value = p.weapon_cat;
+            if (p.year_from)  document.getElementById('year-from-filter').value = p.year_from;
+            if (p.year_to)    document.getElementById('year-to-filter').value = p.year_to;
+
+            // Restore color-by
+            document.getElementById('color-by-select').value = p.color_by;
+            if (p.color_by === 'gender') {
+                document.getElementById('gender-field-group').style.display = 'block';
+            }
+
+            // Restore gender_field radio
+            const radio = document.querySelector('input[name="gender_field"][value="' + p.gender_field + '"]');
+            if (radio) radio.checked = true;
+
             loadLocations();
+        })();
+
+        // ── Filter toggle (header click) ──────────────────────────────────────
+        document.getElementById('filter-toggle').addEventListener('click', function () {
+            document.getElementById('filter-panel').classList.toggle('panel-collapsed');
         });
 
-        document.getElementById('reset-filters').addEventListener('click', function() {
-            document.getElementById('city-filter').value = '';
-            document.getElementById('crime-type-filter').value = '';
-            document.getElementById('year-from-filter').value = '';
-            document.getElementById('year-to-filter').value = '';
-            loadLocations();
+        // ── Color-by select ───────────────────────────────────────────────────
+        document.getElementById('color-by-select').addEventListener('change', function () {
+            document.getElementById('gender-field-group').style.display =
+                this.value === 'gender' ? 'block' : 'none';
+        });
+
+        // ── Apply / Reset button ──────────────────────────────────────────────
+        const filterIds = [
+            'city-filter',
+            'crime-type-filter',
+            'weapon-category-filter',
+            'year-from-filter',
+            'year-to-filter',
+        ];
+        const filterBtn = document.getElementById('filter-action-btn');
+        let filtersApplied = false;
+
+        function hasActiveFilters() {
+            return filterIds.some(id => document.getElementById(id).value !== '');
+        }
+
+        function clearFilters() {
+            filterIds.forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('color-by-select').value = 'none';
+            document.getElementById('gender-field-group').style.display = 'none';
+            const victimRadio = document.querySelector('input[name="gender_field"][value="victim"]');
+            if (victimRadio) victimRadio.checked = true;
+        }
+
+        filterBtn.addEventListener('click', function () {
+            if (filtersApplied) {
+                clearFilters();
+                loadLocations();
+                filtersApplied = false;
+                filterBtn.textContent = 'Apply Filters';
+                filterBtn.classList.remove('reset');
+            } else {
+                loadLocations();
+                if (hasActiveFilters()) {
+                    filtersApplied = true;
+                    filterBtn.textContent = 'Reset Filters';
+                    filterBtn.classList.add('reset');
+                }
+            }
         });
     </script>
 {% endblock %}
