@@ -1,3 +1,4 @@
+import re
 import time
 from datetime import datetime
 
@@ -170,6 +171,22 @@ class LocationWidget(widgets.ForeignKeyWidget):
         return location
 
 
+MONTH_NAMES = {
+    "January": 1,
+    "February": 2,
+    "March": 3,
+    "April": 4,
+    "May": 5,
+    "June": 6,
+    "July": 7,
+    "August": 8,
+    "September": 9,
+    "October": 10,
+    "November": 11,
+    "December": 12,
+}
+
+
 class CustomDateWidget(widgets.Widget):
     """Custom date widget that handles various date formats"""
 
@@ -181,67 +198,47 @@ class CustomDateWidget(widgets.Widget):
 
             if year and month:
                 try:
-                    # Convert month name to number if needed
-                    month_names = {
-                        "January": 1,
-                        "February": 2,
-                        "March": 3,
-                        "April": 4,
-                        "May": 5,
-                        "June": 6,
-                        "July": 7,
-                        "August": 8,
-                        "September": 9,
-                        "October": 10,
-                        "November": 11,
-                        "December": 12,
-                    }
-                    if month in month_names:
-                        month_num = month_names[month]
-                    else:
-                        month_num = int(month)
-
-                    year_num = int(year)
-                    return datetime(year_num, month_num, 1).date()
+                    month_num = MONTH_NAMES.get(month, None) or int(month)
+                    return datetime(int(year), month_num, 1).date()
                 except (ValueError, TypeError):
                     pass
 
-            # Default to a placeholder date if nothing else works
-            return datetime(1600, 1, 1).date()
+            return None
 
-        # Try to parse various date formats
         value_str = str(value).strip()
 
-        # Try different date formats
+        # 4-digit year formats first
         date_formats = [
             "%m/%d/%Y",  # 03/15/1615
             "%m/%Y",  # 05/1612
             "%Y-%m-%d",  # 1615-03-15
             "%Y/%m/%d",  # 1615/03/15
         ]
-
         for fmt in date_formats:
             try:
-                parsed_date = datetime.strptime(value_str, fmt).date()
-                return parsed_date
+                return datetime.strptime(value_str, fmt).date()
             except ValueError:
                 continue
 
-        # If none of the formats work, try to extract year/month manually
-        try:
-            if "/" in value_str:
-                parts = value_str.split("/")
-                if len(parts) == 2:  # MM/YYYY format
-                    month, year = parts
-                    return datetime(int(year), int(month), 1).date()
-                elif len(parts) == 3:  # MM/DD/YYYY format
-                    month, day, year = parts
-                    return datetime(int(year), int(month), int(day)).date()
-        except (ValueError, TypeError):
-            pass
+        # 2-digit year: MM/DD/YY — infer century from the row's Year field
+        if "/" in value_str:
+            parts = value_str.split("/")
+            try:
+                if len(parts) == 3 and len(parts[2]) == 2:
+                    month, day, year_2 = int(parts[0]), int(parts[1]), int(parts[2])
+                    row_year = (row.get("Year", "") or "") if row else ""
+                    if str(row_year).strip().isdigit():
+                        century = (int(str(row_year).strip()) // 100) * 100
+                        full_year = century + year_2
+                    else:
+                        full_year = 1600 + year_2
+                    return datetime(full_year, month, day).date()
+                elif len(parts) == 2:  # MM/YYYY
+                    return datetime(int(parts[1]), int(parts[0]), 1).date()
+            except (ValueError, TypeError):
+                pass
 
-        # Last resort: return placeholder date
-        return datetime(1600, 1, 1).date()
+        return None
 
 
 class HistoricalDateWidget(widgets.Widget):
@@ -288,6 +285,16 @@ class HistoricalDateWidget(widgets.Widget):
 class CrimeResource(resources.ModelResource):
     """Import/Export resource for Crime model"""
 
+    def __init__(self, user=None, **kwargs):
+        self.importing_user = user
+        super().__init__(**kwargs)
+
+    def before_save_instance(self, instance, row, **kwargs):
+        """Set input_by to the importing user for new records."""
+        if self.importing_user and not instance.input_by_id:
+            instance.input_by = self.importing_user
+        return super().before_save_instance(instance, row, **kwargs)
+
     # Map CSV columns to model fields - column mapping handled in before_import_row
     number = fields.Field(column_name="Number", attribute="number")
 
@@ -310,6 +317,12 @@ class CrimeResource(resources.ModelResource):
     )
 
     sentence = fields.Field(column_name="Sentence", attribute="sentence")
+
+    convicted = fields.Field(
+        column_name="Convicted",
+        attribute="convicted",
+        widget=BooleanWidget(),
+    )
 
     sentence_enforced = fields.Field(
         column_name="Sentence_Enforced (Y/N)",
@@ -418,6 +431,7 @@ class CrimeResource(resources.ModelResource):
             "trial_phase",
             "arbitration",
             "sentence",
+            "convicted",
             "sentence_enforced",
             "date",
             "year",
@@ -450,25 +464,56 @@ class CrimeResource(resources.ModelResource):
         use_bulk = False
         import_id_fields = []
 
-    def before_import_row(self, row, **kwargs):
-        """Process row before importing"""
-
-        # Skip completely empty rows
+    def skip_row(self, instance, original, row, import_validation_errors=None):
+        """Silently skip empty rows instead of raising an error."""
         if self.is_empty_row(row):
-            raise ValueError("There are empty rows in the data - please remove them.")
+            return True
+        return super().skip_row(instance, original, row, import_validation_errors)
 
-        # Normalize column names for flexible mapping
+    def before_import_row(self, row, **kwargs):
+        """Normalize column names and values before importing."""
+
+        # Drop stray columns with blank/whitespace-only header names
+        for key in [k for k in list(row.keys()) if not (k or "").strip()]:
+            row.pop(key, None)
+
+        # Normalize column names — handles both the standard format and
+        # rose_data.csv's underscore/spacing variants
         column_mappings = {
-            # Map basic field differences - keep person fields separate
             "Case Number": "Number",
-            "Date_of_Crime (Modern)": "Date (Modern Format)",
+            "Case_number": "Number",
             "Description_of_Crime": "Description of Case",
+            "Description_of_Case": "Description of Case",
+            "Date_of_Crime (Modern)": "Date (Modern Format)",
+            "Date_of_Crime": "Date (Modern Format)",
+            "Weapon": "Type_of_Weapon",
+            "Archival_Location": "Archival Location",
         }
+        for src, dst in column_mappings.items():
+            if src in row and dst not in row:
+                row[dst] = row[src]
 
-        # Apply column mappings
-        for modena_col, standard_col in column_mappings.items():
-            if modena_col in row and standard_col not in row:
-                row[standard_col] = row[modena_col]
+        # LocationWidget reads 'City' from the row; fall back to 'Location'
+        # when only a single combined location column is present
+        if not (row.get("City") or "").strip() and (row.get("Location") or "").strip():
+            row["City"] = row["Location"]
+
+        # Parse Y/N prefix from Sentence field.
+        # Formats seen in the data: "Y - <text>", "Y- <text>", "Y <text>",
+        # "Y", "Y?", "N - <reason>", "N", lowercase variants, freeform text.
+        # Sets Convicted from the prefix and reduces Sentence to the annotation.
+        sentence_raw = (row.get("Sentence") or "").strip()
+        if sentence_raw:
+            m = re.match(r"^([YyNn])\s*[-–]?\s*(.*)", sentence_raw, re.DOTALL)
+            if m:
+                prefix, remainder = m.group(1).upper(), m.group(2).strip()
+                yn = "Y" if prefix == "Y" else "N"
+                # Only set these if not already explicitly provided in the row
+                if not row.get("Convicted"):
+                    row["Convicted"] = prefix == "Y"
+                if not (row.get("Sentence_Enforced (Y/N)") or "").strip():
+                    row["Sentence_Enforced (Y/N)"] = yn
+                row["Sentence"] = remainder
 
         # Handle Y/N values for boolean fields
         bool_fields = ["Arbitration (Y/N)", "Sentence_Enforced (Y/N)", "Fatality (Y/N)"]
@@ -499,17 +544,22 @@ class CrimeResource(resources.ModelResource):
         return super().before_import_row(row, **kwargs)
 
     def is_empty_row(self, row):
-        """Check if a row is essentially empty"""
-        # Key fields that should have data for a valid crime record
-        key_fields = ["Crime", "Description of Case", "Year"]
+        """Check if a row is essentially empty.
 
-        # Check if any key field has meaningful data
-        for field in key_fields:
-            value = row.get(field, "")
-            if value and str(value).strip():
+        A row is considered empty only when it carries no identifier at all —
+        no case number and no archival location.  Rows that lack Crime /
+        Description / Year but still have a case number or archival reference
+        are real (if sparse) records and should be imported.
+        """
+        id_fields = [
+            "Number",
+            "Case_number",
+            "Archival Location",
+            "Archival_Location",
+        ]
+        for field in id_fields:
+            if (row.get(field) or "").strip():
                 return False
-
-        # If no key fields have data, consider it empty
         return True
 
     def after_save_instance(self, instance, row, **kwargs):
