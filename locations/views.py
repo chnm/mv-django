@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 
 from locations.models import City, Location
-from mapping_violence.models import Crime
+from mapping_violence.models import WEAPON_CATEGORY_CHOICES, Crime
 
 
 def map_view(request):
@@ -22,6 +22,7 @@ def map_view(request):
     context = {
         "cities": cities,
         "crime_types": crime_types,
+        "weapon_categories": WEAPON_CATEGORY_CHOICES,
     }
     return render(request, "locations/map.html", context)
 
@@ -36,6 +37,7 @@ def locations_geojson(request):
     crime_type = request.GET.get("crime_type")
     year_from = request.GET.get("year_from")
     year_to = request.GET.get("year_to")
+    weapon_category = request.GET.get("weapon_category")
 
     if city_id:
         locations = locations.filter(city_id=city_id)
@@ -48,6 +50,9 @@ def locations_geojson(request):
 
     if year_to:
         locations = locations.filter(crime__year__lte=year_to)
+
+    if weapon_category:
+        locations = locations.filter(crime__weapon__weapon_category=weapon_category)
 
     # Get unique locations with crime counts
     locations = locations.annotate(crime_count=Count("crime", distinct=True)).distinct()
@@ -66,8 +71,25 @@ def locations_geojson(request):
             crimes_query = crimes_query.filter(year__gte=year_from)
         if year_to:
             crimes_query = crimes_query.filter(year__lte=year_to)
+        if weapon_category:
+            crimes_query = crimes_query.filter(weapon__weapon_category=weapon_category)
 
-        crimes = crimes_query.values("id", "crime", "number", "date", "year")
+        crimes_data = []
+        for crime in crimes_query.prefetch_related("victim", "perpetrator"):
+            victim_genders = [v.gender for v in crime.victim.all() if v.gender]
+            perp_genders = [p.gender for p in crime.perpetrator.all() if p.gender]
+            crimes_data.append(
+                {
+                    "id": crime.id,
+                    "crime": crime.crime,
+                    "number": crime.number,
+                    "date": str(crime.date) if crime.date else None,
+                    "year": crime.year,
+                    "fatality": crime.fatality,
+                    "victim_gender": victim_genders[0] if victim_genders else "U",
+                    "perpetrator_gender": perp_genders[0] if perp_genders else "U",
+                }
+            )
 
         feature = {
             "type": "Feature",
@@ -88,8 +110,8 @@ def locations_geojson(request):
                 "sestiere": location.sestiere or "",
                 "street": location.street or "",
                 "landmark": location.landmark or "",
-                "crime_count": len(crimes),
-                "crimes": list(crimes),
+                "crime_count": len(crimes_data),
+                "crimes": crimes_data,
             },
         }
         features.append(feature)

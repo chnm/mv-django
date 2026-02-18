@@ -28,12 +28,28 @@
     }
   },
   {
+    "model": "mapping_violence.weaponcategory",
+    "pk": 5,
+    "fields": {
+      "name": "Hands"
+    }
+  },
+  {
+    "model": "mapping_violence.weaponcategory",
+    "pk": 6,
+    "fields": {
+      "name": "Other"
+    }
+  },
+  {
     "model": "mapping_violence.weapon",
     "pk": 1,
     "fields": {
       "name": "Rifle",
       "definition": "A long-barreled firearm designed for accurate shooting",
-      "category": 1
+      "category": 1,
+      "weapon_category": "firearm",
+      "weapon_subcategory": "rifle"
     }
   },
   {
@@ -42,7 +58,9 @@
     "fields": {
       "name": "Sword",
       "definition": "A bladed weapon with a long metal blade and a handle",
-      "category": 2
+      "category": 2,
+      "weapon_category": "blade",
+      "weapon_subcategory": "sword"
     }
   },
   {
@@ -51,7 +69,9 @@
     "fields": {
       "name": "Club",
       "definition": "A heavy stick or similar weapon used for striking",
-      "category": 3
+      "category": 3,
+      "weapon_category": "blunt_instrument",
+      "weapon_subcategory": "club"
     }
   },
   {
@@ -60,7 +80,9 @@
     "fields": {
       "name": "Pistol",
       "definition": "A short-barreled handheld firearm",
-      "category": 1
+      "category": 1,
+      "weapon_category": "firearm",
+      "weapon_subcategory": "pistol"
     }
   },
   {
@@ -69,7 +91,9 @@
     "fields": {
       "name": "Knife",
       "definition": "A short-bladed cutting tool or weapon",
-      "category": 2
+      "category": 2,
+      "weapon_category": "blade",
+      "weapon_subcategory": "knife"
     }
   },
   {
@@ -78,7 +102,9 @@
     "fields": {
       "name": "Mace",
       "definition": "A heavy club with a metal head",
-      "category": 3
+      "category": 3,
+      "weapon_category": "blunt_instrument",
+      "weapon_subcategory": "mace"
     }
   },
   {
@@ -87,7 +113,9 @@
     "fields": {
       "name": "Musket",
       "definition": "A smoothbore long gun used in the 16th to 19th centuries",
-      "category": 1
+      "category": 1,
+      "weapon_category": "firearm",
+      "weapon_subcategory": "musket"
     }
   },
   {
@@ -96,7 +124,9 @@
     "fields": {
       "name": "Dagger",
       "definition": "A short knife with a pointed blade",
-      "category": 2
+      "category": 2,
+      "weapon_category": "blade",
+      "weapon_subcategory": "dagger"
     }
   },
   {
@@ -105,7 +135,9 @@
     "fields": {
       "name": "Staff",
       "definition": "A long stick used as a weapon",
-      "category": 3
+      "category": 3,
+      "weapon_category": "blunt_instrument",
+      "weapon_subcategory": "staff"
     }
   },
   {
@@ -114,7 +146,9 @@
     "fields": {
       "name": "Bow",
       "definition": "A ranged weapon that fires arrows",
-      "category": 4
+      "category": 4,
+      "weapon_category": "other",
+      "weapon_subcategory": "bow"
     }
   }
 ]

@@ -3,7 +3,7 @@ from django.db.models import Q
 
 from locations.models import City
 
-from .models import Crime, Person
+from .models import WEAPON_CATEGORY_CHOICES, Crime, Person
 
 
 class CrimeFilter(django_filters.FilterSet):
@@ -40,6 +40,17 @@ class CrimeFilter(django_filters.FilterSet):
     )
     year = django_filters.CharFilter(lookup_expr="icontains", label="Year")
     fatality = django_filters.BooleanFilter(label="Fatal Only")
+    weapon_category = django_filters.ChoiceFilter(
+        choices=WEAPON_CATEGORY_CHOICES,
+        field_name="weapon__weapon_category",
+        label="Weapon Category",
+        empty_label="All Weapon Categories",
+    )
+    weapon_subcategory = django_filters.CharFilter(
+        field_name="weapon__weapon_subcategory",
+        lookup_expr="icontains",
+        label="Weapon Subcategory",
+    )
 
     def filter_by_person(self, queryset, name, value):
         """Filter crimes where the person is either a victim or perpetrator"""
@@ -49,4 +60,13 @@ class CrimeFilter(django_filters.FilterSet):
 
     class Meta:
         model = Crime
-        fields = ["number", "crime", "city", "person", "year", "fatality"]
+        fields = [
+            "number",
+            "crime",
+            "city",
+            "person",
+            "year",
+            "fatality",
+            "weapon_category",
+            "weapon_subcategory",
+        ]

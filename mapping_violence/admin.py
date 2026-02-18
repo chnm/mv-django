@@ -1,11 +1,13 @@
 from itertools import groupby
 
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
+from django.shortcuts import render
 from import_export.admin import ImportExportModelAdmin
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
 from unfold.contrib.import_export.forms import ExportForm, ImportForm
@@ -248,6 +250,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "get_location",
     )
     list_filter = (
+        "offense_category",
         "fatality",
         "violence_caused_death",
         "convicted",
@@ -267,12 +270,15 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "day",
         "day_of_week",
         "date_of_entry",
-        "input_by",
         "updated_by",
     )
+    actions = ["reassign_input_by"]
 
     fieldsets = (
-        ("Basic Information", {"fields": ("number", "crime", "description_of_case")}),
+        (
+            "Basic Information",
+            {"fields": ("number", "crime", "offense_category", "description_of_case")},
+        ),
         (
             "Court & Legal Information",
             {
@@ -282,6 +288,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
                     "trial_phase",
                     "arbitration",
                     "sentence",
+                    "sentence_in_absentia",
                     "sentence_enforced",
                 ),
                 "classes": ("collapse",),
@@ -386,6 +393,43 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+    def get_import_resource_kwargs(self, request, *args, **kwargs):
+        """Pass the logged-in user to the resource so imported rows are attributed."""
+        kwargs = super().get_import_resource_kwargs(request, *args, **kwargs)
+        kwargs["user"] = request.user
+        return kwargs
+
+    @admin.action(description="Reassign selected crimes to a user")
+    def reassign_input_by(self, request, queryset):
+        class ReassignForm(forms.Form):
+            user = forms.ModelChoiceField(
+                queryset=User.objects.filter(is_active=True).order_by("username"),
+                label="Assign to",
+                empty_label="— select a user —",
+            )
+
+        if "apply" in request.POST:
+            form = ReassignForm(request.POST)
+            if form.is_valid():
+                user = form.cleaned_data["user"]
+                count = queryset.update(input_by=user)
+                self.message_user(request, f"Reassigned {count} crime(s) to {user}.")
+                return None
+        else:
+            form = ReassignForm()
+
+        return render(
+            request,
+            "admin/reassign_input_by.html",
+            {
+                "title": "Reassign crimes to a user",
+                "form": form,
+                "queryset": queryset,
+                "opts": self.model._meta,
+                "action": "reassign_input_by",
+            },
+        )
+
 
 @admin.register(Person)
 class PersonAdmin(ModelAdmin):
@@ -407,6 +451,7 @@ class PersonAdmin(ModelAdmin):
                     "description",
                     "occupation",
                     "citizenship",
+                    "nationality_ethnicity",
                     "identifying_information",
                 ),
                 "classes": ("collapse",),
@@ -432,5 +477,13 @@ class PersonAdmin(ModelAdmin):
 class WeaponAdmin(ModelAdmin):
     """Admin for Weapon entities"""
 
-    list_display = ("__str__", "definition", "category")
-    list_filter = ("name", "category")
+    list_display = ("__str__", "weapon_category", "weapon_subcategory", "category")
+    list_filter = ("weapon_category",)
+    search_fields = ("name", "weapon_subcategory")
+    fieldsets = (
+        ("Basic Information", {"fields": ("name", "definition")}),
+        (
+            "Classification",
+            {"fields": ("weapon_category", "weapon_subcategory", "category")},
+        ),
+    )

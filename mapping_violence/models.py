@@ -14,10 +14,34 @@ class WeaponCategory(models.Model):
         return self.name
 
 
+WEAPON_CATEGORY_CHOICES = [
+    ("firearm", "Firearm"),
+    ("blade", "Blade"),
+    ("blunt_instrument", "Blunt Instrument"),
+    ("hands", "Hands"),
+    ("other", "Other"),
+]
+
+
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
     definition = models.TextField(blank=True)
-    category = models.ForeignKey(WeaponCategory, null=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(
+        WeaponCategory, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    weapon_category = models.CharField(
+        max_length=50,
+        blank=True,
+        choices=WEAPON_CATEGORY_CHOICES,
+        verbose_name="Weapon Category",
+        help_text="Select the top-level weapon category",
+    )
+    weapon_subcategory = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Weapon Subcategory",
+        help_text="Enter subcategory (e.g. pistol, arquebus, dagger, sword, club)",
+    )
 
     def __str__(self):
         return self.name
@@ -64,6 +88,13 @@ class Person(models.Model):
         blank=True, max_length=1, choices=GENDER_CHOICES, help_text="Input gender: M/F"
     )
     citizenship = models.CharField(max_length=255, null=True, blank=True)
+    nationality_ethnicity = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="Nationality/Ethnicity",
+        help_text="Input nationality or ethnicity if recorded in the source, e.g. Ottoman, Jewish, Greek",
+    )
     repeat_offender = models.BooleanField(default=False)
     notes = models.TextField(null=True, blank=True)
 
@@ -136,6 +167,21 @@ class Crime(models.Model):
         verbose_name="Crime",
         help_text="Input type of crime according to modern taxonomy, e.g., assault, homicide, battery",
     )  # TODO: possibly convert to a model for a controlled vocab
+    offense_category = models.CharField(
+        max_length=50,
+        blank=True,
+        choices=[
+            ("homicide", "Homicide"),
+            ("premeditated_homicide", "Pre-meditated Homicide"),
+            ("insult", "Insult"),
+            ("sexual_offenses", "Sexual Offenses"),
+            ("abduction", "Abduction"),
+            ("assault", "Assault"),
+            ("other", "Other"),
+        ],
+        verbose_name="Offense Category",
+        help_text="Select the top-level offense category",
+    )
     description_of_case = models.TextField(
         blank=True,
         verbose_name="Description of Case",
@@ -166,6 +212,11 @@ class Crime(models.Model):
     sentence = models.TextField(
         blank=True,
         help_text="Input sentence of convicted if known. Examples: death penalty, exile, fine. If multiple penalties, input all in field separated by commas.",
+    )
+    sentence_in_absentia = models.BooleanField(
+        default=False,
+        verbose_name="In Contumacia (Y/N)",
+        help_text="Was the sentence issued in absentia (in contumacia)? Check Y if the person was sentenced without being present.",
     )
     sentence_enforced = models.BooleanField(
         default=False,
@@ -247,9 +298,8 @@ class Crime(models.Model):
     )
 
     # Case details
-    motive = models.CharField(
+    motive = models.TextField(
         blank=True,
-        max_length=255,
         help_text="Input description of motive as given, if known: example: mortal hatred",
     )
     relationship = models.CharField(
