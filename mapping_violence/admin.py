@@ -248,6 +248,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "get_location",
     )
     list_filter = (
+        "offense_category",
         "fatality",
         "violence_caused_death",
         "convicted",
@@ -272,7 +273,10 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     )
 
     fieldsets = (
-        ("Basic Information", {"fields": ("number", "crime", "description_of_case")}),
+        (
+            "Basic Information",
+            {"fields": ("number", "crime", "offense_category", "description_of_case")},
+        ),
         (
             "Court & Legal Information",
             {
@@ -282,6 +286,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
                     "trial_phase",
                     "arbitration",
                     "sentence",
+                    "sentence_in_absentia",
                     "sentence_enforced",
                 ),
                 "classes": ("collapse",),
@@ -407,6 +412,7 @@ class PersonAdmin(ModelAdmin):
                     "description",
                     "occupation",
                     "citizenship",
+                    "nationality_ethnicity",
                     "identifying_information",
                 ),
                 "classes": ("collapse",),
@@ -432,5 +438,13 @@ class PersonAdmin(ModelAdmin):
 class WeaponAdmin(ModelAdmin):
     """Admin for Weapon entities"""
 
-    list_display = ("__str__", "definition", "category")
-    list_filter = ("name", "category")
+    list_display = ("__str__", "weapon_category", "weapon_subcategory", "category")
+    list_filter = ("weapon_category",)
+    search_fields = ("name", "weapon_subcategory")
+    fieldsets = (
+        ("Basic Information", {"fields": ("name", "definition")}),
+        (
+            "Classification",
+            {"fields": ("weapon_category", "weapon_subcategory", "category")},
+        ),
+    )
