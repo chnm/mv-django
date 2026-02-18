@@ -298,9 +298,8 @@ class Crime(models.Model):
     )
 
     # Case details
-    motive = models.CharField(
+    motive = models.TextField(
         blank=True,
-        max_length=255,
         help_text="Input description of motive as given, if known: example: mortal hatred",
     )
     relationship = models.CharField(
