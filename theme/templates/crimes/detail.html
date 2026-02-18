@@ -32,7 +32,11 @@
                     {% endif %}
                 </h1>
                 {% if crime.crime %}
-                    <p class="text-xl text-gray-700">{{ crime.crime }}</p>
+                    <p class="text-xl">
+                        <a href="{% url 'crime_list' %}?crime={{ crime.crime|urlencode }}"
+                           class="hover:underline"
+                           style="color: #8B4513;">{{ crime.crime }}</a>
+                    </p>
                 {% endif %}
             </div>
 
@@ -165,12 +169,6 @@
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Crime Details</h2>
                     <dl class="space-y-2">
-                        {% if crime.court_classification %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Court Classification</dt>
-                                <dd class="text-base text-gray-900">{{ crime.court_classification }}</dd>
-                            </div>
-                        {% endif %}
                         {% if crime.weapon %}
                             <div>
                                 <dt class="text-sm font-medium text-gray-600">Weapon</dt>
@@ -191,15 +189,21 @@
                 </div>
             </div>
 
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
         <!-- Legal Information -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Legal Information</h2>
-                <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Legal Information</h2>
                     <dl class="space-y-2">
                         {% if crime.court %}
                             <div>
                                 <dt class="text-sm font-medium text-gray-600">Court</dt>
                                 <dd class="text-base text-gray-900">{{ crime.court }}</dd>
+                            </div>
+                        {% endif %}
+                        {% if crime.court_classification %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-600">Court Classification</dt>
+                                <dd class="text-base text-gray-900">{{ crime.court_classification }}</dd>
                             </div>
                         {% endif %}
                         {% if crime.trial_phase %}
@@ -208,15 +212,12 @@
                                 <dd class="text-base text-gray-900">{{ crime.trial_phase }}</dd>
                             </div>
                         {% endif %}
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Convicted</dt>
-                            <dd class="text-base text-gray-900">{% if crime.convicted %}Yes{% else %}No{% endif %}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Pardoned</dt>
-                            <dd class="text-base text-gray-900">{% if crime.pardoned %}Yes{% else %}No{% endif %}</dd>
-                        </div>
                     </dl>
+                </div>
+
+        <!-- Sentencing -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Sentencing</h2>
                     <dl class="space-y-2">
                         {% if crime.sentence %}
                             <div>
@@ -225,8 +226,20 @@
                             </div>
                         {% endif %}
                         <div>
+                            <dt class="text-sm font-medium text-gray-600">In Contumacia</dt>
+                            <dd class="text-base text-gray-900">{% if crime.sentence_in_absentia %}Yes{% else %}No{% endif %}</dd>
+                        </div>
+                        <div>
                             <dt class="text-sm font-medium text-gray-600">Sentence Enforced</dt>
                             <dd class="text-base text-gray-900">{% if crime.sentence_enforced %}Yes{% else %}No{% endif %}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-600">Convicted</dt>
+                            <dd class="text-base text-gray-900">{% if crime.convicted %}Yes{% else %}No{% endif %}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-600">Pardoned</dt>
+                            <dd class="text-base text-gray-900">{% if crime.pardoned %}Yes{% else %}No{% endif %}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-600">Arbitration</dt>
