@@ -26,13 +26,16 @@
                             {{ field }}
                         </div>
                     {% endfor %}
-                    <div class="flex items-end space-x-2 md:col-span-2 lg:col-span-3">
-                        <button type="submit" class="text-white-200 bg-mediterranean-700 px-6 py-2 rounded hover:bg-mediterranean-800 transition-colors">
-                            Apply Filters
-                        </button>
-                        <a href="{% url 'crime_list' %}" class="bg-gray-500 text-white-200 px-6 py-2 rounded hover:bg-gray-600 transition-colors">
-                            Reset
-                        </a>
+                    <div class="flex items-end md:col-span-2 lg:col-span-3">
+                        {% if request.GET %}
+                            <a href="{% url 'crime_list' %}" class="btn-reset px-6 py-2 rounded">
+                                Reset Filters
+                            </a>
+                        {% else %}
+                            <button type="submit" class="btn-apply px-6 py-2 rounded">
+                                Apply Filters
+                            </button>
+                        {% endif %}
                     </div>
                 </form>
             </div>
@@ -45,8 +48,24 @@
     </div>
 
     <style>
+        .btn-apply, .btn-reset {
+            color: #ffffff;
+        }
+        .btn-apply {
+            background-color: #8B4513;
+        }
+        .btn-apply:hover {
+            background-color: #5D2906;
+        }
+        .btn-reset {
+            background-color: #6b7280;
+        }
+        .btn-reset:hover {
+            background-color: #4b5563;
+        }
+
     /* Style form inputs to match Tailwind */
-        #id_number, #id_crime, #id_year {
+        #id_number, #id_crime, #id_year, #id_weapon_subcategory {
             width: 100%;
             padding: 0.5rem 0.75rem;
             border: 1px solid #d1d5db;
@@ -54,7 +73,7 @@
             font-size: 0.875rem;
         }
 
-        #id_city, #id_person, #id_fatality {
+        #id_city, #id_person, #id_fatality, #id_weapon_category {
             width: 100%;
             padding: 0.5rem 0.75rem;
             border: 1px solid #d1d5db;
