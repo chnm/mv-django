@@ -195,6 +195,11 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 # Custom adapter to prevent any signups unless invited
 ACCOUNT_ADAPTER = "config.adapters.NoSignupAdapter"
+SOCIALACCOUNT_ADAPTER = "config.adapters.NoSocialSignupAdapter"
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # match social email to existing account
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
+    True  # auto-connect without manual confirmation
+)
 
 # allauth: provider specific settings
 SOCIALACCOUNT_PROVIDERS = {
