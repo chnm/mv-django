@@ -270,6 +270,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "day",
         "day_of_week",
         "date_of_entry",
+        "input_by",
         "updated_by",
     )
     actions = ["reassign_input_by"]
