@@ -14,6 +14,7 @@
   - [Flow 1: Browsing the Interactive Map](#flow-1-browsing-the-interactive-map)
   - [Flow 2: Entering a Crime Record via Admin](#flow-2-entering-a-crime-record-via-admin)
   - [Flow 3: Bulk Importing Crime Data via CSV](#flow-3-bulk-importing-crime-data-via-csv)
+  - [Flow 4: Onboarding a New Team Member](#flow-4-onboarding-a-new-team-member)
 - [Out of Scope](#out-of-scope)
 - [Open Questions](#open-questions)
 
@@ -293,6 +294,44 @@ Wagtail-powered narrative content at `/cms/` for project team to manage.
 
 ---
 
+### Flow 4: Onboarding a New Team Member
+
+**Goal:** A superuser grants a new research assistant access to the application. The application does not allow public self-registration; all accounts must be created by an administrator.
+
+**Starting Point:** Superuser is logged in and navigates to `/admin/auth/user/add/`
+
+**Steps:**
+
+1. Create the user account
+   - Enter the new team member's **email address** (this is the critical field — it must match the email they use for GitHub or Slack if they will authenticate via social login)
+   - Enter a **username** (can be anything; the email is used for social login matching)
+   - Set **Staff status** to true so they can access `/admin/`
+   - Leave **Superuser status** unchecked unless they need full admin access
+   - Click **Save**
+
+2. Set a password (choose one option)
+   - **Option A — Password reset email:** On the user's detail page, click "Reset password" to send the user an email with a set-password link. They set their own password before first login.
+   - **Option B — Temporary password:** Enter a temporary password directly and communicate it securely to the team member; they should change it at `/accounts/password/change/` after first login.
+
+3. Communicate login options to the new team member
+   - They can log in at `/accounts/login/` using their email/username and password
+   - **Or** they can log in via GitHub or Slack — if their GitHub/Slack account uses the same email address entered in step 1, allauth will automatically connect the accounts on first social login and they will not need a password
+
+4. (Optional) Verify the connection
+   - After the team member logs in via a social provider for the first time, their linked social account appears in the admin under **System Configuration → Social Authentication → Social Accounts**
+   - The team member can view and manage their own connections at `/accounts/social/connections/`
+
+**Notes:**
+- A team member can have both password login and one or more social logins active simultaneously
+- If a team member's GitHub or Slack email differs from the email on their Django account, social login will be blocked (no account match) — they will see an "invitation only" error. Update their email in `/admin/auth/user/` to match, then ask them to try again.
+- To revoke access, set the user's **Active** flag to false in `/admin/auth/user/` — this blocks all login methods (password and social) without deleting their data
+
+**Error Paths:**
+- Social login with no matching email → user sees "Account creation is by invitation only" message and is returned to the login page
+- Password reset email not received → check `EMAIL_BACKEND` setting; in development emails are printed to the console, not sent
+
+---
+
 ## Out of Scope
 
 ### Not in current version (potential future work)
@@ -341,5 +380,5 @@ Wagtail-powered narrative content at `/cms/` for project team to manage.
 
 ---
 
-*Last Updated: 2026-02-18*
+*Last Updated: 2026-02-19*
 *This document is maintained for AI agent context and onboarding.*
