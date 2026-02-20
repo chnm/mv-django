@@ -202,7 +202,6 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
 )
 
 # allauth: provider specific settings
-ACCOUNT_DEFAULT_HTTP_PROTOCOL='https'
 SOCIALACCOUNT_PROVIDERS = {
     "orcid": {
         "BASE_DOMAIN": "orcid.org",
@@ -221,11 +220,14 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     "slack": {
         "VERIFIED_EMAIL": True,
+        "SCOPE": ["openid", "profile", "email"],
+        "AUTH_PARAMS": {
+            "auth_type": "reauthenticate",
+        },
         "APP": {
             "client_id": env("ALLAUTH_SLACK_CLIENT_ID", default="PLACEHOLDER"),
             "secret": env("ALLAUTH_SLACK_CLIENT_SECRET", default="PLACEHOLDER"),
             "key": "",
-            "settings": {"scope": ["openid", "profile", "email"]},
         },
     },
 }
