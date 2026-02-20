@@ -16,7 +16,7 @@ class CrimeTable(tables.Table):
     perpetrators = tables.Column(
         empty_values=(), orderable=False, verbose_name="Perpetrator(s)"
     )
-    fatality = tables.BooleanColumn(yesno="Yes,No", verbose_name="Fatal")
+    status = tables.Column(empty_values=(), orderable=False, verbose_name="Status")
 
     class Meta:
         model = Crime
@@ -28,7 +28,7 @@ class CrimeTable(tables.Table):
             "city",
             "victims",
             "perpetrators",
-            "fatality",
+            "status",
         )
         attrs = {
             "class": "table table-striped table-hover",
@@ -49,3 +49,13 @@ class CrimeTable(tables.Table):
         if perpetrators:
             return ", ".join([str(p) for p in perpetrators])
         return "-"
+
+    def render_status(self, record):
+        labels = []
+        if record.fatality:
+            labels.append("Fatal")
+        if record.convicted:
+            labels.append("Convicted")
+        if record.pardoned:
+            labels.append("Pardoned")
+        return ", ".join(labels) if labels else "—"
