@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 from django_tables2 import RequestConfig
 
@@ -33,13 +34,46 @@ def crime_detail(request, crime_id):
     """Display detailed information about a specific crime"""
     crime = get_object_or_404(
         Crime.objects.select_related(
-            "address", "address__city", "weapon", "connected_event"
+            "address", "address__city", "weapon", "connected_event", "judge"
         ).prefetch_related("victim", "perpetrator", "witnesses"),
         pk=crime_id,
     )
 
+    # Find cases sharing a victim or perpetrator with this crime
+    person_pks = set(
+        list(crime.victim.values_list("pk", flat=True))
+        + list(crime.perpetrator.values_list("pk", flat=True))
+    )
+    if person_pks:
+        related_qs = (
+            Crime.objects.filter(
+                Q(victim__in=person_pks) | Q(perpetrator__in=person_pks)
+            )
+            .exclude(pk=crime.pk)
+            .select_related("address", "address__city")
+            .prefetch_related("victim", "perpetrator")
+            .distinct()
+            .order_by("-date", "-year")[:10]
+        )
+        related_crimes = []
+        for rel in related_qs:
+            shared = []
+            seen_pks = set()
+            for v in rel.victim.all():
+                if v.pk in person_pks and v.pk not in seen_pks:
+                    shared.append(str(v))
+                    seen_pks.add(v.pk)
+            for p in rel.perpetrator.all():
+                if p.pk in person_pks and p.pk not in seen_pks:
+                    shared.append(str(p))
+                    seen_pks.add(p.pk)
+            related_crimes.append({"crime": rel, "shared": shared})
+    else:
+        related_crimes = []
+
     context = {
         "crime": crime,
+        "related_crimes": related_crimes,
     }
 
     return render(request, "crimes/detail.html", context)
