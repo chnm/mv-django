@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    {% if crime.number %}Case #{{ crime.number }}{% else %}Crime Detail{% endif %} - Mapping Early Modern Violence
+    {% if crime.number %}Case #{{ crime.number }}{% else %}Violence Event{% endif %} — Mapping Early Modern Violence
 {% endblock %}
 
 {% block extra_css %}
@@ -10,284 +10,492 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
     <style>
-        #crime-map {
-            height: 400px;
-            width: 100%;
-            border-radius: 0.5rem;
-        }
+        #crime-map { height: 200px; width: 100%; }
     </style>
 {% endblock %}
 
 {% block content %}
-    <div class="bg-white-50 py-12">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-            <div class="mb-8">
-                <a href="{% url 'crime_list' %}" class="text-mediterranean-600 hover:text-mediterranean-800 text-base mb-4 inline-block">&larr; Back to Data</a>
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                    {% if crime.number %}
-                        Case #{{ crime.number }}
-                    {% else %}
-                        Crime Detail
-                    {% endif %}
-                </h1>
-                {% if crime.crime %}
-                    <p class="text-xl">
+    <div class="bg-white py-10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {# ── Top navigation strip ── #}
+            <div class="flex items-center justify-between mb-6 flex-wrap gap-y-2">
+                <a href="{% url 'crime_list' %}"
+                   class="text-sm text-mediterranean-600 hover:text-mediterranean-800">&larr; Back to Data</a>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                    {% if crime.crime %}
                         <a href="{% url 'crime_list' %}?crime={{ crime.crime|urlencode }}"
-                           class="hover:underline"
-                           style="color: #8B4513;">{{ crime.crime }}</a>
-                    </p>
-                {% endif %}
-            </div>
-
-        <!-- Case Description -->
-            {% if crime.description_of_case %}
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Case Description</h2>
-                    <p class="text-gray-700 leading-relaxed">{{ crime.description_of_case }}</p>
-                </div>
-            {% endif %}
-
-            <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <!-- Date and Time Information -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Date & Time</h2>
-                    <dl class="space-y-2">
-                        {% if crime.date %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Date</dt>
-                                <dd class="text-base text-gray-900">{{ crime.date }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.year %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Year</dt>
-                                <dd class="text-base text-gray-900">{{ crime.year }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.day_of_week %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Day of Week</dt>
-                                <dd class="text-base text-gray-900">{{ crime.day_of_week }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.time %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Time</dt>
-                                <dd class="text-base text-gray-900">{{ crime.time }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.liturgical_occasion %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Liturgical Occasion</dt>
-                                <dd class="text-base text-gray-900">{{ crime.liturgical_occasion }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.connected_event %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Connected Event</dt>
-                                <dd class="text-base text-gray-900">{{ crime.connected_event.name }}</dd>
-                            </div>
-                        {% endif %}
-                    </dl>
-                </div>
-
-            <!-- Location Information -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Location</h2>
-                    <dl class="space-y-2">
-                        {% if crime.address %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Address</dt>
-                                <dd class="text-base text-gray-900">{{ crime.address.name }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.address.city %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">City</dt>
-                                <dd class="text-base text-gray-900">{{ crime.address.city.name }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.sestiere %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Sestiere</dt>
-                                <dd class="text-base text-gray-900">{{ crime.sestiere }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.description_of_location %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Location Description</dt>
-                                <dd class="text-base text-gray-900">{{ crime.description_of_location }}</dd>
-                            </div>
-                        {% endif %}
-                    </dl>
+                           class="text-mediterranean-600 hover:underline">Browse: {{ crime.crime }}</a>
+                    {% endif %}
+                    {% if crime.address.city %}
+                        <span class="text-gray-300">&middot;</span>
+                        <a href="{% url 'crime_list' %}?city={{ crime.address.city.pk }}"
+                           class="text-mediterranean-600 hover:underline">{{ crime.address.city.name }}</a>
+                    {% endif %}
+                    {% if crime.address.effective_latitude and crime.address.effective_longitude %}
+                        <span class="text-gray-300">&middot;</span>
+                        <a href="{% url 'map' %}{% if crime.address.city %}?city={{ crime.address.city.pk }}{% endif %}"
+                           class="text-mediterranean-600 hover:underline">View on Map &rarr;</a>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <!-- People Involved -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">People Involved</h2>
-
-                    {% if crime.victim.all %}
-                        <div class="mb-4">
-                            <h3 class="text-base font-semibold text-gray-700 mb-2">Victim(s)</h3>
-                            <ul class="list-disc list-inside text-gray-900">
-                                {% for person in crime.victim.all %}
-                                    <li>{{ person }}</li>
-                                {% endfor %}
-                            </ul>
-                            {% if crime.victim_description %}
-                                <p class="text-sm text-gray-600 mt-2">{{ crime.victim_description }}</p>
-                            {% endif %}
-                        </div>
+            {# ── Case header ── #}
+            <div class="mb-8">
+                <h1 class="text-3xl sm:text-4xl font-bold font-display text-gray-900 mb-3">
+                    {% if crime.number %}Case #{{ crime.number }}{% else %}Violence Event{% endif %}
+                </h1>
+                <div class="flex flex-wrap items-center gap-2">
+                    {% if crime.crime %}
+                        <a href="{% url 'crime_list' %}?crime={{ crime.crime|urlencode }}"
+                           class="inline-block text-sm font-medium px-3 py-1 rounded-full bg-burgundy-100 text-burgundy-700 hover:bg-burgundy-200 transition-colors">{{ crime.crime }}</a>
                     {% endif %}
-
-                    {% if crime.perpetrator.all %}
-                        <div class="mb-4">
-                            <h3 class="text-base font-semibold text-gray-700 mb-2">Perpetrator(s)</h3>
-                            <ul class="list-disc list-inside text-gray-900">
-                                {% for person in crime.perpetrator.all %}
-                                    <li>{{ person }}</li>
-                                {% endfor %}
-                            </ul>
-                            {% if crime.assailant_description %}
-                                <p class="text-sm text-gray-600 mt-2">{{ crime.assailant_description }}</p>
-                            {% endif %}
-                        </div>
+                    {% if crime.offense_category %}
+                        <span class="inline-block text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">{{ crime.get_offense_category_display }}</span>
                     {% endif %}
+                    {% if crime.fatality %}
+                        <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700">Fatal</span>
+                    {% endif %}
+                    {% if crime.convicted %}
+                        <span class="inline-block text-xs px-3 py-1 rounded-full bg-gray-800 text-white-50">Convicted</span>
+                    {% endif %}
+                    {% if crime.pardoned %}
+                        <span class="inline-block text-xs px-3 py-1 rounded-full bg-green-100 text-green-700">Pardoned</span>
+                    {% endif %}
+                </div>
+            </div>
 
-                    {% if crime.relationship %}
+            {# ── Two-column body ── #}
+            <div class="lg:flex lg:gap-10">
+
+                {# Left sidebar: Quick facts (sticky) + map (non-sticky, below) #}
+                <aside class="lg:w-72 flex-shrink-0 mb-10 lg:mb-0">
+
+                    {# Sticky quick-fact sections #}
+                    <div class="lg:sticky lg:top-6 space-y-6">
+
+                        {# When #}
+                        {% if crime.date or crime.year or crime.historical_date or crime.day_of_week or crime.time or crime.time_of_day or crime.liturgical_occasion %}
+                            <div>
+                                <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1.5 mb-3">When</h2>
+                                <dl class="space-y-1.5 text-sm">
+                                    {% if crime.date %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Date</dt>
+                                            <dd class="text-gray-900">{{ crime.date }}</dd>
+                                        </div>
+                                    {% elif crime.historical_date %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Date</dt>
+                                            <dd class="text-gray-900">{{ crime.historical_date }}</dd>
+                                        </div>
+                                    {% elif crime.year %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Year</dt>
+                                            <dd class="text-gray-900">{{ crime.year }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    {% if crime.day_of_week %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Day</dt>
+                                            <dd class="text-gray-900">{{ crime.day_of_week }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    {% if crime.time %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Time</dt>
+                                            <dd class="text-gray-900">{{ crime.time }}</dd>
+                                        </div>
+                                    {% elif crime.time_of_day %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Time</dt>
+                                            <dd class="text-gray-900">{{ crime.time_of_day }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    {% if crime.liturgical_occasion %}
+                                        <div class="flex gap-2">
+                                            <dt class="text-gray-500 w-24 flex-shrink-0">Occasion</dt>
+                                            <dd class="text-gray-900">{{ crime.liturgical_occasion }}</dd>
+                                        </div>
+                                    {% endif %}
+                                </dl>
+                            </div>
+                        {% endif %}
+
+                        {# Where #}
                         <div>
-                            <dt class="text-sm font-medium text-gray-600">Relationship</dt>
-                            <dd class="text-base text-gray-900">{{ crime.relationship }}</dd>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1.5 mb-3">Where</h2>
+                            <div class="space-y-1 text-sm">
+                                {% if crime.address %}
+                                    <p class="text-gray-900">{{ crime.address.name }}</p>
+                                {% endif %}
+                                {% if crime.sestiere %}
+                                    <p class="text-gray-600">{{ crime.sestiere }} sestiere</p>
+                                {% endif %}
+                                {% if crime.address.city %}
+                                    <p class="text-gray-600">{{ crime.address.city.name }}</p>
+                                {% endif %}
+                                {% if crime.description_of_location %}
+                                    <p class="text-gray-500 italic text-xs mt-2">{{ crime.description_of_location }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                    {% endif %}
-                </div>
 
-            <!-- Crime Details -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Crime Details</h2>
-                    <dl class="space-y-2">
+                        {# People — names link to filtered data table #}
+                        {% if crime.victim.all or crime.perpetrator.all or crime.relationship or crime.judge %}
+                            <div>
+                                <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1.5 mb-3">People</h2>
+                                <div class="space-y-3 text-sm">
+                                    {% if crime.victim.all %}
+                                        <div>
+                                            <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Victim{% if crime.victim.count > 1 %}s{% endif %}</p>
+                                            {% for person in crime.victim.all %}
+                                                <a href="{% url 'crime_list' %}?person={{ person.pk }}"
+                                                   class="block text-mediterranean-600 hover:underline">{{ person }}</a>
+                                            {% endfor %}
+                                            {% if crime.victim_description %}
+                                                <p class="text-gray-500 italic text-xs mt-1">{{ crime.victim_description }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    {% if crime.perpetrator.all %}
+                                        <div>
+                                            <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Perpetrator{% if crime.perpetrator.count > 1 %}s{% endif %}</p>
+                                            {% for person in crime.perpetrator.all %}
+                                                <a href="{% url 'crime_list' %}?person={{ person.pk }}"
+                                                   class="block text-mediterranean-600 hover:underline">{{ person }}</a>
+                                            {% endfor %}
+                                            {% if crime.assailant_description %}
+                                                <p class="text-gray-500 italic text-xs mt-1">{{ crime.assailant_description }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    {% if crime.relationship %}
+                                        <div>
+                                            <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Relationship</p>
+                                            <p class="text-gray-900">{{ crime.relationship }}</p>
+                                        </div>
+                                    {% endif %}
+                                    {% if crime.judge %}
+                                        <div>
+                                            <p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Judge</p>
+                                            <p class="text-gray-900">{{ crime.judge }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {# Weapon #}
                         {% if crime.weapon %}
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Weapon</dt>
-                                <dd class="text-base text-gray-900">{{ crime.weapon.name }}</dd>
+                                <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1.5 mb-3">Weapon</h2>
+                                <div class="text-sm">
+                                    <p class="text-gray-900">{{ crime.weapon.name }}</p>
+                                    {% if crime.weapon.weapon_category %}
+                                        <a href="{% url 'crime_list' %}?weapon_category={{ crime.weapon.weapon_category }}"
+                                           class="text-xs text-mediterranean-600 hover:underline">{{ crime.weapon.get_weapon_category_display }} &rarr;</a>
+                                    {% endif %}
+                                </div>
                             </div>
                         {% endif %}
-                        {% if crime.motive %}
+
+                        {# Connected Event #}
+                        {% if crime.connected_event %}
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Motive</dt>
-                                <dd class="text-base text-gray-900">{{ crime.motive }}</dd>
+                                <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1.5 mb-3">Connected Event</h2>
+                                <div class="text-sm">
+                                    <p class="text-gray-900">{{ crime.connected_event.name }}</p>
+                                    {% if crime.connected_event.event_type %}
+                                        <p class="text-gray-500">{{ crime.connected_event.event_type }}</p>
+                                    {% endif %}
+                                </div>
                             </div>
                         {% endif %}
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Fatality</dt>
-                            <dd class="text-base text-gray-900">{% if crime.fatality %}Yes{% else %}No{% endif %}</dd>
+
+                        {# Browse / navigation buttons #}
+                        {% if crime.crime or crime.address.city or crime.weapon %}
+                            <div class="border-t border-gray-200 pt-4 space-y-2">
+                                {% if crime.crime %}
+                                    <a href="{% url 'crime_list' %}?crime={{ crime.crime|urlencode }}"
+                                       class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
+                                        <span>Browse all {{ crime.crime }} cases</span>
+                                        <span class="ml-2">&rarr;</span>
+                                    </a>
+                                {% endif %}
+                                {% if crime.address.city %}
+                                    <a href="{% url 'crime_list' %}?city={{ crime.address.city.pk }}"
+                                       class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
+                                        <span>Browse cases in {{ crime.address.city.name }}</span>
+                                        <span class="ml-2">&rarr;</span>
+                                    </a>
+                                {% endif %}
+                                {% if crime.weapon.weapon_category %}
+                                    <a href="{% url 'crime_list' %}?weapon_category={{ crime.weapon.weapon_category }}"
+                                       class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
+                                        <span>Browse {{ crime.weapon.get_weapon_category_display|lower }} cases</span>
+                                        <span class="ml-2">&rarr;</span>
+                                    </a>
+                                {% endif %}
+                                {% if crime.address.effective_latitude and crime.address.effective_longitude %}
+                                    <a href="{% url 'map' %}{% if crime.address.city %}?city={{ crime.address.city.pk }}{% endif %}"
+                                       class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
+                                        <span>See location on map</span>
+                                        <span class="ml-2">&rarr;</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                    </div>{# end sticky div #}
+
+
+                </aside>
+
+                {# Right main: Narrative and structured sections #}
+                <main class="flex-1 min-w-0 space-y-10">
+
+                    {# Case Description #}
+                    {% if crime.description_of_case %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-4">
+                                <span>Case Description</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <p class="text-gray-800 leading-relaxed">{{ crime.description_of_case }}</p>
+                        </section>
+                    {% endif %}
+
+                    {# Motive #}
+                    {% if crime.motive %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-4">
+                                <span>Motive</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <p class="text-gray-800 leading-relaxed">{{ crime.motive }}</p>
+                        </section>
+                    {% endif %}
+
+                    {# Legal Record #}
+                    {% if crime.court or crime.court_classification or crime.trial_phase %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-4">
+                                <span>Legal Record</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <dl class="space-y-3 text-sm">
+                                {% if crime.court %}
+                                    <div class="sm:flex sm:gap-4">
+                                        <dt class="text-gray-500 sm:w-40 flex-shrink-0">Court</dt>
+                                        <dd class="text-gray-900">{{ crime.court }}</dd>
+                                    </div>
+                                {% endif %}
+                                {% if crime.court_classification %}
+                                    <div class="sm:flex sm:gap-4">
+                                        <dt class="text-gray-500 sm:w-40 flex-shrink-0">Classification</dt>
+                                        <dd class="text-gray-900">{{ crime.court_classification }}</dd>
+                                    </div>
+                                {% endif %}
+                                {% if crime.trial_phase %}
+                                    <div class="sm:flex sm:gap-4">
+                                        <dt class="text-gray-500 sm:w-40 flex-shrink-0">Trial phase</dt>
+                                        <dd class="text-gray-900">{{ crime.trial_phase }}</dd>
+                                    </div>
+                                {% endif %}
+                            </dl>
+                        </section>
+                    {% endif %}
+
+                    {# Outcome #}
+                    <section>
+                        <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-2">
+                            <span>Outcome</span>
+                            <span class="flex-1 h-px bg-gray-200"></span>
+                        </h2>
+                        <p class="text-xs text-gray-400 mb-4">Filled indicator = recorded in source; hollow = not recorded or not applicable.</p>
+                        <div class="space-y-4">
+                            <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                                <div class="flex items-center gap-1.5">
+                                    {% if crime.fatality %}
+                                        <span class="w-2 h-2 rounded-full bg-red-600 flex-shrink-0"></span>
+                                        <span class="text-gray-900">Fatal</span>
+                                    {% else %}
+                                        <span class="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"></span>
+                                        <span class="text-gray-400">Fatal</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    {% if crime.convicted %}
+                                        <span class="w-2 h-2 rounded-full bg-gray-800 flex-shrink-0"></span>
+                                        <span class="text-gray-900">Convicted</span>
+                                    {% else %}
+                                        <span class="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"></span>
+                                        <span class="text-gray-400">Convicted</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    {% if crime.sentence_enforced %}
+                                        <span class="w-2 h-2 rounded-full bg-gray-800 flex-shrink-0"></span>
+                                        <span class="text-gray-900">Sentence enforced</span>
+                                    {% else %}
+                                        <span class="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"></span>
+                                        <span class="text-gray-400">Sentence enforced</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    {% if crime.sentence_in_absentia %}
+                                        <span class="w-2 h-2 rounded-full bg-gray-800 flex-shrink-0"></span>
+                                        <span class="text-gray-900">In contumacia</span>
+                                    {% else %}
+                                        <span class="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"></span>
+                                        <span class="text-gray-400">In contumacia</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    {% if crime.pardoned %}
+                                        <span class="w-2 h-2 rounded-full bg-green-600 flex-shrink-0"></span>
+                                        <span class="text-gray-900">Pardoned</span>
+                                    {% else %}
+                                        <span class="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"></span>
+                                        <span class="text-gray-400">Pardoned</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    {% if crime.arbitration %}
+                                        <span class="w-2 h-2 rounded-full bg-gray-800 flex-shrink-0"></span>
+                                        <span class="text-gray-900">Arbitration</span>
+                                    {% else %}
+                                        <span class="w-2 h-2 rounded-full border border-gray-300 flex-shrink-0"></span>
+                                        <span class="text-gray-400">Arbitration</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if crime.sentence %}
+                                <div class="text-sm">
+                                    <span class="text-gray-500">Sentence: </span>
+                                    <span class="text-gray-900">{{ crime.sentence }}</span>
+                                </div>
+                            {% endif %}
+                            {% if crime.accord %}
+                                <div class="text-sm">
+                                    <span class="text-gray-500">Peace accord</span>
+                                    {% if crime.accord_date %}
+                                        <span class="text-gray-900"> &mdash; {{ crime.accord_date }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                         </div>
-                    </dl>
-                </div>
+                    </section>
+
+                    {# Witnesses #}
+                    {% if crime.witnesses.all %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-4">
+                                <span>Witnesses</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <div class="space-y-4">
+                                {% for witness in crime.witnesses.all %}
+                                    <div class="text-sm">
+                                        {% if witness.name %}
+                                            <p class="text-gray-900 font-medium">{{ witness.name }}</p>
+                                        {% endif %}
+                                        {% if witness.date_of_testimony %}
+                                            <p class="text-gray-500">Testimony: {{ witness.date_of_testimony }}</p>
+                                        {% endif %}
+                                        {% if witness.claims %}
+                                            <p class="text-gray-700 mt-1">{{ witness.claims }}</p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endif %}
+
+                    {# Archival Sources #}
+                    {% if crime.source or crime.archival_location or crime.reference %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-4">
+                                <span>Archival Sources</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <dl class="space-y-3 text-sm">
+                                {% if crime.source %}
+                                    <div class="sm:flex sm:gap-4">
+                                        <dt class="text-gray-500 sm:w-40 flex-shrink-0">Source</dt>
+                                        <dd class="text-gray-900">{{ crime.source }}</dd>
+                                    </div>
+                                {% endif %}
+                                {% if crime.archival_location %}
+                                    <div class="sm:flex sm:gap-4">
+                                        <dt class="text-gray-500 sm:w-40 flex-shrink-0">Archival location</dt>
+                                        <dd class="text-gray-900">{{ crime.archival_location }}</dd>
+                                    </div>
+                                {% endif %}
+                                {% if crime.reference %}
+                                    <div class="sm:flex sm:gap-4">
+                                        <dt class="text-gray-500 sm:w-40 flex-shrink-0">Reference</dt>
+                                        <dd class="text-gray-900">{{ crime.reference }}</dd>
+                                    </div>
+                                {% endif %}
+                            </dl>
+                        </section>
+                    {% endif %}
+
+                    {# Related Cases — other crimes sharing a victim or perpetrator #}
+                    {% if related_crimes %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-2">
+                                <span>Related Cases</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <p class="text-xs text-gray-400 mb-4">Other cases sharing a victim or perpetrator with this record.</p>
+                            <div class="space-y-2">
+                                {% for entry in related_crimes %}
+                                    <div class="flex items-start justify-between gap-4 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                                        <div class="flex-1 min-w-0">
+                                            <a href="{% url 'crime_detail' entry.crime.pk %}"
+                                               class="text-sm font-medium text-mediterranean-600 hover:underline">
+                                                {% if entry.crime.number %}Case #{{ entry.crime.number }}{% else %}Violence Event #{{ entry.crime.pk }}{% endif %}
+                                            </a>
+                                            {% if entry.crime.crime %}
+                                                <span class="text-xs text-gray-500"> &middot; {{ entry.crime.crime }}</span>
+                                            {% endif %}
+                                            {% if entry.shared %}
+                                                <p class="text-xs text-gray-400 mt-0.5">
+                                                    Via: {% for name in entry.shared %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right flex-shrink-0">
+                                            {% if entry.crime.date %}
+                                                <p class="text-xs text-gray-500">{{ entry.crime.date }}</p>
+                                            {% elif entry.crime.year %}
+                                                <p class="text-xs text-gray-500">{{ entry.crime.year }}</p>
+                                            {% endif %}
+                                            {% if entry.crime.address.city %}
+                                                <p class="text-xs text-gray-400">{{ entry.crime.address.city.name }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endif %}
+
+                {# Map — below sticky block, scrolls naturally #}
+                    {% if crime.address.effective_latitude and crime.address.effective_longitude %}
+                        <div class="mt-6 rounded-lg overflow-hidden border border-gray-200">
+                            <div id="crime-map"></div>
+                        </div>
+                    {% endif %}
+
+
+                </main>
+
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6 mb-6">
-        <!-- Legal Information -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Legal Information</h2>
-                    <dl class="space-y-2">
-                        {% if crime.court %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Court</dt>
-                                <dd class="text-base text-gray-900">{{ crime.court }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.court_classification %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Court Classification</dt>
-                                <dd class="text-base text-gray-900">{{ crime.court_classification }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.trial_phase %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Trial Phase</dt>
-                                <dd class="text-base text-gray-900">{{ crime.trial_phase }}</dd>
-                            </div>
-                        {% endif %}
-                    </dl>
-                </div>
-
-        <!-- Sentencing -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Sentencing</h2>
-                    <dl class="space-y-2">
-                        {% if crime.sentence %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Sentence</dt>
-                                <dd class="text-base text-gray-900">{{ crime.sentence }}</dd>
-                            </div>
-                        {% endif %}
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">In Contumacia</dt>
-                            <dd class="text-base text-gray-900">{% if crime.sentence_in_absentia %}Yes{% else %}No{% endif %}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Sentence Enforced</dt>
-                            <dd class="text-base text-gray-900">{% if crime.sentence_enforced %}Yes{% else %}No{% endif %}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Convicted</dt>
-                            <dd class="text-base text-gray-900">{% if crime.convicted %}Yes{% else %}No{% endif %}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Pardoned</dt>
-                            <dd class="text-base text-gray-900">{% if crime.pardoned %}Yes{% else %}No{% endif %}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-600">Arbitration</dt>
-                            <dd class="text-base text-gray-900">{% if crime.arbitration %}Yes{% else %}No{% endif %}</dd>
-                        </div>
-                        {% if crime.accord %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Peace Accord</dt>
-                                <dd class="text-base text-gray-900">Yes{% if crime.accord_date %} ({{ crime.accord_date }}){% endif %}</dd>
-                            </div>
-                        {% endif %}
-                    </dl>
-                </div>
-            </div>
-
-        <!-- Location Map -->
-            {% if crime.address.effective_latitude and crime.address.effective_longitude %}
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div id="crime-map"></div>
-                </div>
-            {% endif %}
-
-        <!-- Archival Information -->
-            {% if crime.source or crime.archival_location or crime.reference %}
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Sources</h2>
-                    <dl class="space-y-2">
-                        {% if crime.source %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Source</dt>
-                                <dd class="text-base text-gray-900">{{ crime.source }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.archival_location %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Archival Location</dt>
-                                <dd class="text-base text-gray-900">{{ crime.archival_location }}</dd>
-                            </div>
-                        {% endif %}
-                        {% if crime.reference %}
-                            <div>
-                                <dt class="text-sm font-medium text-gray-600">Reference</dt>
-                                <dd class="text-base text-gray-900">{{ crime.reference }}</dd>
-                            </div>
-                        {% endif %}
-                    </dl>
-                </div>
-            {% endif %}
         </div>
     </div>
 {% endblock %}
@@ -298,17 +506,13 @@
                 integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
                 crossorigin=""></script>
         <script>
-    // Initialize the map centered on the crime location
-            const crimeMap = L.map('crime-map').setView([{{ crime.address.effective_latitude }}, {{ crime.address.effective_longitude }}], 15);
-
-    // Add CartoDB Dark Matter tile layer
+            const crimeMap = L.map('crime-map').setView([{{ crime.address.effective_latitude }}, {{ crime.address.effective_longitude }}], 14);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(crimeMap);
 
-    // Add marker for crime location
             const marker = L.circleMarker([{{ crime.address.effective_latitude }}, {{ crime.address.effective_longitude }}], {
                 radius: 8,
                 fillColor: "#F59E0B",
@@ -318,17 +522,26 @@
                 fillOpacity: 0.8
             }).addTo(crimeMap);
 
-    // Add popup to marker
-            let popupContent = '<div style="color: #1f2937;">';
-            popupContent += '<strong>{{ crime.address.name }}</strong><br>';
-            {% if crime.address.city %}
-                popupContent += '{{ crime.address.city.name }}<br>';
-            {% endif %}
-            {% if crime.crime %}
-                popupContent += '<em>{{ crime.crime }}</em>';
-            {% endif %}
-            popupContent += '</div>';
+            // Build popup: place name, weapon, victims, perpetrators
+            const victims = [];
+            {% for person in crime.victim.all %}victims.push('{{ person|escapejs }}');
+            {% endfor %}
+            const perpetrators = [];
+            {% for person in crime.perpetrator.all %}perpetrators.push('{{ person|escapejs }}');
+            {% endfor %}
 
+            let popupContent = '<div style="color:#1f2937;font-size:0.85rem;line-height:1.6;max-width:200px;">';
+            popupContent += '<strong>{{ crime.address.name|escapejs }}</strong>';
+            {% if crime.weapon %}
+                popupContent += '<br><span style="color:#9ca3af;font-size:0.75rem;">Weapon</span><br>{{ crime.weapon.name|escapejs }}';
+            {% endif %}
+            if (victims.length) {
+                popupContent += '<br><span style="color:#9ca3af;font-size:0.75rem;">' + (victims.length > 1 ? 'Victims' : 'Victim') + '</span><br>' + victims.join(', ');
+            }
+            if (perpetrators.length) {
+                popupContent += '<br><span style="color:#9ca3af;font-size:0.75rem;">' + (perpetrators.length > 1 ? 'Perpetrators' : 'Perpetrator') + '</span><br>' + perpetrators.join(', ');
+            }
+            popupContent += '</div>';
             marker.bindPopup(popupContent);
         </script>
     {% endif %}
