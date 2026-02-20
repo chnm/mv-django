@@ -8,176 +8,282 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
     <style>
-        .map-container {
-            position: relative;
+        /* ── Full-height two-zone layout ────────────────────────────── */
+        .page-map-layout {
+            display: flex;
             height: calc(100vh - 80px);
-        }
-
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-
-        /* Filter panel */
-        .filter-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            z-index: 1000;
-            max-width: 300px;
-            width: 260px;
             overflow: hidden;
         }
 
-        /* Clickable header with integrated caret */
-        .filter-panel-header {
+        /* ── Sidebar ─────────────────────────────────────────────────── */
+        .map-sidebar {
+            width: 288px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        /* Filter toggle button */
+        .filter-toggle-btn {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 20px;
-            cursor: pointer;
-            user-select: none;
+            width: 100%;
+            padding: 10px 16px;
             background: #8B4513;
             color: white;
-            border-radius: 8px 8px 0 0;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            text-align: left;
         }
 
-        .filter-panel-header:hover {
+        .filter-toggle-btn:hover {
             background: #7a3c10;
         }
 
-        .filter-panel-header h3 {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
         .filter-caret {
-            font-size: 11px;
-            transition: transform 0.25s ease;
+            font-size: 10px;
+            transition: transform 0.2s ease;
             line-height: 1;
         }
 
-        .filter-panel.panel-collapsed .filter-caret {
+        /* Collapsed = triangle points down (rotate 180°) */
+        .filter-caret.is-collapsed {
             transform: rotate(180deg);
         }
 
-        /* Collapsible body */
-        .filter-panel-body {
-            padding: 16px 20px 20px;
-            max-height: 800px;
-            overflow: hidden;
-            transition: max-height 0.25s ease, padding 0.25s ease;
+        /* Filter body — hidden by default */
+        .filter-body {
+            display: none;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafafa;
+            overflow-y: auto;
+            flex-shrink: 0;
         }
 
-        .filter-panel.panel-collapsed .filter-panel-body {
-            max-height: 0;
-            padding-top: 0;
-            padding-bottom: 0;
+        .filter-body.is-expanded {
+            display: block;
         }
 
-        .filter-section-header {
-            font-size: 13px;
+        .filter-group {
+            margin-bottom: 10px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.06em;
             color: #6b7280;
-            margin: 16px 0 8px 0;
-            padding-top: 12px;
+            margin-bottom: 4px;
+        }
+
+        .filter-group select,
+        .filter-group input[type="number"] {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .filter-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin: 12px 0 6px;
+            padding-top: 10px;
             border-top: 1px solid #e5e7eb;
         }
 
-        .filter-panel .filter-group {
-            margin-bottom: 15px;
+        .filter-radio-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
         }
 
-        .filter-panel label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            font-size: 14px;
+        .filter-radio-row label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: normal;
+            font-size: 11px;
+            text-transform: none;
+            letter-spacing: 0;
+            color: #374151;
+            margin-bottom: 0;
+            cursor: pointer;
         }
 
-        .filter-panel select,
-        .filter-panel input:not([type="radio"]):not([type="checkbox"]) {
+        .filter-action-btn {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        .filter-panel button {
-            width: 100%;
-            padding: 10px;
-            background-color: #8B4513;
+            padding: 7px 10px;
+            background: #8B4513;
             color: white;
             border: none;
             border-radius: 4px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
         }
 
-        .filter-panel button:hover {
-            background-color: #5D2906;
+        .filter-action-btn:hover {
+            background: #5D2906;
         }
 
-        .filter-panel button.reset {
-            background-color: #6b7280;
+        .filter-action-btn.is-reset {
+            background: #6b7280;
         }
 
-        .filter-panel button.reset:hover {
-            background-color: #4b5563;
+        .filter-action-btn.is-reset:hover {
+            background: #4b5563;
         }
 
-        /* Gender sub-option radio labels */
-        #gender-field-group .radio-row {
+        /* ── Case list ───────────────────────────────────────────────── */
+        .case-list-header {
             display: flex;
-            gap: 16px;
-            margin-top: 4px;
-        }
-
-        #gender-field-group .radio-row label {
-            display: inline-flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 5px;
-            font-weight: normal;
-            margin-bottom: 0;
-            cursor: pointer;
+            padding: 10px 16px 8px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #f3f4f6;
         }
 
-        /* Legend box */
+        #case-list-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin: 0;
+        }
+
+        #back-btn {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8B4513;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 0;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        #back-btn:hover {
+            color: #5D2906;
+            text-decoration: underline;
+        }
+
+        .case-list-scroll {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .case-row {
+            padding: 9px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.1s;
+        }
+
+        .case-row:hover {
+            background: #fafafa;
+        }
+
+        .case-row-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0077be;
+            text-decoration: none;
+        }
+
+        .case-row-link:hover {
+            text-decoration: underline;
+        }
+
+        .case-row-type {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .case-row-meta {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .case-badge-fatal {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 1.4;
+            padding: 0 6px;
+            border-radius: 9999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            vertical-align: middle;
+            margin-left: 3px;
+        }
+
+        .case-list-message {
+            padding: 20px 16px;
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+        }
+
+        /* ── Map area ─────────────────────────────────────────────────── */
+        .map-area {
+            position: relative;
+            flex: 1;
+        }
+
+        #map {
+            position: absolute;
+            inset: 0;
+        }
+
+        /* Legend */
         .legend-box {
             position: absolute;
-            bottom: 30px;
-            left: 20px;
+            bottom: 20px;
+            right: 20px;
             background: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            padding: 10px 14px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-            min-width: 140px;
-            font-size: 13px;
+            font-size: 12px;
+            color: #374151;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            margin: 4px 0;
+            margin: 3px 0;
         }
 
         .legend-dot {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 7px;
             flex-shrink: 0;
         }
 
@@ -187,210 +293,34 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.92);
-            padding: 24px 32px;
-            border-radius: 10px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.92);
+            padding: 20px 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
             z-index: 999;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
             color: #374151;
-            text-align: center;
             pointer-events: none;
-        }
-
-        /* Popup styles */
-        .leaflet-popup-content {
-            font-size: 14px;
-            max-width: 300px;
-        }
-
-        .leaflet-popup-content h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .leaflet-popup-content p {
-            margin: 5px 0;
-        }
-
-        .leaflet-popup-content .label {
-            font-weight: 600;
-            color: #374151;
-        }
-
-        /* Drawer Styles */
-        .drawer-overlay {
-            position: fixed;
-            inset: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            transition: opacity 0.3s ease;
-        }
-
-        .drawer {
-            position: fixed;
-            background: white;
-            z-index: 2001;
-            overflow-y: auto;
-            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease;
-        }
-
-        /* Desktop: slide from left */
-        @media (min-width: 768px) {
-            .drawer {
-                top: 0;
-                left: 0;
-                bottom: 0;
-                width: 400px;
-            }
-        }
-
-        /* Mobile: slide from bottom */
-        @media (max-width: 767px) {
-            .drawer {
-                left: 0;
-                right: 0;
-                bottom: 0;
-                max-height: 80vh;
-            }
-        }
-
-        .drawer-header {
-            position: sticky;
-            top: 0;
-            background: white;
-            padding: 20px;
-            border-bottom: 2px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .drawer-content {
-            padding: 20px;
-        }
-
-        .close-drawer {
-            background: #6b7280;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .close-drawer:hover {
-            background: #4b5563;
-        }
-
-        .drawer h2 {
-            margin: 0 0 10px 0;
-            font-size: 24px;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .drawer .info-item {
-            margin: 12px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .drawer .info-label {
-            font-weight: 600;
-            color: #374151;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .drawer .info-value {
-            color: #1f2937;
-            font-size: 16px;
-            margin-top: 4px;
-        }
-
-        .drawer .crimes-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e5e7eb;
-        }
-
-        .drawer .crimes-header {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 15px;
-        }
-
-        .drawer .crime-card {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .drawer .crime-card:hover {
-            background: #f3f4f6;
-            border-color: #d1d5db;
-        }
-
-        .drawer .crime-card a {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .drawer .crime-card a:hover {
-            color: #1e40af;
-            text-decoration: underline;
-        }
-
-        .drawer .crime-type {
-            color: #4b5563;
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
-        .crime-filter-link {
-            color: #8B4513;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .crime-filter-link:hover {
-            color: #5D2906;
-            text-decoration: underline;
-        }
-
-        .drawer .crime-year {
-            color: #6b7280;
-            font-size: 13px;
-            font-style: italic;
         }
     </style>
 {% endblock %}
 
 {% block content %}
-    <div class="map-container" x-data="locationDrawer()">
+    <div class="page-map-layout">
 
-        <!-- Filter panel with integrated header toggle -->
-        <div class="filter-panel" id="filter-panel">
+        <!-- ── Sidebar ── -->
+        <aside class="map-sidebar">
 
-            <div class="filter-panel-header" id="filter-toggle">
-                <h3>Filter Crimes</h3>
-                <span class="filter-caret">&#9650;</span>
-            </div>
+            <!-- Filter toggle (collapsed by default) -->
+            <button class="filter-toggle-btn" id="filter-toggle" type="button">
+                <span>Filters</span>
+                <span class="filter-caret is-collapsed" id="filter-caret">&#9650;</span>
+            </button>
 
-            <div class="filter-panel-body">
+            <!-- Filter body -->
+            <div class="filter-body" id="filter-body">
+
                 <div class="filter-group">
                     <label for="city-filter">City</label>
                     <select id="city-filter">
@@ -423,16 +353,15 @@
 
                 <div class="filter-group">
                     <label for="year-from-filter">Year From</label>
-                    <input type="number" id="year-from-filter" placeholder="e.g., 1500" min="1400" max="2000">
+                    <input type="number" id="year-from-filter" placeholder="e.g. 1500" min="1400" max="2000">
                 </div>
 
                 <div class="filter-group">
                     <label for="year-to-filter">Year To</label>
-                    <input type="number" id="year-to-filter" placeholder="e.g., 1700" min="1400" max="2000">
+                    <input type="number" id="year-to-filter" placeholder="e.g. 1700" min="1400" max="2000">
                 </div>
 
-                <!-- Color by section -->
-                <div class="filter-section-header">Color by</div>
+                <div class="filter-section-label">Colour by</div>
 
                 <div class="filter-group">
                     <label for="color-by-select">Visualization</label>
@@ -444,102 +373,45 @@
                     </select>
                 </div>
 
-                <!-- Gender sub-option, shown only when color-by=gender -->
                 <div class="filter-group" id="gender-field-group" style="display:none">
                     <label>Gender of:</label>
-                    <div class="radio-row">
+                    <div class="filter-radio-row">
                         <label><input type="radio" name="gender_field" value="victim" checked> Victim</label>
                         <label><input type="radio" name="gender_field" value="perpetrator"> Perpetrator</label>
                     </div>
                 </div>
 
-                <button id="filter-action-btn">Apply Filters</button>
+                <button class="filter-action-btn" id="filter-action-btn" type="button">Apply Filters</button>
+
             </div>
+
+            <!-- Case list header -->
+            <div class="case-list-header">
+                <h2 id="case-list-title">All Cases</h2>
+                <button id="back-btn" type="button" style="display:none">&#8592; All cases</button>
+            </div>
+
+            <!-- Scrollable case list -->
+            <div class="case-list-scroll" id="case-list">
+                <div class="case-list-message">Loading&hellip;</div>
+            </div>
+
+        </aside>
+
+        <!-- ── Map area ── -->
+        <div class="map-area">
+            <div id="map">
+                <div id="empty-state" class="empty-state" style="display:none">
+                    No violence events match the current filters.
+                </div>
+            </div>
+            <div id="legend-box" class="legend-box" style="display:none"></div>
         </div>
 
-        <div id="map">
-            <!-- Empty state overlay -->
-            <div id="empty-state" class="empty-state" style="display:none">
-                No violence events match the current filters.
-            </div>
-        </div>
-
-        <!-- Legend box -->
-        <div id="legend-box" class="legend-box" style="display:none"></div>
-
-        <!-- Drawer Overlay -->
-        <div x-show="isOpen"
-             x-transition.opacity
-             @click="close()"
-             class="drawer-overlay"></div>
-
-        <!-- Drawer -->
-        <div class="drawer"
-             x-show="isOpen"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="transform -translate-x-full md:translate-y-0 md:-translate-x-full translate-y-full"
-             x-transition:enter-end="transform translate-x-0 translate-y-0"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="transform translate-x-0 translate-y-0"
-             x-transition:leave-end="transform -translate-x-full md:translate-y-0 md:-translate-x-full translate-y-full">
-
-            <div class="drawer-header">
-                <h2 x-text="location.name"></h2>
-                <button @click="close()" class="close-drawer">Close</button>
-            </div>
-
-            <div class="drawer-content">
-                <!-- Location Information -->
-                <template x-if="location.city">
-                    <div class="info-item">
-                        <div class="info-label">City</div>
-                        <div class="info-value" x-text="location.city"></div>
-                    </div>
-                </template>
-
-                <template x-if="location.category">
-                    <div class="info-item">
-                        <div class="info-label">Category</div>
-                        <div class="info-value" x-text="location.category"></div>
-                    </div>
-                </template>
-
-                <template x-if="location.current_name">
-                    <div class="info-item">
-                        <div class="info-label">Current Name</div>
-                        <div class="info-value" x-text="location.current_name"></div>
-                    </div>
-                </template>
-
-                <!-- Crimes Section -->
-                <template x-if="location.crimes && location.crimes.length > 0">
-                    <div class="crimes-section">
-                        <div class="crimes-header">
-                            Crimes at this location (<span x-text="location.crime_count"></span>)
-                        </div>
-
-                        <template x-for="crime in location.crimes" :key="crime.id">
-                            <div class="crime-card">
-                                <a :href="'/crime/' + crime.id + '/'" x-html="formatCrimeTitle(crime)"></a>
-                                <div class="crime-type" x-show="crime.crime">
-                                    <a :href="crimeListUrl + '?crime=' + encodeURIComponent(crime.crime)"
-                                       x-text="crime.crime"
-                                       class="crime-filter-link"></a>
-                                </div>
-                                <div class="crime-year" x-show="crime.year" x-text="'Year: ' + crime.year"></div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-            </div>
-        </div>
     </div>
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
@@ -547,51 +419,63 @@
         const crimeListUrl  = '{% url "crime_list" %}';
         const GENDER_LABELS = { M: "Male", F: "Female", U: "Unknown" };
         const GENDER_COLORS = { M: "#3b82f6", F: "#ec4899", U: "#6b7280" };
-        const FATALITY_COLORS = { true: "#ef4444", false: "#22c55e" };
-        const TYPE_PALETTE = [
+        const TYPE_PALETTE  = [
             "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
             "#a65628","#f781bf","#999999","#66c2a5","#fc8d62"
         ];
         let crimeTypeColorMap = {};
-        let paletteIndex = 0;
+        let paletteIndex      = 0;
+        let allLoadedCrimes   = [];
 
-        // ── Global drawer controller ──────────────────────────────────────────
-        window.drawerController = null;
+        // ── HTML escaping ─────────────────────────────────────────────────────
+        function escHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
-        function locationDrawer() {
-            return {
-                isOpen: false,
-                location: {
-                    name: '',
-                    city: '',
-                    category: '',
-                    current_name: '',
-                    crime_count: 0,
-                    crimes: []
-                },
+        // ── Sidebar case list ─────────────────────────────────────────────────
+        function renderCaseList(crimes, locationName) {
+            const titleEl = document.getElementById('case-list-title');
+            const backBtn = document.getElementById('back-btn');
+            const listEl  = document.getElementById('case-list');
 
-                init() {
-                    window.drawerController = this;
-                },
+            if (locationName) {
+                titleEl.textContent = locationName;
+                backBtn.style.display = 'block';
+            } else {
+                const n = crimes.length;
+                titleEl.textContent = n + ' case' + (n !== 1 ? 's' : '');
+                backBtn.style.display = 'none';
+            }
 
-                open(locationData) {
-                    this.location = locationData;
-                    this.isOpen = true;
-                    document.body.style.overflow = 'hidden';
-                },
+            if (crimes.length === 0) {
+                listEl.innerHTML = '<div class="case-list-message">No cases to display.</div>';
+                return;
+            }
 
-                close() {
-                    this.isOpen = false;
-                    document.body.style.overflow = 'auto';
-                },
+            listEl.innerHTML = crimes.map(crime => {
+                const caseLabel = crime.number
+                    ? 'Case #' + escHtml(crime.number)
+                    : 'Event #' + escHtml(String(crime.id));
+                const type    = crime.crime          ? escHtml(crime.crime)          : '';
+                const year    = crime.year           ? escHtml(String(crime.year))   : '';
+                const city    = crime.city           ? escHtml(crime.city)           : '';
+                const locName = crime.location_name  ? escHtml(crime.location_name)  : '';
+                const fatal   = crime.fatality
+                    ? '<span class="case-badge-fatal">Fatal</span>'
+                    : '';
+                const meta    = [year, locName, city].filter(Boolean).join(' · ');
 
-                formatCrimeTitle(crime) {
-                    if (crime.number) {
-                        return '<strong>Case #' + crime.number + '</strong>';
-                    }
-                    return 'View Crime Details';
-                }
-            };
+                return '<div class="case-row">' +
+                '<a class="case-row-link" href="/crime/' + crime.id + '/">' + caseLabel + '</a>' +
+                (type  ? ' <span class="case-row-type">· ' + type + '</span>' : '') +
+                fatal +
+                (meta  ? '<div class="case-row-meta">' + meta + '</div>' : '') +
+                '</div>';
+            }).join('');
         }
 
         // ── Color helpers ─────────────────────────────────────────────────────
@@ -607,7 +491,7 @@
             if (colorBy === "fatality")   return crime.fatality ? "#ef4444" : "#22c55e";
             if (colorBy === "gender")     return GENDER_COLORS[crime[genderField + "_gender"]] || "#6b7280";
             if (colorBy === "crime_type") return getCrimeTypeColor(crime.crime);
-            return "#F59E0B"; // default amber
+            return "#F59E0B";
         }
 
         function jitterCoords(lat, lng, index, total) {
@@ -621,13 +505,13 @@
         function readUrlParams() {
             const p = new URLSearchParams(window.location.search);
             return {
-                city:         p.get("city")          || "",
-                crime_type:   p.get("crime_type")    || "",
-                weapon_cat:   p.get("weapon_cat")    || "",
-                year_from:    p.get("year_from")     || "",
-                year_to:      p.get("year_to")       || "",
-                color_by:     p.get("color_by")      || "none",
-                gender_field: p.get("gender_field")  || "victim",
+                city:         p.get("city")         || "",
+                crime_type:   p.get("crime_type")   || "",
+                weapon_cat:   p.get("weapon_cat")   || "",
+                year_from:    p.get("year_from")    || "",
+                year_to:      p.get("year_to")      || "",
+                color_by:     p.get("color_by")     || "none",
+                gender_field: p.get("gender_field") || "victim",
             };
         }
 
@@ -656,7 +540,7 @@
             box.innerHTML = entries.map(([color, label]) =>
                 '<div class="legend-item">' +
                 '<span class="legend-dot" style="background:' + color + '"></span>' +
-                label +
+                escHtml(label) +
                 '</div>'
             ).join("");
             box.style.display = "block";
@@ -673,113 +557,145 @@
 
         let markersLayer = null;
 
-        // ── Load locations ────────────────────────────────────────────────────
+        // ── Load and render locations ─────────────────────────────────────────
         function loadLocations() {
-            const city          = document.getElementById('city-filter').value;
-            const crimeType     = document.getElementById('crime-type-filter').value;
-            const weaponCat     = document.getElementById('weapon-category-filter').value;
-            const yearFrom      = document.getElementById('year-from-filter').value;
-            const yearTo        = document.getElementById('year-to-filter').value;
-            const colorBy       = document.getElementById('color-by-select').value;
-            const genderField   = document.querySelector('input[name="gender_field"]:checked').value;
+            const city        = document.getElementById('city-filter').value;
+            const crimeType   = document.getElementById('crime-type-filter').value;
+            const weaponCat   = document.getElementById('weapon-category-filter').value;
+            const yearFrom    = document.getElementById('year-from-filter').value;
+            const yearTo      = document.getElementById('year-to-filter').value;
+            const colorBy     = document.getElementById('color-by-select').value;
+            const genderField = document.querySelector('input[name="gender_field"]:checked').value;
 
-            // Persist all state to URL (color-by is client-side only, not sent to API)
             pushUrlState({
                 city,
-                crime_type: crimeType,
-                weapon_cat: weaponCat,
-                year_from:  yearFrom,
-                year_to:    yearTo,
-                color_by:   colorBy,
+                crime_type:   crimeType,
+                weapon_cat:   weaponCat,
+                year_from:    yearFrom,
+                year_to:      yearTo,
+                color_by:     colorBy,
                 gender_field: genderField,
             });
 
-            // Build GeoJSON API query (no color-by — it's client-side)
             const params = new URLSearchParams();
-            if (city)        params.append('city', city);
-            if (crimeType)   params.append('crime_type', crimeType);
-            if (weaponCat)   params.append('weapon_category', weaponCat);
-            if (yearFrom)    params.append('year_from', yearFrom);
-            if (yearTo)      params.append('year_to', yearTo);
+            if (city)      params.append('city', city);
+            if (crimeType) params.append('crime_type', crimeType);
+            if (weaponCat) params.append('weapon_category', weaponCat);
+            if (yearFrom)  params.append('year_from', yearFrom);
+            if (yearTo)    params.append('year_to', yearTo);
 
             const url = '{% url "locations_geojson" %}' + (params.toString() ? '?' + params.toString() : '');
 
-            if (markersLayer) {
-                map.removeLayer(markersLayer);
-                markersLayer = null;
-            }
+            if (markersLayer) { map.removeLayer(markersLayer); markersLayer = null; }
 
             fetch(url)
-                .then(response => response.json())
+                .then(r => r.json())
                 .then(data => {
                     const emptyState = document.getElementById('empty-state');
 
                     if (!data.features || data.features.length === 0) {
                         emptyState.style.display = 'block';
+                        allLoadedCrimes = [];
+                        renderCaseList([], null);
                         buildLegend("none", genderField);
                         return;
                     }
                     emptyState.style.display = 'none';
 
-                    // Reset color palette for consistent colors per load
+                    // Reset color palette for fresh color assignments
                     crimeTypeColorMap = {};
                     paletteIndex = 0;
 
+                    // Flatten all crimes for the sidebar "all cases" view
+                    allLoadedCrimes = [];
+                    data.features.forEach(feature => {
+                        const crimes = feature.properties.crimes || [];
+                        crimes.forEach(crime => {
+                            allLoadedCrimes.push(Object.assign({}, crime, {
+                                location_name: feature.properties.name,
+                                city:          feature.properties.city,
+                            }));
+                        });
+                    });
+                    // Sort descending by date then year
+                    allLoadedCrimes.sort((a, b) => {
+                        const da = a.date || (a.year ? String(a.year) : '');
+                        const db = b.date || (b.year ? String(b.year) : '');
+                        return db.localeCompare(da);
+                    });
+                    renderCaseList(allLoadedCrimes, null);
+
                     if (colorBy === "none") {
-                        // Default: location-level markers sized by crime count
+                        // Default mode: location-level markers sized by crime count
                         markersLayer = L.geoJSON(data, {
-                            pointToLayer: function (feature, latlng) {
-                                const crimeCount = feature.properties.crime_count || 1;
-                                const radius = Math.min(6 + (crimeCount * 2), 20);
+                            pointToLayer: (feature, latlng) => {
+                                const count  = feature.properties.crime_count || 1;
+                                const radius = Math.min(6 + (count * 2), 20);
                                 return L.circleMarker(latlng, {
-                                    radius: radius,
-                                    fillColor: "#F59E0B",
-                                    color: "#FBBF24",
-                                    weight: 2,
-                                    opacity: 1,
+                                    radius:      radius,
+                                    fillColor:   "#F59E0B",
+                                    color:       "#FBBF24",
+                                    weight:      2,
+                                    opacity:     1,
                                     fillOpacity: 0.8
                                 });
                             },
-                            onEachFeature: function (feature, layer) {
-                                layer.on('click', function () {
-                                    if (window.drawerController) {
-                                        window.drawerController.open(feature.properties);
-                                    }
+                            onEachFeature: (feature, layer) => {
+                                const n = feature.properties.crime_count || 0;
+                                layer.bindTooltip(
+                                    '<strong>' + escHtml(feature.properties.name || '') + '</strong>' +
+                                    '<br><span style="color:#6b7280;">' +
+                                    n + ' case' + (n !== 1 ? 's' : '') +
+                                    '</span>',
+                                    { sticky: true, direction: 'top' }
+                                );
+                                layer.on('click', () => {
+                                    const locCrimes = (feature.properties.crimes || []).map(c =>
+                                        Object.assign({}, c, {
+                                            location_name: feature.properties.name,
+                                            city:          feature.properties.city,
+                                        })
+                                    );
+                                    renderCaseList(locCrimes, feature.properties.name);
                                 });
                             }
                         }).addTo(map);
+
                     } else {
                         // Color-by mode: individual jittered markers per crime
                         markersLayer = L.layerGroup().addTo(map);
 
-                        data.features.forEach(function (feature) {
-                            const crimes = feature.properties.crimes || [];
+                        data.features.forEach(feature => {
+                            const crimes  = feature.properties.crimes || [];
                             const baseLat = feature.geometry.coordinates[1];
                             const baseLng = feature.geometry.coordinates[0];
                             const total   = crimes.length;
 
-                            crimes.forEach(function (crime, index) {
+                            crimes.forEach((crime, index) => {
                                 const [lat, lng] = jitterCoords(baseLat, baseLng, index, total);
                                 const color = getMarkerColor(crime, colorBy, genderField);
 
                                 const marker = L.circleMarker([lat, lng], {
-                                    radius: 7,
-                                    fillColor: color,
-                                    color: "#fff",
-                                    weight: 1.5,
-                                    opacity: 1,
+                                    radius:      7,
+                                    fillColor:   color,
+                                    color:       "#fff",
+                                    weight:      1.5,
+                                    opacity:     1,
                                     fillOpacity: 0.85
                                 });
 
-                                // Drawer data: single-crime view using location properties
-                                marker.on('click', function () {
-                                    if (window.drawerController) {
-                                        const drawerData = Object.assign({}, feature.properties, {
-                                            crimes: [crime],
-                                            crime_count: 1,
-                                        });
-                                        window.drawerController.open(drawerData);
-                                    }
+                                marker.bindTooltip(
+                                    '<strong>' + escHtml(feature.properties.name || '') + '</strong>' +
+                                    (crime.crime ? '<br>' + escHtml(crime.crime) : ''),
+                                    { sticky: true, direction: 'top' }
+                                );
+
+                                marker.on('click', () => {
+                                    const enriched = Object.assign({}, crime, {
+                                        location_name: feature.properties.name,
+                                        city:          feature.properties.city,
+                                    });
+                                    renderCaseList([enriched], feature.properties.name);
                                 });
 
                                 marker.addTo(markersLayer);
@@ -789,48 +705,34 @@
 
                     buildLegend(colorBy, genderField);
                 })
-                .catch(function (error) {
-                    console.error('Error loading location data:', error);
-                });
+                .catch(err => console.error('Error loading location data:', err));
         }
 
-        // ── Restore state from URL and load ───────────────────────────────────
-        (function initFromUrl() {
-            const p = readUrlParams();
-
-            // Restore filter inputs
-            if (p.city)       document.getElementById('city-filter').value = p.city;
-            if (p.crime_type) document.getElementById('crime-type-filter').value = p.crime_type;
-            if (p.weapon_cat) document.getElementById('weapon-category-filter').value = p.weapon_cat;
-            if (p.year_from)  document.getElementById('year-from-filter').value = p.year_from;
-            if (p.year_to)    document.getElementById('year-to-filter').value = p.year_to;
-
-            // Restore color-by
-            document.getElementById('color-by-select').value = p.color_by;
-            if (p.color_by === 'gender') {
-                document.getElementById('gender-field-group').style.display = 'block';
-            }
-
-            // Restore gender_field radio
-            const radio = document.querySelector('input[name="gender_field"][value="' + p.gender_field + '"]');
-            if (radio) radio.checked = true;
-
-            loadLocations();
-        })();
-
-        // ── Filter toggle (header click) ──────────────────────────────────────
-        document.getElementById('filter-toggle').addEventListener('click', function () {
-            document.getElementById('filter-panel').classList.toggle('panel-collapsed');
+        // ── Back button ───────────────────────────────────────────────────────
+        document.getElementById('back-btn').addEventListener('click', () => {
+            renderCaseList(allLoadedCrimes, null);
         });
 
-        // ── Color-by select ───────────────────────────────────────────────────
+        // ── Filter panel toggle ───────────────────────────────────────────────
+        document.getElementById('filter-toggle').addEventListener('click', () => {
+            document.getElementById('filter-body').classList.toggle('is-expanded');
+            document.getElementById('filter-caret').classList.toggle('is-collapsed');
+        });
+
+        // ── Color-by: show/hide gender sub-option and auto-apply ─────────────
         document.getElementById('color-by-select').addEventListener('change', function () {
             document.getElementById('gender-field-group').style.display =
                 this.value === 'gender' ? 'block' : 'none';
+            loadLocations();
+        });
+
+        // ── Gender radio: auto-apply when changed ─────────────────────────────
+        document.querySelectorAll('input[name="gender_field"]').forEach(radio => {
+            radio.addEventListener('change', () => loadLocations());
         });
 
         // ── Apply / Reset button ──────────────────────────────────────────────
-        const filterIds = [
+        const filterInputIds = [
             'city-filter',
             'crime-type-filter',
             'weapon-category-filter',
@@ -841,32 +743,53 @@
         let filtersApplied = false;
 
         function hasActiveFilters() {
-            return filterIds.some(id => document.getElementById(id).value !== '');
+            return filterInputIds.some(id => document.getElementById(id).value !== '');
         }
 
         function clearFilters() {
-            filterIds.forEach(id => { document.getElementById(id).value = ''; });
+            filterInputIds.forEach(id => { document.getElementById(id).value = ''; });
             document.getElementById('color-by-select').value = 'none';
             document.getElementById('gender-field-group').style.display = 'none';
-            const victimRadio = document.querySelector('input[name="gender_field"][value="victim"]');
-            if (victimRadio) victimRadio.checked = true;
+            const radio = document.querySelector('input[name="gender_field"][value="victim"]');
+            if (radio) radio.checked = true;
         }
 
-        filterBtn.addEventListener('click', function () {
+        filterBtn.addEventListener('click', () => {
             if (filtersApplied) {
                 clearFilters();
                 loadLocations();
                 filtersApplied = false;
                 filterBtn.textContent = 'Apply Filters';
-                filterBtn.classList.remove('reset');
+                filterBtn.classList.remove('is-reset');
             } else {
                 loadLocations();
                 if (hasActiveFilters()) {
                     filtersApplied = true;
                     filterBtn.textContent = 'Reset Filters';
-                    filterBtn.classList.add('reset');
+                    filterBtn.classList.add('is-reset');
                 }
             }
         });
+
+        // ── Restore URL state and initial load ────────────────────────────────
+        (function initFromUrl() {
+            const p = readUrlParams();
+
+            if (p.city)       document.getElementById('city-filter').value = p.city;
+            if (p.crime_type) document.getElementById('crime-type-filter').value = p.crime_type;
+            if (p.weapon_cat) document.getElementById('weapon-category-filter').value = p.weapon_cat;
+            if (p.year_from)  document.getElementById('year-from-filter').value = p.year_from;
+            if (p.year_to)    document.getElementById('year-to-filter').value = p.year_to;
+
+            document.getElementById('color-by-select').value = p.color_by;
+            if (p.color_by === 'gender') {
+                document.getElementById('gender-field-group').style.display = 'block';
+            }
+
+            const radio = document.querySelector('input[name="gender_field"][value="' + p.gender_field + '"]');
+            if (radio) radio.checked = true;
+
+            loadLocations();
+        })();
     </script>
 {% endblock %}
