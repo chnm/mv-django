@@ -223,9 +223,6 @@ SOCIALACCOUNT_PROVIDERS = {
     "slack": {
         "VERIFIED_EMAIL": True,
         "SCOPE": ["openid", "profile", "email"],
-        "AUTH_PARAMS": {
-            "auth_type": "reauthenticate",
-        },
         "APP": {
             "client_id": env("ALLAUTH_SLACK_CLIENT_ID", default="PLACEHOLDER"),
             "secret": env("ALLAUTH_SLACK_CLIENT_SECRET", default="PLACEHOLDER"),
