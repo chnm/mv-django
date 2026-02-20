@@ -202,6 +202,7 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
 )
 
 # allauth: provider specific settings
+ACCOUNT_DEFAULT_HTTP_PROTOCOL='https'
 SOCIALACCOUNT_PROVIDERS = {
     "orcid": {
         "BASE_DOMAIN": "orcid.org",
