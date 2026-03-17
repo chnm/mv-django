@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block title %}{{ page.title }} - Mapping Early Modern Violence{% endblock %}
+
+{% block content %}
+    <div class="bg-white-50 py-12 sm:py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            {% if page.hero_image %}
+                <div class="mb-8">
+                    {% image page.hero_image width-1200 class="w-full h-auto rounded-lg" %}
+                </div>
+            {% endif %}
+
+            <div class="mb-8">
+                <h1 class="text-3xl sm:text-4xl font-display font-bold text-black mb-4">{{ page.title }}</h1>
+                <p class="text-base text-gray-500">
+                    {{ page.date|date:"F j, Y" }}{% if page.author %} &middot; {{ page.author }}{% endif %}
+                </p>
+            </div>
+
+            <div class="prose prose-xl prose-mediterranean max-w-none">
+                {% for block in page.body %}
+                    {% if block.block_type == 'paragraph' %}
+                        <div class="prose-content text-black text-lg leading-relaxed">{{ block.value|safe }}</div>
+                    {% else %}
+                        {% include_block block %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-gray-200">
+                <a href="{% pageurl page.get_parent %}" class="text-mediterranean-600 hover:text-mediterranean-800 font-medium transition-colors duration-200">&larr; Back to {{ page.get_parent.title }}</a>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
