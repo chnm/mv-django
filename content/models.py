@@ -1,3 +1,4 @@
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import models
 from wagtail import blocks
 from wagtail.admin.panels import FieldPanel
@@ -182,3 +183,72 @@ class GeneralPage(Page):
     class Meta:
         verbose_name = "About Page"
         verbose_name_plural = "About Pages"
+
+
+class BlogIndexPage(Page):
+    """Container page that lists all blog posts."""
+
+    max_count = 1
+    subpage_types = ["content.BlogPost"]
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.show_in_menus = True
+        super().save(*args, **kwargs)
+
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        posts = (
+            BlogPost.objects.live().descendant_of(self).order_by("-first_published_at")
+        )
+        paginator = Paginator(posts, 10)
+        page_number = request.GET.get("page")
+        try:
+            posts = paginator.page(page_number)
+        except PageNotAnInteger:
+            posts = paginator.page(1)
+        except EmptyPage:
+            posts = paginator.page(paginator.num_pages)
+        context["posts"] = posts
+        return context
+
+    class Meta:
+        verbose_name = "Blog Index Page"
+        verbose_name_plural = "Blog Index Pages"
+
+
+class BlogPost(Page):
+    """Individual blog post."""
+
+    author = models.CharField(max_length=255, blank=True)
+    date = models.DateField("Post date")
+    intro = models.TextField(blank=True, help_text="Short summary for the listing page")
+    hero_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    body = StreamField(
+        [
+            ("paragraph", blocks.RichTextBlock(help_text="Rich text content")),
+            ("image_gallery", ImageGalleryBlock()),
+        ],
+        use_json_field=True,
+        help_text="Main content for the post",
+    )
+
+    content_panels = Page.content_panels + [
+        FieldPanel("author"),
+        FieldPanel("date"),
+        FieldPanel("intro"),
+        FieldPanel("hero_image"),
+        FieldPanel("body"),
+    ]
+
+    parent_page_types = ["content.BlogIndexPage"]
+
+    class Meta:
+        verbose_name = "Blog Post"
+        verbose_name_plural = "Blog Posts"
