@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "django_tables2",
     "django_filters",
     "import_export",
@@ -182,6 +183,7 @@ AUTHENTICATION_BACKENDS = [
 
 
 # allauth
+SITE_ID = 1
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 ACCOUNT_EMAIL_VERIFICATION = (
     "optional"  # Changed from 'mandatory' to fix ConnectionRefusedError
@@ -202,7 +204,6 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
 )
 
 # allauth: provider specific settings
-ACCOUNT_DEFAULT_HTTP_PROTOCOL='https'
 SOCIALACCOUNT_PROVIDERS = {
     "orcid": {
         "BASE_DOMAIN": "orcid.org",
@@ -221,11 +222,10 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     "slack": {
         "VERIFIED_EMAIL": True,
+        "SCOPE": ["openid", "profile", "email"],
         "APP": {
             "client_id": env("ALLAUTH_SLACK_CLIENT_ID", default="PLACEHOLDER"),
             "secret": env("ALLAUTH_SLACK_CLIENT_SECRET", default="PLACEHOLDER"),
-            "key": "",
-            "settings": {"scope": ["openid", "profile", "email"]},
         },
     },
 }
