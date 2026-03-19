@@ -269,6 +269,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "month",
         "day",
         "day_of_week",
+        "input_by",
         "date_of_entry",
         "updated_by",
     )

@@ -372,7 +372,6 @@ class Crime(models.Model):
         on_delete=models.CASCADE,
         related_name="created_by",
         verbose_name="Created by",
-        editable=False,
     )
     date_of_entry = models.DateTimeField(
         auto_now_add=True,
@@ -385,7 +384,6 @@ class Crime(models.Model):
         null=True,
         blank=True,
         related_name="updated_by",
-        editable=False,
     )
 
     def __str__(self) -> str:
