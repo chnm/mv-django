@@ -174,14 +174,13 @@
                     </div>
                 </div>
             </div>
-            {% load socialaccount %}
             {% block footer_content %}
                 <div class="container mx-auto text-center text-white-300 text-base mt-8 py-4 border-t border-mediterranean-700">
                     {% if user.is_authenticated %}
-                        <p>Logged in as <code class="text-white-200">{{ user.username }}</code> &middot; <a class="underline hover:text-white-50" href="/admin/">Admin</a> | <a class="underline hover:text-white-50" href="{% url 'account_logout' %}">Logout</a></p>
+                        <p>Logged in as <code class="text-white-200">{{ user.username }}</code> &middot; <a class="underline hover:text-white-50" href="/admin/">Admin</a> | <a class="underline hover:text-white-50" href="{% url 'logout' %}">Logout</a></p>
                     {% else %}
                         <div class="space-x-4">
-                            <a class="underline hover:text-white-50" href="{% url 'account_login' %}">Admin Login</a>
+                            <a class="underline hover:text-white-50" href="{% url 'login' %}">Admin Login</a>
                         </div>
                     {% endif %}
                 </div>

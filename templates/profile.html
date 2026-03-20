@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load allauth %}
 
 {% block title %}Profile{% endblock %}
 {% block content %}
@@ -62,16 +61,10 @@
             <div>
               <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div class="space-y-3">
-                <a href="{% url 'account_change_password' %}" class="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                <a href="{% url 'password_change' %}" class="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
                   Change Password
                 </a>
-                <a href="{% url 'account_email' %}" class="block w-full bg-gray-600 text-white text-center py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200">
-                  Manage Email Addresses
-                </a>
-                <a href="{% url 'socialaccount_connections' %}" class="block w-full bg-green-600 text-white text-center py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
-                  Connected Accounts
-                </a>
-                <a href="{% url 'account_logout' %}" class="block w-full bg-red-600 text-white text-center py-2 px-4 rounded-md hover:bg-red-700 transition duration-200">
+                <a href="{% url 'logout' %}" class="block w-full bg-red-600 text-white text-center py-2 px-4 rounded-md hover:bg-red-700 transition duration-200">
                   Log Out
                 </a>
               </div>
@@ -81,18 +74,12 @@
         <!-- Additional Information -->
           <div class="mt-8 pt-8 border-t border-gray-200">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Status</h2>
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid sm:grid-cols-3 gap-4">
               <div class="bg-blue-50 rounded-lg p-4 text-center">
                 <div class="text-2xl font-bold text-blue-600">
                   {% if user.is_active %}Active{% else %}Inactive{% endif %}
                 </div>
                 <div class="text-sm text-gray-600">Account Status</div>
-              </div>
-              <div class="bg-green-50 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-green-600">
-                  {% if user.emailaddress_set.all.0.verified %}Verified{% else %}Unverified{% endif %}
-                </div>
-                <div class="text-sm text-gray-600">Email Status</div>
               </div>
               <div class="bg-purple-50 rounded-lg p-4 text-center">
                 <div class="text-2xl font-bold text-purple-600">
@@ -100,11 +87,11 @@
                 </div>
                 <div class="text-sm text-gray-600">Account Type</div>
               </div>
-              <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-yellow-600">
-                  {{ user.socialaccount_set.all|length }}
+              <div class="bg-green-50 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-green-600">
+                  {{ user.email }}
                 </div>
-                <div class="text-sm text-gray-600">Connected Accounts</div>
+                <div class="text-sm text-gray-600">Email</div>
               </div>
             </div>
           </div>

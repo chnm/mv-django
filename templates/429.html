@@ -1,11 +1,8 @@
-{% extends "allauth/layouts/entrance.html" %}
-{% load allauth %}
-{% block head_title %}
-    Too Many Requests
-{% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        Too Many Requests
-    {% endelement %}
-    <p>You are sending too many requests.</p>
-{% endblock content %}
+{% extends 'account/_base.html' %}
+{% block title %}Too Many Requests{% endblock %}
+{% block content_auth_form %}
+  <div class="text-center">
+    <h1 class="text-2xl font-bold text-gray-900 mb-4">Too Many Requests</h1>
+    <p class="text-gray-600">You are sending too many requests.</p>
+  </div>
+{% endblock content_auth_form %}

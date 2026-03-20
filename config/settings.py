@@ -57,13 +57,6 @@ INSTALLED_APPS = [
     "django_tables2",
     "django_filters",
     "import_export",
-    # allauth
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.orcid",
-    "allauth.socialaccount.providers.github",
-    "allauth.socialaccount.providers.slack",
     # wagtail
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
@@ -99,8 +92,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # allauth
-    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -175,60 +166,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
     "django.contrib.auth.backends.ModelBackend",
-    # allauth specific authentication methods, such as login by email
-    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-
-# allauth
 SITE_ID = 1
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-ACCOUNT_EMAIL_VERIFICATION = (
-    "optional"  # Changed from 'mandatory' to fix ConnectionRefusedError
-)
-ACCOUNT_LOGIN_METHODS = {"email", "username"}
-ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
-ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
-ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
-ACCOUNT_SESSION_REMEMBER = True
+LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
-# Custom adapter to prevent any signups unless invited
-ACCOUNT_ADAPTER = "config.adapters.NoSignupAdapter"
-SOCIALACCOUNT_ADAPTER = "config.adapters.NoSocialSignupAdapter"
-SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # match social email to existing account
-SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
-    True  # auto-connect without manual confirmation
-)
-
-# allauth: provider specific settings
-SOCIALACCOUNT_PROVIDERS = {
-    "orcid": {
-        "BASE_DOMAIN": "orcid.org",
-        "MEMBER_API": False,
-        "APP": {
-            "client_id": env("ALLAUTH_ORCID_CLIENT_ID", default="PLACEHOLDER"),
-            "secret": env("ALLAUTH_ORCID_CLIENT_SECRET", default="PLACEHOLDER"),
-        },
-    },
-    "github": {
-        "VERIFIED_EMAIL": True,
-        "APP": {
-            "client_id": env("ALLAUTH_GITHUB_CLIENT_ID", default="PLACEHOLDER"),
-            "secret": env("ALLAUTH_GITHUB_CLIENT_SECRET", default="PLACEHOLDER"),
-        },
-    },
-    "slack": {
-        "VERIFIED_EMAIL": True,
-        "SCOPE": ["openid", "profile", "email"],
-        "APP": {
-            "client_id": env("ALLAUTH_SLACK_CLIENT_ID", default="PLACEHOLDER"),
-            "secret": env("ALLAUTH_SLACK_CLIENT_SECRET", default="PLACEHOLDER"),
-        },
-    },
-}
 
 # Email settings for development and production
 if DEBUG:
@@ -412,23 +356,6 @@ UNFOLD = {
                         "title": "Groups",
                         "icon": "group",
                         "link": "/admin/auth/group/",
-                    },
-                ],
-            },
-            {
-                "title": "Social Authentication",
-                "separator": True,
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": "Social Applications",
-                        "icon": "apps",
-                        "link": "/admin/socialaccount/socialapp/",
-                    },
-                    {
-                        "title": "Social Accounts",
-                        "icon": "account_circle",
-                        "link": "/admin/socialaccount/socialaccount/",
                     },
                 ],
             },
