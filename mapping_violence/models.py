@@ -56,6 +56,12 @@ class Person(models.Model):
         max_length=255,
         help_text="Enter last name first, as in: Badoer, Angelo",
     )
+    given_name = models.CharField(
+        blank=True,
+        max_length=255,
+        verbose_name="Given name (display name)",
+        help_text="How the person is commonly referred to in sources. Used as the display name when present.",
+    )
     description = models.TextField(
         blank=True,
         help_text="Input description of person. Example: Youth of 18 years without beard, or Madonna Anzola, wife of Lodovico",
@@ -99,10 +105,11 @@ class Person(models.Model):
     notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
+        if self.given_name:
+            return self.given_name
         if self.first_name and self.last_name:
             return self.first_name + " " + self.last_name
-        else:
-            return self.last_name
+        return self.last_name or self.first_name or ""
 
 
 class Event(models.Model):

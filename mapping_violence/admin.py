@@ -441,10 +441,14 @@ class PersonAdmin(ModelAdmin):
     search_fields = (
         "first_name",
         "last_name",
+        "given_name",
     )
 
     fieldsets = (
-        ("Basic Information", {"fields": ("first_name", "last_name", "gender")}),
+        (
+            "Basic Information",
+            {"fields": ("first_name", "last_name", "given_name", "gender")},
+        ),
         (
             "Description & Background",
             {
