@@ -1,7 +1,7 @@
 import django_filters
 from django.db.models import Q
 
-from locations.models import City
+from locations.models import URBAN_RURAL_CHOICES, City
 
 from .models import WEAPON_CATEGORY_CHOICES, Crime, Person
 
@@ -27,15 +27,8 @@ class CrimeFilter(django_filters.FilterSet):
         label="City",
         empty_label="All Cities",
     )
-    person = django_filters.ModelChoiceFilter(
-        queryset=Person.objects.filter(
-            Q(crime_victim__isnull=False) | Q(crime_perpetrator__isnull=False)
-        )
-        .exclude(Q(last_name="") | Q(last_name__isnull=True))
-        .distinct()
-        .order_by("last_name", "first_name"),
+    person = django_filters.CharFilter(
         label="Person (Victim or Perpetrator)",
-        empty_label="All People",
         method="filter_by_person",
     )
     year = django_filters.CharFilter(lookup_expr="icontains", label="Year")
@@ -51,11 +44,25 @@ class CrimeFilter(django_filters.FilterSet):
         lookup_expr="icontains",
         label="Weapon Subcategory",
     )
+    urban_rural = django_filters.ChoiceFilter(
+        choices=URBAN_RURAL_CHOICES,
+        field_name="address__urban_rural",
+        label="Urban/Rural",
+        empty_label="All",
+    )
 
     def filter_by_person(self, queryset, name, value):
-        """Filter crimes where the person is either a victim or perpetrator"""
+        """Filter crimes where a victim or perpetrator name matches the search term"""
         if value:
-            return queryset.filter(Q(victim=value) | Q(perpetrator=value)).distinct()
+            person_q = (
+                Q(first_name__icontains=value)
+                | Q(last_name__icontains=value)
+                | Q(given_name__icontains=value)
+            )
+            matching_people = Person.objects.filter(person_q)
+            return queryset.filter(
+                Q(victim__in=matching_people) | Q(perpetrator__in=matching_people)
+            ).distinct()
         return queryset
 
     class Meta:
@@ -69,4 +76,5 @@ class CrimeFilter(django_filters.FilterSet):
             "fatality",
             "weapon_category",
             "weapon_subcategory",
+            "urban_rural",
         ]

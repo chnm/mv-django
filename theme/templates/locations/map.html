@@ -352,6 +352,16 @@
                 </div>
 
                 <div class="filter-group">
+                    <label for="urban-rural-filter">Urban/Rural</label>
+                    <select id="urban-rural-filter">
+                        <option value="">All</option>
+                        {% for value, label in urban_rural_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
                     <label for="year-from-filter">Year From</label>
                     <input type="number" id="year-from-filter" placeholder="e.g. 1500" min="1400" max="2000">
                 </div>
@@ -564,6 +574,7 @@
             const weaponCat   = document.getElementById('weapon-category-filter').value;
             const yearFrom    = document.getElementById('year-from-filter').value;
             const yearTo      = document.getElementById('year-to-filter').value;
+            const urbanRural  = document.getElementById('urban-rural-filter').value;
             const colorBy     = document.getElementById('color-by-select').value;
             const genderField = document.querySelector('input[name="gender_field"]:checked').value;
 
@@ -573,16 +584,18 @@
                 weapon_cat:   weaponCat,
                 year_from:    yearFrom,
                 year_to:      yearTo,
+                urban_rural:  urbanRural,
                 color_by:     colorBy,
                 gender_field: genderField,
             });
 
             const params = new URLSearchParams();
-            if (city)      params.append('city', city);
-            if (crimeType) params.append('crime_type', crimeType);
-            if (weaponCat) params.append('weapon_category', weaponCat);
-            if (yearFrom)  params.append('year_from', yearFrom);
-            if (yearTo)    params.append('year_to', yearTo);
+            if (city)       params.append('city', city);
+            if (crimeType)  params.append('crime_type', crimeType);
+            if (weaponCat)  params.append('weapon_category', weaponCat);
+            if (yearFrom)   params.append('year_from', yearFrom);
+            if (yearTo)     params.append('year_to', yearTo);
+            if (urbanRural) params.append('urban_rural', urbanRural);
 
             const url = '{% url "locations_geojson" %}' + (params.toString() ? '?' + params.toString() : '');
 
@@ -779,7 +792,8 @@
             if (p.crime_type) document.getElementById('crime-type-filter').value = p.crime_type;
             if (p.weapon_cat) document.getElementById('weapon-category-filter').value = p.weapon_cat;
             if (p.year_from)  document.getElementById('year-from-filter').value = p.year_from;
-            if (p.year_to)    document.getElementById('year-to-filter').value = p.year_to;
+            if (p.year_to)     document.getElementById('year-to-filter').value = p.year_to;
+            if (p.urban_rural) document.getElementById('urban-rural-filter').value = p.urban_rural;
 
             document.getElementById('color-by-select').value = p.color_by;
             if (p.color_by === 'gender') {

@@ -143,11 +143,21 @@ class LocationWidget(widgets.ForeignKeyWidget):
                 parts.append(f"({category_of_space})")
             location_name = " - ".join(parts)
 
+        # Auto-detect urban/rural from place name text
+        combined_text = f"{city_name} {location_name}".lower()
+        if "contado" in combined_text:
+            urban_rural = "rural"
+        elif "citta" in combined_text or "città" in combined_text:
+            urban_rural = "urban"
+        else:
+            urban_rural = "unknown"
+
         location_defaults = {
             "name": location_name,
             "city": city,
             "category_of_space": category_of_space,
             "description_of_location": description_of_location,
+            "urban_rural": urban_rural,
         }
 
         # Try to find existing location or create new one

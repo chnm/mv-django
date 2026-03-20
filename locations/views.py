@@ -2,7 +2,7 @@ from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from locations.models import City, Location
+from locations.models import URBAN_RURAL_CHOICES, City, Location
 from mapping_violence.models import WEAPON_CATEGORY_CHOICES, Crime
 
 
@@ -23,6 +23,7 @@ def map_view(request):
         "cities": cities,
         "crime_types": crime_types,
         "weapon_categories": WEAPON_CATEGORY_CHOICES,
+        "urban_rural_choices": URBAN_RURAL_CHOICES,
     }
     return render(request, "locations/map.html", context)
 
@@ -38,6 +39,7 @@ def locations_geojson(request):
     year_from = request.GET.get("year_from")
     year_to = request.GET.get("year_to")
     weapon_category = request.GET.get("weapon_category")
+    urban_rural = request.GET.get("urban_rural")
 
     if city_id:
         locations = locations.filter(city_id=city_id)
@@ -53,6 +55,9 @@ def locations_geojson(request):
 
     if weapon_category:
         locations = locations.filter(crime__weapon__weapon_category=weapon_category)
+
+    if urban_rural:
+        locations = locations.filter(urban_rural=urban_rural)
 
     # Get unique locations with crime counts
     locations = locations.annotate(crime_count=Count("crime", distinct=True)).distinct()
@@ -110,6 +115,7 @@ def locations_geojson(request):
                 "sestiere": location.sestiere or "",
                 "street": location.street or "",
                 "landmark": location.landmark or "",
+                "urban_rural": location.urban_rural or "unknown",
                 "crime_count": len(crimes_data),
                 "crimes": crimes_data,
             },
