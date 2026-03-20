@@ -1,7 +1,7 @@
 import django_filters
 from django.db.models import Q
 
-from locations.models import City
+from locations.models import URBAN_RURAL_CHOICES, City
 
 from .models import WEAPON_CATEGORY_CHOICES, Crime, Person
 
@@ -44,6 +44,12 @@ class CrimeFilter(django_filters.FilterSet):
         lookup_expr="icontains",
         label="Weapon Subcategory",
     )
+    urban_rural = django_filters.ChoiceFilter(
+        choices=URBAN_RURAL_CHOICES,
+        field_name="address__urban_rural",
+        label="Urban/Rural",
+        empty_label="All",
+    )
 
     def filter_by_person(self, queryset, name, value):
         """Filter crimes where a victim or perpetrator name matches the search term"""
@@ -70,4 +76,5 @@ class CrimeFilter(django_filters.FilterSet):
             "fatality",
             "weapon_category",
             "weapon_subcategory",
+            "urban_rural",
         ]

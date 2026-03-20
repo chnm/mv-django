@@ -178,10 +178,17 @@ class CityAdmin(ModelAdmin):
 class LocationAdmin(ModelAdmin):
     """Admin for Location entities"""
 
-    list_display = ("name", "city", "category_of_space", "get_coordinates")
+    list_display = (
+        "name",
+        "city",
+        "category_of_space",
+        "urban_rural",
+        "get_coordinates",
+    )
     list_filter = (
         "city",
         "category_of_space",
+        "urban_rural",
         "city__parish",
     )
     search_fields = (
@@ -196,7 +203,7 @@ class LocationAdmin(ModelAdmin):
         ("Basic Information", {"fields": ("name", "city", "current_name")}),
         (
             "Location Details",
-            {"fields": ("category_of_space", "description_of_location")},
+            {"fields": ("category_of_space", "description_of_location", "urban_rural")},
         ),
         (
             "Address Components",

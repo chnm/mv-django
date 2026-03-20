@@ -39,6 +39,13 @@ class City(models.Model):
         return self.name
 
 
+URBAN_RURAL_CHOICES = [
+    ("urban", "Urban"),
+    ("rural", "Rural"),
+    ("unknown", "Unknown"),
+]
+
+
 class Location(models.Model):
     """Model for specific locations within cities"""
 
@@ -93,6 +100,15 @@ class Location(models.Model):
         max_digits=9,
         decimal_places=6,
         help_text="Specific location longitude (falls back to city coordinates if empty)",
+    )
+
+    urban_rural = models.CharField(
+        max_length=10,
+        choices=URBAN_RURAL_CHOICES,
+        default="unknown",
+        blank=True,
+        verbose_name="Urban/Rural",
+        help_text="Classify this location as urban (citta) or rural (contado)",
     )
 
     notes = models.TextField(
