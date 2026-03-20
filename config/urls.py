@@ -8,6 +8,7 @@ from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
+from content.views import download_blog_post_markdown
 from locations.views import locations_geojson, map_view
 from mapping_violence.views import crime_detail, crime_list, index
 
@@ -18,6 +19,11 @@ urlpatterns = [
     path("api/locations.geojson", locations_geojson, name="locations_geojson"),
     path("crime/<int:crime_id>/", crime_detail, name="crime_detail"),
     path("admin/", admin.site.urls),
+    path(
+        "cms/download-markdown/<int:page_id>/",
+        download_blog_post_markdown,
+        name="download_blog_post_markdown",
+    ),
     path("cms/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("accounts/", include("django.contrib.auth.urls")),
