@@ -69,14 +69,13 @@
                             {% if nav_item.has_children %}
                                 <!-- Dropdown Menu -->
                                 <div class="relative dropdown">
-                                    <button class="dropdown-toggle text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center border-b-2 border-transparent hover:border-gray-400 transition-all duration-200">
+                                    <button class="dropdown-toggle text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
                                         {{ nav_item.page.title }}
                                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </button>
-                                    <div class="dropdown-menu absolute left-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-2 z-50 hidden border border-gray-200">
-                                        <a href="{{ nav_item.page.url }}" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150">{{ nav_item.page.title }}</a>
+                                    <div class="dropdown-menu absolute left-0 top-full w-48 py-2 z-50 hidden border-l border-r border-b border-gray-200" style="background-color: #ffffff;">
                                         {% for child in nav_item.children %}
                                             <a href="{{ child.url }}" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150">{{ child.title }}</a>
                                         {% endfor %}
@@ -203,6 +202,29 @@
                 mobileMenu.classList.toggle('hidden');
                 menuIcon.classList.toggle('hidden');
                 closeIcon.classList.toggle('hidden');
+            });
+
+            // Desktop dropdown menus (hover with delay to prevent flicker)
+            document.querySelectorAll('.dropdown').forEach(function(dropdown) {
+                const menu = dropdown.querySelector('.dropdown-menu');
+                let timeout;
+
+                dropdown.addEventListener('mouseenter', function() {
+                    clearTimeout(timeout);
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown').forEach(function(other) {
+                        if (other !== dropdown) {
+                            other.querySelector('.dropdown-menu').classList.add('hidden');
+                        }
+                    });
+                    menu.classList.remove('hidden');
+                });
+
+                dropdown.addEventListener('mouseleave', function() {
+                    timeout = setTimeout(function() {
+                        menu.classList.add('hidden');
+                    }, 150);
+                });
             });
 
             // Close mobile menu when clicking on links
