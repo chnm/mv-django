@@ -1,0 +1,165 @@
+<style>
+    /* ── Shared filter bar styles ───────────────────────────────────── */
+    .filter-bar {
+        flex-shrink: 0;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 8px 16px;
+    }
+
+    .filter-bar-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .filter-bar-group label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #6b7280;
+        margin-bottom: 2px;
+        white-space: nowrap;
+    }
+
+    .filter-bar-group select,
+    .filter-bar-group input[type="number"] {
+        padding: 5px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 12px;
+        background: white;
+        min-width: 120px;
+    }
+
+    .filter-bar-group select:disabled {
+        background: #f3f4f6;
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .filter-bar-group input[type="number"] {
+        width: 80px;
+    }
+
+    .filter-bar-year {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+    }
+
+    .filter-bar-year-sep {
+        padding-bottom: 6px;
+        color: #9ca3af;
+        font-size: 12px;
+    }
+
+    .filter-bar-person {
+        min-width: 180px;
+    }
+
+    .filter-bar-fatality {
+        min-width: auto;
+    }
+
+    .filter-bar-checkbox-wrap {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 0;
+    }
+
+    .filter-bar-checkbox-wrap input[type="checkbox"] {
+        margin: 0;
+    }
+
+    .filter-bar-checkbox-label {
+        font-size: 12px !important;
+        font-weight: normal !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        color: #374151 !important;
+        margin-bottom: 0 !important;
+        cursor: pointer;
+    }
+
+    .filter-bar-separator {
+        width: 1px;
+        height: 32px;
+        background: #e5e7eb;
+        align-self: flex-end;
+        margin-bottom: 2px;
+    }
+
+    .filter-bar-actions {
+        display: flex;
+        gap: 6px;
+        align-self: flex-end;
+        margin-left: auto;
+    }
+
+    .filter-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 14px;
+        background: #8B4513;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    .filter-action-btn:hover {
+        background: #5D2906;
+        color: white;
+    }
+
+    .filter-action-btn.is-reset {
+        background: #6b7280;
+    }
+
+    .filter-action-btn.is-reset:hover {
+        background: #4b5563;
+        color: white;
+    }
+
+    /* Tom Select overrides for compact filter bar */
+    .filter-bar .ts-wrapper {
+        min-width: 180px;
+        font-size: 12px;
+    }
+
+    .filter-bar .ts-control {
+        padding: 3px 8px !important;
+        min-height: 28px !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 4px !important;
+        background: white !important;
+    }
+
+    .filter-bar .ts-control .item {
+        font-size: 11px;
+        padding: 1px 6px !important;
+        background: #fef3c7 !important;
+        border: 1px solid #fcd34d !important;
+        color: #92400e !important;
+        border-radius: 3px !important;
+    }
+
+    .filter-bar .ts-dropdown {
+        font-size: 12px;
+    }
+</style>

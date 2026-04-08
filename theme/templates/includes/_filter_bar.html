@@ -1,0 +1,107 @@
+{% comment %}
+Shared filter bar included by both the map and data table pages.
+
+Required context variables:
+  cities, crime_types, weapon_categories, weapon_subcategories,
+  urban_rural_choices, locations_by_city_json
+
+Optional context variable:
+  filter_mode  — "map" or "table" (controls minor UI differences)
+{% endcomment %}
+
+<div class="filter-bar" id="filter-bar">
+    <div class="filter-bar-row">
+
+        <div class="filter-bar-group">
+            <label for="filter-city">City</label>
+            <select id="filter-city" name="city">
+                <option value="">All Cities</option>
+                {% for city in cities %}
+                    <option value="{{ city.id }}">{{ city.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-bar-group">
+            <label for="filter-location">Location</label>
+            <select id="filter-location" name="location" disabled>
+                <option value="">Select a city first</option>
+            </select>
+        </div>
+
+        <div class="filter-bar-group">
+            <label for="filter-crime-type">Crime Type</label>
+            <select id="filter-crime-type" name="crime_type">
+                <option value="">All Crime Types</option>
+                {% for ct in crime_types %}
+                    <option value="{{ ct }}">{{ ct }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-bar-group">
+            <label for="filter-weapon-category">Weapon</label>
+            <select id="filter-weapon-category" name="weapon_category">
+                <option value="">All Weapons</option>
+                {% for value, label in weapon_categories %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-bar-group">
+            <label for="filter-weapon-subcategory">Subcategory</label>
+            <select id="filter-weapon-subcategory" name="weapon_subcategory">
+                <option value="">All</option>
+                {% for sc in weapon_subcategories %}
+                    <option value="{{ sc }}">{{ sc }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-bar-group">
+            <label for="filter-urban-rural">Urban/Rural</label>
+            <select id="filter-urban-rural" name="urban_rural">
+                <option value="">All</option>
+                {% for value, label in urban_rural_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-bar-year">
+            <div class="filter-bar-group">
+                <label for="filter-year-from">Year</label>
+                <input type="number" id="filter-year-from" name="year_from" placeholder="From" min="1400" max="2000">
+            </div>
+            <span class="filter-bar-year-sep">&ndash;</span>
+            <div class="filter-bar-group">
+                <label for="filter-year-to">&nbsp;</label>
+                <input type="number" id="filter-year-to" name="year_to" placeholder="To" min="1400" max="2000">
+            </div>
+        </div>
+
+        <div class="filter-bar-group filter-bar-person">
+            <label for="filter-person">Person</label>
+            <select id="filter-person" name="person" multiple placeholder="Search by name..."></select>
+        </div>
+
+        <div class="filter-bar-group filter-bar-fatality">
+            <label for="filter-fatality">Fatal</label>
+            <div class="filter-bar-checkbox-wrap">
+                <input type="checkbox" id="filter-fatality" name="fatality" value="true">
+                <label for="filter-fatality" class="filter-bar-checkbox-label">Only</label>
+            </div>
+        </div>
+
+        <div class="filter-bar-actions">
+            <button class="filter-action-btn" id="apply-filters-btn" type="{% if filter_mode == 'table' %}submit{% else %}button{% endif %}">Apply</button>
+            {% if filter_mode == "table" %}
+                <a href="{% url 'crime_list' %}" class="filter-action-btn is-reset">Reset</a>
+            {% else %}
+                <button class="filter-action-btn is-reset" id="reset-filters-btn" type="button">Reset</button>
+            {% endif %}
+        </div>
+
+    </div>
+</div>

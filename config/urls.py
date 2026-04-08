@@ -10,6 +10,7 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from content.views import download_blog_post_markdown
 from locations.views import locations_geojson, map_view
+from mapping_violence.api import person_search
 from mapping_violence.views import crime_detail, crime_list, index
 
 urlpatterns = [
@@ -17,6 +18,7 @@ urlpatterns = [
     path("map/", map_view, name="map"),
     path("data/", crime_list, name="crime_list"),
     path("api/locations.geojson", locations_geojson, name="locations_geojson"),
+    path("api/persons/search/", person_search, name="person_search"),
     path("crime/<int:crime_id>/", crime_detail, name="crime_detail"),
     path("admin/", admin.site.urls),
     path(
