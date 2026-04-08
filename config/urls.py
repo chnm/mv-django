@@ -8,7 +8,9 @@ from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
+from content.views import download_blog_post_markdown
 from locations.views import locations_geojson, map_view
+from mapping_violence.api import person_search
 from mapping_violence.views import crime_detail, crime_list, index
 
 urlpatterns = [
@@ -16,12 +18,17 @@ urlpatterns = [
     path("map/", map_view, name="map"),
     path("data/", crime_list, name="crime_list"),
     path("api/locations.geojson", locations_geojson, name="locations_geojson"),
+    path("api/persons/search/", person_search, name="person_search"),
     path("crime/<int:crime_id>/", crime_detail, name="crime_detail"),
     path("admin/", admin.site.urls),
+    path(
+        "cms/download-markdown/<int:page_id>/",
+        download_blog_post_markdown,
+        name="download_blog_post_markdown",
+    ),
     path("cms/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
-    # allauth
-    path("accounts/", include("allauth.urls")),
+    path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/profile/", TemplateView.as_view(template_name="profile.html")),
     path("schema-viewer/", include("schema_viewer.urls")),
     # Wagtail pages - must be last to act as catch-all

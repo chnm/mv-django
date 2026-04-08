@@ -56,6 +56,17 @@ class Person(models.Model):
         max_length=255,
         help_text="Enter last name first, as in: Badoer, Angelo",
     )
+    given_name = models.CharField(
+        blank=True,
+        max_length=255,
+        verbose_name="Given name (display name)",
+        help_text="How the person is commonly referred to in sources. Used as the display name when present.",
+    )
+    honorific = models.CharField(
+        blank=True,
+        max_length=255,
+        help_text="Input honorific or title, if known. Example: Ser, Madonna, Messer, Magnifico",
+    )
     description = models.TextField(
         blank=True,
         help_text="Input description of person. Example: Youth of 18 years without beard, or Madonna Anzola, wife of Lodovico",
@@ -98,11 +109,22 @@ class Person(models.Model):
     repeat_offender = models.BooleanField(default=False)
     notes = models.TextField(null=True, blank=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["last_name", "first_name"], name="person_name_idx"),
+            models.Index(fields=["given_name"], name="person_given_name_idx"),
+        ]
+
     def __str__(self):
-        if self.first_name and self.last_name:
-            return self.first_name + " " + self.last_name
+        if self.given_name:
+            name = self.given_name
+        elif self.first_name and self.last_name:
+            name = self.first_name + " " + self.last_name
         else:
-            return self.last_name
+            name = self.last_name or self.first_name or ""
+        if self.honorific:
+            return f"{self.honorific} {name}" if name else self.honorific
+        return name
 
 
 class Event(models.Model):
@@ -372,7 +394,6 @@ class Crime(models.Model):
         on_delete=models.CASCADE,
         related_name="created_by",
         verbose_name="Created by",
-        editable=False,
     )
     date_of_entry = models.DateTimeField(
         auto_now_add=True,
@@ -385,7 +406,6 @@ class Crime(models.Model):
         null=True,
         blank=True,
         related_name="updated_by",
-        editable=False,
     )
 
     def __str__(self) -> str:
