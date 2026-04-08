@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django_tables2 import RequestConfig
 
 from content.models import HomePageContent, ProjectPerson
+from mapping_violence.context_helpers import get_filter_context
 from mapping_violence.filters import CrimeFilter
 from mapping_violence.models import Crime
 from mapping_violence.tables import CrimeTable
@@ -82,7 +83,7 @@ def crime_detail(request, crime_id):
 def crime_list(request):
     """Display a data table of all crimes with filtering"""
     crimes = (
-        Crime.objects.select_related("address", "address__city")
+        Crime.objects.select_related("address", "address__city", "weapon")
         .prefetch_related("victim", "perpetrator")
         .order_by("-date", "-year")
     )
@@ -98,5 +99,6 @@ def crime_list(request):
         "table": table,
         "filter": crime_filter,
     }
+    context.update(get_filter_context())
 
     return render(request, "crimes/list.html", context)

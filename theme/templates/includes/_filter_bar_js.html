@@ -1,0 +1,118 @@
+{% comment %}
+Shared filter bar JavaScript — city→location cascade and Tom Select person autocomplete.
+
+Expects:
+  - window.LOCATIONS_BY_CITY to be set before this script runs
+  - Tom Select JS to be loaded before this script
+  - Element IDs: filter-city, filter-location, filter-person
+{% endcomment %}
+<script>
+    // ── City → Location cascading dropdown ──────────────────────────────
+    function populateLocationDropdown(cityId, selectedLocationId) {
+        const sel = document.getElementById('filter-location');
+        sel.innerHTML = '';
+
+        if (!cityId) {
+            sel.innerHTML = '<option value="">Select a city first</option>';
+            sel.disabled = true;
+            return;
+        }
+
+        const locs = (window.LOCATIONS_BY_CITY || {})[cityId] || [];
+        sel.disabled = false;
+        sel.innerHTML = '<option value="">All locations</option>';
+
+        // Sort: precise first, then alphabetical
+        const sorted = locs.slice().sort((a, b) => {
+            if (a.precise !== b.precise) return a.precise ? -1 : 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        sorted.forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc.id;
+            opt.textContent = loc.name + (loc.precise ? '' : ' (approx.)');
+            sel.appendChild(opt);
+        });
+
+        if (selectedLocationId) {
+            sel.value = selectedLocationId;
+        }
+    }
+
+    document.getElementById('filter-city').addEventListener('change', function () {
+        populateLocationDropdown(this.value, '');
+    });
+
+    // ── Tom Select: person autocomplete ─────────────────────────────────
+    if (typeof TomSelect !== 'undefined') {
+        new TomSelect('#filter-person', {
+            valueField: 'value',
+            labelField: 'text',
+            searchField: 'text',
+            plugins: ['remove_button'],
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                const cityVal = document.getElementById('filter-city').value;
+                const params = new URLSearchParams({ q: query });
+                if (cityVal) params.set('city', cityVal);
+                fetch('{% url "person_search" %}?' + params.toString())
+                    .then(r => r.json())
+                    .then(data => callback(data))
+                    .catch(() => callback());
+            },
+            render: {
+                no_results: function() {
+                    return '<div class="no-results">No matches</div>';
+                },
+            },
+        });
+    }
+
+    // ── Restore filter state from URL params ────────────────────────────
+    (function restoreFilterState() {
+        const p = new URLSearchParams(window.location.search);
+
+        const cityVal = p.get('city') || '';
+        if (cityVal) {
+            document.getElementById('filter-city').value = cityVal;
+            populateLocationDropdown(cityVal, p.get('location') || '');
+        }
+
+        const fields = {
+            'filter-crime-type':          'crime_type',
+            'filter-weapon-category':     'weapon_category',
+            'filter-weapon-subcategory':  'weapon_subcategory',
+            'filter-urban-rural':         'urban_rural',
+            'filter-year-from':           'year_from',
+            'filter-year-to':             'year_to',
+        };
+        Object.entries(fields).forEach(([id, param]) => {
+            const val = p.get(param);
+            if (val) {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            }
+        });
+
+        // Fatality checkbox
+        const fatalVal = p.get('fatality');
+        if (fatalVal && fatalVal.toLowerCase() === 'true') {
+            document.getElementById('filter-fatality').checked = true;
+        }
+
+        // Person (Tom Select) — load pre-selected persons by ID
+        const personVal = p.get('person');
+        if (personVal && typeof TomSelect !== 'undefined') {
+            const ts = document.getElementById('filter-person').tomselect;
+            if (ts) {
+                const ids = personVal.split(',').filter(Boolean);
+                // Fetch person names for pre-selected IDs
+                ids.forEach(id => {
+                    ts.addOption({ value: id, text: 'Person #' + id });
+                    ts.addItem(id, true);
+                });
+            }
+        }
+    })();
+</script>
