@@ -54,7 +54,7 @@
             {# Contributors column #}
                     <div class="lg:col-span-1">
                         {% if project_team %}
-                            <h3 class="text-xl font-semibold text-black mb-4">Project Team</h3>
+                            <h2 class="text-xl font-semibold text-black mb-4">Project Team</h2>
                             <div class="space-y-4 mb-6">
                                 {% for person in project_team %}
                                     <div class="flex items-start space-x-3">
@@ -80,7 +80,7 @@
                         {% endif %}
 
                         {% if advisory_board %}
-                            <h3 class="text-xl font-semibold text-black mb-4">Advisory Board</h3>
+                            <h2 class="text-xl font-semibold text-black mb-4">Advisory Board</h2>
                             <div class="space-y-4">
                                 {% for person in advisory_board %}
                                     <div class="flex items-start space-x-3">
@@ -106,11 +106,11 @@
                         {% endif %}
 
                         {% if not project_team and not advisory_board %}
-                            <h3 class="text-xl font-semibold text-black mb-4">Contributors</h3>
+                            <h2 class="text-xl font-semibold text-black mb-4">Contributors</h2>
                             <div class="space-y-4">
                                 <div class="flex items-start space-x-3">
                                     <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-madden.jpg" class="w-full h-full object-cover"/>
+                                        <img src="/static/images/head-madden.jpg" class="w-full h-full object-cover" alt="Amanda Madden"/>
                                     </div>
                                     <div>
                                         <p class="text-base font-medium text-black">Amanda Madden</p>
@@ -120,7 +120,7 @@
                                 </div>
                                 <div class="flex items-start space-x-3">
                                     <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-rose.jpg" class="w-full h-full object-cover"/>
+                                        <img src="/static/images/head-rose.jpg" class="w-full h-full object-cover" alt="Colin Rose"/>
                                     </div>
                                     <div>
                                         <p class="text-base font-medium text-black">Colin Rose</p>
@@ -130,7 +130,7 @@
                                 </div>
                                 <div class="flex items-start space-x-3">
                                     <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-heppler.jpg" class="w-full h-full object-cover"/>
+                                        <img src="/static/images/head-heppler.jpg" class="w-full h-full object-cover" alt="Jason A. Heppler"/>
                                     </div>
                                     <div>
                                         <p class="text-base font-medium text-black">Jason A. Heppler</p>
@@ -140,7 +140,7 @@
                                 </div>
                                 <div class="flex items-start space-x-3">
                                     <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-buck.jpg" class="w-full h-full object-cover"/>
+                                        <img src="/static/images/head-buck.jpg" class="w-full h-full object-cover" alt="Brandan P. Buck"/>
                                     </div>
                                     <div>
                                         <p class="text-base font-medium text-black">Brandan P. Buck</p>
