@@ -64,41 +64,47 @@
                         </h1>
                     </div>
                     <!-- Desktop Navigation -->
-                    <div class="hidden md:flex items-center space-x-8">
+                    <ul class="hidden md:flex items-center space-x-8 list-none m-0 p-0">
                         {% for nav_item in nav_data %}
                             {% if nav_item.has_children %}
                                 <!-- Dropdown Menu -->
-                                <div class="relative dropdown">
+                                <li class="relative dropdown">
                                     <button class="dropdown-toggle text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
                                         {{ nav_item.page.title }}
                                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </button>
-                                    <div class="dropdown-menu absolute left-0 top-full w-48 py-2 z-50 hidden border-l border-r border-b border-gray-200" style="background-color: #ffffff;">
+                                    <ul class="dropdown-menu absolute left-0 top-full w-48 py-2 z-50 hidden border-l border-r border-b border-gray-200 list-none m-0 p-0" style="background-color: #ffffff;">
                                         {% for child in nav_item.children %}
-                                            <a href="{{ child.url }}" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150">{{ child.title }}</a>
+                                            <li><a href="{{ child.url }}" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150">{{ child.title }}</a></li>
                                         {% endfor %}
-                                    </div>
-                                </div>
+                                    </ul>
+                                </li>
                             {% else %}
                                 <!-- Regular Link -->
-                                <a href="{{ nav_item.page.url }}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == nav_item.page.slug %}text-gray-900 border-gray-400{% endif %}">
-                                    {{ nav_item.page.title }}
-                                </a>
+                                <li>
+                                    <a href="{{ nav_item.page.url }}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == nav_item.page.slug %}text-gray-900 border-gray-400{% endif %}">
+                                        {{ nav_item.page.title }}
+                                    </a>
+                                </li>
                             {% endif %}
                         {% endfor %}
-                        <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
-                            Map
-                        </a>
-                        <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
-                            Data
-                        </a>
+                        <li>
+                            <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                                Map
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                                Data
+                            </a>
+                        </li>
                         {% block nav_links %}{% endblock %}
-                    </div>
+                    </ul>
                     <!-- Mobile menu button -->
                     <div class="md:hidden flex items-center">
-                        <button id="mobile-menu-button" class="bg-white text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 hover:border-gray-400 transition-all duration-200">
+                        <button id="mobile-menu-button" aria-label="Toggle navigation menu" class="bg-white text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 hover:border-gray-400 transition-all duration-200">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                                 <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -108,20 +114,26 @@
                 </div>
                 <!-- Mobile Navigation Menu -->
                 <div id="mobile-menu" class="md:hidden hidden">
-                    <div class="px-4 pt-4 pb-6 space-y-3 bg-white border-t border-gray-200">
+                    <ul class="px-4 pt-4 pb-6 space-y-3 bg-white border-t border-gray-200 list-none m-0 p-0">
                         {% for page in nav_pages %}
-                            <a href="{{ page.url }}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == page.slug %}text-gray-900 border-gray-400{% endif %}">
-                                {{ page.title }}
-                            </a>
+                            <li>
+                                <a href="{{ page.url }}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == page.slug %}text-gray-900 border-gray-400{% endif %}">
+                                    {{ page.title }}
+                                </a>
+                            </li>
                         {% endfor %}
-                        <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
-                            Map
-                        </a>
-                        <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
-                            Data
-                        </a>
+                        <li>
+                            <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                                Map
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                                Data
+                            </a>
+                        </li>
                         {% block mobile_nav_links %}{% endblock %}
-                    </div>
+                    </ul>
                 </div>
             </div>
         </nav>
@@ -135,7 +147,7 @@
         <div id="gallery-lightbox-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden">
             <div class="relative w-full h-full flex items-center justify-center p-4">
                 <!-- Close button -->
-                <button onclick="closeGalleryLightbox()"
+                <button onclick="closeGalleryLightbox()" aria-label="Close image gallery"
                         class="absolute top-4 right-4 z-10 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -166,7 +178,7 @@
                         </p>
                     </div>
                     <div>
-                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo-black.png"/>
+                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo-black.png" alt="Roy Rosenzweig Center for History and New Media logo"/>
                     </div>
                     <div>
                         {% block footer_links %}{% endblock %}
