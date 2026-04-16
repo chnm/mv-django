@@ -2,11 +2,15 @@
 {% load static %}
 {% load wagtailimages_tags %}
 
+{% block nav_classes %}nav-hero bg-transparent absolute top-0 left-0 right-0 z-20{% endblock %}
+{% block nav_style %}{% endblock %}
+{% block nav_overlay %}{% endblock %}
+
 {% block content %}
-        <!-- Hero Section -->
+        <!-- Hero Section (extends behind nav) -->
     <div class="bg-cover bg-center relative" style="background-image: url('{% static 'images/website_image.jpg' %}')">
         <div class="absolute inset-0 bg-black bg-opacity-70"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 pb-16 sm:pb-20 lg:pb-24 relative z-10">
             <div class="text-center">
                 {% if home_content %}
                     <div style="color: white;" class="text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0 [&_*]:!text-white">
