@@ -1,29 +1,33 @@
 from wagtail.models import Page
 
 
+def _build_nav_tree(page, max_depth=3):
+    """
+    Recursively build navigation data for a page and its children.
+    max_depth limits how many levels deep to traverse (1 = just this level's children).
+    """
+    children_pages = page.get_children().live().in_menu()
+    children = []
+    if max_depth > 0:
+        for child in children_pages:
+            children.append(_build_nav_tree(child, max_depth - 1))
+    return {
+        "page": page,
+        "children": children,
+        "has_children": len(children) > 0,
+    }
+
+
 def navigation(request):
     """
     Add navigation menu items to template context from Wagtail pages.
-    Includes child pages for dropdown functionality.
+    Supports nested child pages up to 3 levels deep.
     """
     try:
-        # Get the root page (usually the home page)
         root_page = Page.objects.filter(depth=2).first()
         if root_page:
-            # Get all live pages that are direct children of root
             nav_pages = root_page.get_children().live().in_menu()
-
-            # Build navigation data with child pages
-            nav_data = []
-            for page in nav_pages:
-                children = page.get_children().live().in_menu()
-                nav_data.append(
-                    {
-                        "page": page,
-                        "children": children,
-                        "has_children": children.exists(),
-                    }
-                )
+            nav_data = [_build_nav_tree(page, max_depth=2) for page in nav_pages]
         else:
             nav_data = []
     except Exception:
