@@ -443,7 +443,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
 class PersonAdmin(ModelAdmin):
     """Admin for Person entities"""
 
-    list_display = ("__str__", "gender", "citizenship", "occupation")
+    list_display = ("__str__", "honorific", "gender", "citizenship", "occupation")
     list_filter = ("gender", "citizenship", "occupation")
     search_fields = (
         "first_name",
@@ -454,7 +454,15 @@ class PersonAdmin(ModelAdmin):
     fieldsets = (
         (
             "Basic Information",
-            {"fields": ("first_name", "last_name", "given_name", "gender")},
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "given_name",
+                    "honorific",
+                    "gender",
+                )
+            },
         ),
         (
             "Description & Background",
