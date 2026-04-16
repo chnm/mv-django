@@ -14,6 +14,30 @@
         <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
 
         {% tailwind_css %}
+        <style>
+            /* Dark nav theme for non-home pages (hero image background) */
+            .nav-hero .nav-link,
+            .nav-hero .dropdown-toggle,
+            .nav-hero h1 { color: #ffffff; }
+            .nav-hero .nav-link:hover,
+            .nav-hero .dropdown-toggle:hover,
+            .nav-hero h1 a:hover { color: #e5e7eb; }
+            .nav-hero .nav-link.is-active { border-color: #ffffff; color: #ffffff; }
+            .nav-hero #mobile-menu-button {
+                background: rgba(255,255,255,0.15);
+                color: #ffffff;
+                border-color: rgba(255,255,255,0.3);
+            }
+            .nav-hero #mobile-menu-button:hover {
+                background: rgba(255,255,255,0.25);
+            }
+            .nav-hero #mobile-menu ul {
+                background: rgba(0,0,0,0.8);
+                border-color: rgba(255,255,255,0.1);
+            }
+            .nav-hero .mobile-link { color: #e5e7eb; }
+            .nav-hero .mobile-link:hover { color: #ffffff; }
+        </style>
         {% block extra_css %}{% endblock %}
 
         <!-- Matomo -->
@@ -53,12 +77,13 @@
         {% endif %}
 
         <!-- Navigation -->
-        <nav class="bg-white shadow-lg border-b-2 border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="{% block nav_classes %}nav-hero bg-cover bg-center relative shadow-lg{% endblock %}" {% block nav_style %}style="background-image: url('{% static 'images/website_image.jpg' %}')"{% endblock %}>
+            {% block nav_overlay %}<div class="absolute inset-0 bg-black bg-opacity-70"></div>{% endblock %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="flex justify-between h-20">
                     <div class="flex items-center">
                         <h1 class="text-lg sm:text-xl lg:text-2xl font-display font-bold text-gray-800 mr-8">
-                            <a href="{% url "index" %}" class="hover:text-gray-600 transition-colors duration-200">
+                            <a href="{% url "index" %}" class="hover:opacity-80 transition-colors duration-200">
                                 Mapping Early Modern Violence
                             </a>
                         </h1>
@@ -69,7 +94,7 @@
                             {% if nav_item.has_children %}
                                 <!-- Dropdown Menu -->
                                 <li class="relative dropdown">
-                                    <button class="dropdown-toggle text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
+                                    <button class="dropdown-toggle nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
                                         {{ nav_item.page.title }}
                                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -84,19 +109,19 @@
                             {% else %}
                                 <!-- Regular Link -->
                                 <li>
-                                    <a href="{{ nav_item.page.url }}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == nav_item.page.slug %}text-gray-900 border-gray-400{% endif %}">
+                                    <a href="{{ nav_item.page.url }}" class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == nav_item.page.slug %}is-active text-gray-900 border-gray-400{% endif %}">
                                         {{ nav_item.page.title }}
                                     </a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                         <li>
-                            <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'map' %}" class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}is-active text-gray-900 border-gray-400{% endif %}">
                                 Map
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'crime_list' %}" class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}is-active text-gray-900 border-gray-400{% endif %}">
                                 Data
                             </a>
                         </li>
@@ -117,18 +142,18 @@
                     <ul class="px-4 pt-4 pb-6 space-y-3 bg-white border-t border-gray-200 list-none m-0 p-0">
                         {% for page in nav_pages %}
                             <li>
-                                <a href="{{ page.url }}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == page.slug %}text-gray-900 border-gray-400{% endif %}">
+                                <a href="{{ page.url }}" class="mobile-link text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == page.slug %}text-gray-900 border-gray-400{% endif %}">
                                     {{ page.title }}
                                 </a>
                             </li>
                         {% endfor %}
                         <li>
-                            <a href="{% url 'map' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'map' %}" class="mobile-link text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
                                 Map
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'crime_list' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'crime_list' %}" class="mobile-link text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
                                 Data
                             </a>
                         </li>
@@ -169,36 +194,65 @@
         </div>
 
         <!-- Footer -->
-        <footer class="bg-mediterranean-800 text-white-100 pt-12">
+        <footer class="bg-gray-800 text-gray-300 pt-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid md:grid-cols-3 gap-8">
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- About + Logo column -->
                     <div>
-                        <p class="text-white-300 text-base pb-4">
-                            Mapping Early Modern Violence is a an endeavor of the <a class="underline hover:text-white-50" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
+                        <div class="flex items-center gap-6 mb-4">
+                            <img class="w-48 h-auto" src="/static/images/rrchnm-logo-white.png" alt="Roy Rosenzweig Center for History and New Media logo"/>
+                            <img class="w-56 h-auto" src="/static/images/gmu-logo-light.png" alt="George Mason University logo"/>
+                        </div>
+                        <p class="text-gray-300 text-base mb-4">
+                            Mapping Early Modern Violence is an endeavor of the <a class="underline hover:text-white" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
+                        </p>
+                        <p class="text-gray-300 text-base">
+                            <a class="underline hover:text-white" href="mailto:chnm@gmu.edu">Contact us</a>
                         </p>
                     </div>
-                    <div>
-                        <img class="w-64 h-auto" src="/static/images/rrchnm-logo-black.png" alt="Roy Rosenzweig Center for History and New Media logo"/>
-                    </div>
-                    <div>
-                        {% block footer_links %}{% endblock %}
+                    <!-- Navigation columns -->
+                    <div class="grid sm:grid-cols-2 gap-8">
+                        {% for nav_item in nav_data %}
+                            <div>
+                                <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">
+                                    <a href="{{ nav_item.page.url }}" class="hover:text-gray-300 transition-colors duration-200">{{ nav_item.page.title }}</a>
+                                </h3>
+                                {% if nav_item.has_children %}
+                                    <ul class="space-y-2 list-none m-0 p-0">
+                                        {% for child in nav_item.children %}
+                                            <li>
+                                                <a href="{{ child.url }}" class="text-gray-300 hover:text-white transition-colors duration-200 text-base">
+                                                    {{ child.title }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div>
+                            <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">
+                                <a href="{% url 'map' %}" class="hover:text-gray-300 transition-colors duration-200">Map</a>
+                            </h3>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">
+                                <a href="{% url 'crime_list' %}" class="hover:text-gray-300 transition-colors duration-200">Data</a>
+                            </h3>
+                        </div>
                     </div>
                 </div>
             </div>
             {% block footer_content %}
-                <div class="container mx-auto text-center text-white-300 text-base mt-8 py-4 border-t border-mediterranean-700">
-                    {% if user.is_authenticated %}
-                        <p>Logged in as <code class="text-white-200">{{ user.username }}</code> &middot; <a class="underline hover:text-white-50" href="/admin/">Admin</a> | <a class="underline hover:text-white-50" href="{% url 'logout' %}">Logout</a></p>
-                    {% else %}
-                        <div class="space-x-4">
-                            <a class="underline hover:text-white-50" href="{% url 'login' %}">Admin Login</a>
-                        </div>
-                    {% endif %}
-                </div>
+                {% if user.is_authenticated %}
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm mt-10 py-4 border-t border-gray-700">
+                        <p>Logged in as <code class="text-gray-300">{{ user.username }}</code> &middot; <a class="underline hover:text-white" href="/admin/">Admin</a> | <a class="underline hover:text-white" href="{% url 'logout' %}">Logout</a></p>
+                    </div>
+                {% endif %}
             {% endblock footer_content %}
             {% block copyright %}
-                <div class="bg-mediterranean-900 text-white-100 text-center text-base py-4">
-                    &copy; 2024&mdash;{%  now "Y" %} | Roy Rosenzweig Center for History and New Media
+                <div class="bg-gray-900 text-gray-400 text-center text-sm py-4 mt-4">
+                    &copy; 2024&mdash;{% now "Y" %} | Roy Rosenzweig Center for History and New Media
                 </div>
             {% endblock copyright%}
         </footer>
