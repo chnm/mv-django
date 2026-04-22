@@ -8,6 +8,9 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
                 <h1 class="text-3xl sm:text-4xl font-display font-bold text-black mb-4">{{ page.title }}</h1>
+                {% if page.author %}
+                    <p class="text-gray-600 text-base">By {{ page.author }}</p>
+                {% endif %}
             </div>
 
             <div class="prose prose-xl prose-mediterranean max-w-none">
@@ -19,6 +22,39 @@
                     {% endif %}
                 {% endfor %}
             </div>
+
+            {% if child_pages %}
+                <nav class="mt-12 border-t border-gray-200 pt-8">
+                    {% for child in child_pages %}
+                        <div class="mb-10">
+                            <h2 class="text-2xl font-display font-bold text-black mb-4">
+                                <a href="{% pageurl child.page %}" class="hover:text-burgundy-700 transition-colors duration-200">
+                                    {{ child.page.title }}
+                                </a>
+                            </h2>
+                            {% if child.children %}
+                                <div class="space-y-4 pl-4 border-l-2 border-gray-200">
+                                    {% for grandchild in child.children %}
+                                        <a href="{% pageurl grandchild %}" class="block p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 group">
+                                            <h3 class="text-lg font-semibold text-gray-900 group-hover:text-burgundy-700 transition-colors duration-200 mb-1">
+                                                {{ grandchild.title }}
+                                            </h3>
+                                            {% if grandchild.author %}
+                                                <p class="text-sm text-gray-500 mb-2">By {{ grandchild.author }}{% if grandchild.last_published_at %} · {{ grandchild.last_published_at|date:"F j, Y" }}{% endif %}</p>
+                                            {% elif grandchild.last_published_at %}
+                                                <p class="text-sm text-gray-500 mb-2">{{ grandchild.last_published_at|date:"F j, Y" }}</p>
+                                            {% endif %}
+                                            {% if grandchild.summary %}
+                                                <p class="text-base text-gray-600 leading-relaxed">{{ grandchild.summary }}</p>
+                                            {% endif %}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </nav>
+            {% endif %}
         </div>
     </div>
 {% endblock content %}
