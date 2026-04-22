@@ -9,6 +9,16 @@ class City(models.Model):
     """Model for cities/towns with general coordinates"""
 
     name = models.CharField(max_length=255, unique=True)
+    country = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Modern country name (e.g., Italy, United Kingdom, Germany)",
+    )
+    region = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Historical or modern region (e.g., Veneto, Lombardy, Terraferma)",
+    )
     parish = models.CharField(
         blank=True, max_length=255, help_text="Administrative parish or region"
     )

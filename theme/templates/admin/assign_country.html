@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div class="border border-base-200 rounded-default shadow-xs dark:border-base-800">
+        <p class="font-semibold p-4 text-font-important-light dark:text-font-important-dark">
+            Assign a country (and optionally a region) to <strong>{{ queryset.count }}</strong>
+            selected cit{{ queryset.count|pluralize:"y,ies" }}.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for obj in queryset %}
+                <input type="hidden" name="_selected_action" value="{{ obj.pk }}">
+            {% endfor %}
+            <input type="hidden" name="action" value="{{ action }}">
+
+            <div class="border-t border-base-200 p-4 dark:border-base-800">
+                <label class="block font-medium mb-1 text-font-important-light text-sm dark:text-font-important-dark">
+                    {{ form.country.label }}
+                </label>
+                {{ form.country }}
+                {% if form.country.errors %}
+                    <p class="mt-2 text-red-600 text-sm dark:text-red-400">{{ form.country.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="border-t border-base-200 p-4 dark:border-base-800">
+                <label class="block font-medium mb-1 text-font-important-light text-sm dark:text-font-important-dark">
+                    {{ form.region.label }}
+                </label>
+                {{ form.region }}
+            </div>
+
+            <div class="border-t border-base-200 flex flex-col gap-3 items-center p-4 lg:flex-row dark:border-base-800">
+                <a href="../" class="border border-base-200 flex items-center justify-center font-medium px-3 py-2 rounded-default w-full hover:bg-base-50 lg:block lg:mb-0 lg:w-auto dark:border-base-700 dark:text-font-default-dark dark:hover:text-base-200 dark:hover:bg-base-900">
+                    {% trans "Cancel" %}
+                </a>
+                <button type="submit" name="apply" class="bg-primary-600 border border-transparent cursor-pointer flex items-center justify-center font-medium px-3 py-2 rounded-default text-sm text-white w-full lg:ml-auto lg:w-auto">
+                    {% trans "Assign" %}
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

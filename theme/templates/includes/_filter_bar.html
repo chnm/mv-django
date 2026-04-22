@@ -13,6 +13,16 @@ Optional context variable:
     <div class="filter-bar-row">
 
         <div class="filter-bar-group">
+            <label for="filter-country">Country</label>
+            <select id="filter-country" name="country">
+                <option value="">All Countries</option>
+                {% for c in countries %}
+                    <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-bar-group">
             <label for="filter-city">City</label>
             <select id="filter-city" name="city">
                 <option value="">All Cities</option>

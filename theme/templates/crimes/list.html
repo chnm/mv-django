@@ -167,6 +167,9 @@
 
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-    <script>window.LOCATIONS_BY_CITY = {{ locations_by_city_json|safe }};</script>
+    <script>
+        window.LOCATIONS_BY_CITY = {{ locations_by_city_json|safe }};
+        window.CITIES_BY_COUNTRY = {{ cities_by_country_json|safe }};
+    </script>
     {% include "includes/_filter_bar_js.html" %}
 {% endblock %}
