@@ -59,23 +59,6 @@
     </head>
 
     <body class="bg-white-100 font-serif leading-normal tracking-normal">
-        {% if request.get_host == 'localhost:8000' or request.get_host == 'localhost' or request.get_host == '127.0.0.1:8000' or request.get_host == '127.0.0.1' or request.get_host == 'dev.earlymodernviolence.org' %}
-            <div class="bg-lemon-100 border-l-4 border-lemon-500 text-lemon-800 p-4">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-lemon-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium">
-                            This beta site is a work in progress. The live site can be viewed at <a href="https://earlymodernviolence.org" class="underline text-lemon-900">https://earlymodernviolence.org</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-
         <!-- Navigation -->
         <nav class="{% block nav_classes %}nav-hero bg-cover bg-center relative shadow-lg{% endblock %}" {% block nav_style %}style="background-image: url('{% static 'images/website_image.jpg' %}')"{% endblock %}>
             {% block nav_overlay %}<div class="absolute inset-0 bg-black bg-opacity-70"></div>{% endblock %}
@@ -94,12 +77,12 @@
                             {% if nav_item.has_children %}
                                 <!-- Dropdown Menu -->
                                 <li class="relative dropdown">
-                                    <button class="dropdown-toggle nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
+                                    <a href="{{ nav_item.page.url }}" class="dropdown-toggle nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
                                         {{ nav_item.page.title }}
                                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
-                                    </button>
+                                    </a>
                                     <ul class="dropdown-menu absolute left-0 top-full w-48 py-2 z-50 hidden border-l border-r border-b border-gray-200 list-none m-0 p-0" style="background-color: #ffffff;">
                                         {% for child in nav_item.children %}
                                             <li class="{% if child.has_children %}relative submenu-parent{% endif %}">

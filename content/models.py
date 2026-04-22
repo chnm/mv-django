@@ -161,6 +161,15 @@ class GeneralPage(Page):
     Page model for general pages content.
     """
 
+    author = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Author of this page (e.g., for guide essays)",
+    )
+    summary = models.TextField(
+        blank=True,
+        help_text="Short summary or excerpt displayed in table-of-contents listings",
+    )
     content = StreamField(
         [
             ("paragraph", blocks.RichTextBlock(help_text="Rich text content")),
@@ -171,8 +180,25 @@ class GeneralPage(Page):
     )
 
     content_panels = Page.content_panels + [
+        FieldPanel("author"),
+        FieldPanel("summary"),
         FieldPanel("content"),
     ]
+
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        children = self.get_children().live().specific()
+        child_data = []
+        for child in children:
+            grandchildren = child.get_children().live().specific()
+            child_data.append(
+                {
+                    "page": child,
+                    "children": grandchildren,
+                }
+            )
+        context["child_pages"] = child_data
+        return context
 
     def save(self, *args, **kwargs):
         # Default to showing in menus
