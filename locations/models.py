@@ -34,6 +34,7 @@ class City(models.Model):
 
     class Meta:
         verbose_name_plural = "Cities"
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -118,11 +119,15 @@ class Location(models.Model):
     )
 
     class Meta:
-        # Ensure unique combinations of city + category + description (allowing nulls)
+        ordering = ["name"]
+        # Only enforce uniqueness when category and description are both filled in.
+        # When either is blank, allow multiple locations in the same city.
         constraints = [
             models.UniqueConstraint(
                 fields=["city", "category_of_space", "description_of_location"],
                 name="unique_location_in_city",
+                condition=~models.Q(category_of_space="")
+                & ~models.Q(description_of_location=""),
             )
         ]
 
