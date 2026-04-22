@@ -232,46 +232,22 @@
                         </p>
                     </div>
                     <!-- Navigation columns -->
-                    <div class="grid sm:grid-cols-2 gap-8">
-                        {% for nav_item in nav_data %}
-                            <div>
-                                <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">
-                                    <a href="{{ nav_item.page.url }}" class="hover:text-gray-300 transition-colors duration-200">{{ nav_item.page.title }}</a>
-                                </h3>
-                                {% if nav_item.has_children %}
-                                    <ul class="space-y-2 list-none m-0 p-0">
-                                        {% for child in nav_item.children %}
-                                            <li>
-                                                <a href="{{ child.page.url }}" class="text-gray-300 hover:text-white transition-colors duration-200 text-base">
-                                                    {{ child.page.title }}
-                                                </a>
-                                                {% if child.has_children %}
-                                                    <ul class="space-y-1 list-none m-0 p-0 pl-3 mt-1">
-                                                        {% for grandchild in child.children %}
-                                                            <li>
-                                                                <a href="{{ grandchild.page.url }}" class="text-gray-400 hover:text-white transition-colors duration-200 text-sm">
-                                                                    {{ grandchild.page.title }}
-                                                                </a>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                {% endif %}
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                        <div>
-                            <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">
-                                <a href="{% url 'map' %}" class="hover:text-gray-300 transition-colors duration-200">Map</a>
-                            </h3>
-                        </div>
-                        <div>
-                            <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">
-                                <a href="{% url 'crime_list' %}" class="hover:text-gray-300 transition-colors duration-200">Data</a>
-                            </h3>
-                        </div>
+                    <div>
+                        <ul class="flex flex-wrap gap-x-8 gap-y-2 list-none m-0 p-0">
+                            {% for nav_item in nav_data %}
+                                <li>
+                                    <a href="{{ nav_item.page.url }}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-semibold uppercase tracking-wider">
+                                        {{ nav_item.page.title }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            <li>
+                                <a href="{% url 'map' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-semibold uppercase tracking-wider">Map</a>
+                            </li>
+                            <li>
+                                <a href="{% url 'crime_list' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-semibold uppercase tracking-wider">Data</a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>

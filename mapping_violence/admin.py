@@ -160,18 +160,63 @@ class EventAdmin(ModelAdmin):
 class CityAdmin(ModelAdmin):
     """Admin for City entities"""
 
-    list_display = ("name", "parish", "latitude", "longitude")
-    list_filter = ("parish",)
-    search_fields = ("name", "parish")
+    list_display = ("name", "country", "region", "parish", "latitude", "longitude")
+    list_filter = ("country", "region", "parish")
+    search_fields = ("name", "country", "region", "parish")
+    actions = ["assign_country"]
 
     fieldsets = (
-        ("Basic Information", {"fields": ("name", "parish")}),
+        ("Basic Information", {"fields": ("name", "country", "region", "parish")}),
         (
             "Coordinates",
             {"fields": ("latitude", "longitude"), "classes": ("collapse",)},
         ),
         ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
     )
+
+    @admin.action(description="Assign country to selected cities")
+    def assign_country(self, request, queryset):
+        class AssignCountryForm(forms.Form):
+            country = forms.CharField(
+                max_length=255,
+                label="Country",
+                widget=forms.TextInput(attrs={"placeholder": "e.g., Italy"}),
+            )
+            region = forms.CharField(
+                max_length=255,
+                label="Region (optional)",
+                required=False,
+                widget=forms.TextInput(attrs={"placeholder": "e.g., Veneto, Lombardy"}),
+            )
+
+        if "apply" in request.POST:
+            form = AssignCountryForm(request.POST)
+            if form.is_valid():
+                country = form.cleaned_data["country"]
+                region = form.cleaned_data["region"]
+                update_fields = {"country": country}
+                if region:
+                    update_fields["region"] = region
+                count = queryset.update(**update_fields)
+                self.message_user(
+                    request,
+                    f"Assigned {count} cit{'y' if count == 1 else 'ies'} to {country}.",
+                )
+                return None
+        else:
+            form = AssignCountryForm()
+
+        return render(
+            request,
+            "admin/assign_country.html",
+            {
+                "title": "Assign country to cities",
+                "form": form,
+                "queryset": queryset,
+                "opts": self.model._meta,
+                "action": "assign_country",
+            },
+        )
 
 
 @admin.register(Location)

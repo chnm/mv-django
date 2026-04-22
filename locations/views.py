@@ -18,6 +18,7 @@ def locations_geojson(request):
     locations = Location.objects.select_related("city").filter(crime__isnull=False)
 
     # Apply filters from request
+    country = request.GET.get("country")
     city_id = request.GET.get("city")
     location_id = request.GET.get("location")
     crime_type = request.GET.get("crime_type")
@@ -28,6 +29,9 @@ def locations_geojson(request):
     urban_rural = request.GET.get("urban_rural")
     person = request.GET.get("person")
     fatality = request.GET.get("fatality")
+
+    if country:
+        locations = locations.filter(city__country=country)
 
     if location_id:
         locations = locations.filter(id=location_id)

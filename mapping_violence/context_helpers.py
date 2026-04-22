@@ -8,6 +8,14 @@ from mapping_violence.models import WEAPON_CATEGORY_CHOICES, Crime, Weapon
 
 def get_filter_context():
     """Return context dict shared by map and data table filter bars."""
+    countries = (
+        City.objects.filter(location__crime__isnull=False)
+        .exclude(country="")
+        .values_list("country", flat=True)
+        .distinct()
+        .order_by("country")
+    )
+
     cities = (
         City.objects.filter(location__crime__isnull=False).distinct().order_by("name")
     )
@@ -49,8 +57,23 @@ def get_filter_context():
             }
         )
 
+    # Build country → cities mapping for cascading dropdown
+    cities_by_country = {}
+    for city in (
+        City.objects.filter(location__crime__isnull=False)
+        .exclude(country="")
+        .distinct()
+        .order_by("name")
+    ):
+        country = city.country
+        if country not in cities_by_country:
+            cities_by_country[country] = []
+        cities_by_country[country].append({"id": city.id, "name": city.name})
+
     return {
+        "countries": countries,
         "cities": cities,
+        "cities_by_country_json": json.dumps(cities_by_country),
         "crime_types": crime_types,
         "weapon_categories": WEAPON_CATEGORY_CHOICES,
         "weapon_subcategories": weapon_subcategories,
