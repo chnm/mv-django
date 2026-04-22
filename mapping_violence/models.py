@@ -10,6 +10,9 @@ User = get_user_model()
 class WeaponCategory(models.Model):
     name = models.CharField(max_length=500)
 
+    class Meta:
+        ordering = ["name"]
+
     def __str__(self) -> str:
         return self.name
 
@@ -42,6 +45,9 @@ class Weapon(models.Model):
         verbose_name="Weapon Subcategory",
         help_text="Enter subcategory (e.g. pistol, arquebus, dagger, sword, club)",
     )
+
+    class Meta:
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -110,6 +116,7 @@ class Person(models.Model):
     notes = models.TextField(null=True, blank=True)
 
     class Meta:
+        ordering = ["last_name", "first_name"]
         indexes = [
             models.Index(fields=["last_name", "first_name"], name="person_name_idx"),
             models.Index(fields=["given_name"], name="person_given_name_idx"),
@@ -162,6 +169,7 @@ class Event(models.Model):
     class Meta:
         verbose_name = "Event"
         verbose_name_plural = "Events"
+        ordering = ["name"]
 
 
 class Witness(models.Model):
