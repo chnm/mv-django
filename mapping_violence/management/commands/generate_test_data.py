@@ -346,9 +346,16 @@ class Command(BaseCommand):
                 defaults={
                     "latitude": Decimal(lat),
                     "longitude": Decimal(lng),
+                    "country": "Italy",
+                    "region": "Veneto",
                     "notes": TAG + "auto-generated city",
                 },
             )
+            # Backfill country on existing cities
+            if not city.country:
+                city.country = "Italy"
+                city.region = "Veneto"
+                city.save()
             cities.append(city)
         self.stdout.write(f"  {len(cities)} cities ready")
 

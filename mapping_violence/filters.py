@@ -11,6 +11,11 @@ class CrimeFilter(django_filters.FilterSet):
 
     number = django_filters.CharFilter(lookup_expr="icontains", label="Case Number")
 
+    country = django_filters.CharFilter(
+        field_name="address__city__country",
+        label="Country",
+    )
+
     city = django_filters.ModelChoiceFilter(
         queryset=City.objects.all(),
         field_name="address__city",
@@ -128,6 +133,7 @@ class CrimeFilter(django_filters.FilterSet):
         model = Crime
         fields = [
             "number",
+            "country",
             "city",
             "location",
             "crime_type",

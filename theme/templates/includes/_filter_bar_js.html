@@ -7,6 +7,45 @@ Expects:
   - Element IDs: filter-city, filter-location, filter-person
 {% endcomment %}
 <script>
+    // ── Country → City cascading dropdown ────────────────────────────────
+    function populateCityDropdown(country, selectedCityId) {
+        const sel = document.getElementById('filter-city');
+        // Store all original options on first call
+        if (!sel._allOptions) {
+            sel._allOptions = Array.from(sel.options).map(o => ({value: o.value, text: o.textContent}));
+        }
+
+        sel.innerHTML = '<option value="">All Cities</option>';
+
+        if (country && window.CITIES_BY_COUNTRY) {
+            const cities = window.CITIES_BY_COUNTRY[country] || [];
+            cities.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+        } else {
+            // Show all cities
+            sel._allOptions.forEach(o => {
+                if (o.value === '') return; // skip the "All Cities" we already added
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.textContent = o.text;
+                sel.appendChild(opt);
+            });
+        }
+
+        if (selectedCityId) {
+            sel.value = selectedCityId;
+        }
+    }
+
+    document.getElementById('filter-country').addEventListener('change', function () {
+        populateCityDropdown(this.value, '');
+        populateLocationDropdown('', '');
+    });
+
     // ── City → Location cascading dropdown ──────────────────────────────
     function populateLocationDropdown(cityId, selectedLocationId) {
         const sel = document.getElementById('filter-location');
@@ -72,6 +111,12 @@ Expects:
     // ── Restore filter state from URL params ────────────────────────────
     (function restoreFilterState() {
         const p = new URLSearchParams(window.location.search);
+
+        const countryVal = p.get('country') || '';
+        if (countryVal) {
+            document.getElementById('filter-country').value = countryVal;
+            populateCityDropdown(countryVal, '');
+        }
 
         const cityVal = p.get('city') || '';
         if (cityVal) {

@@ -7,60 +7,255 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     {% include "includes/_filter_bar_styles.html" %}
     <style>
-        /* ── Full-height layout: filter bar on top, sidebar + map below ── */
+        /* ── UI font: sans-serif for map controls ─────────────────────── */
+        .page-map-layout,
+        .page-map-layout select,
+        .page-map-layout input,
+        .page-map-layout button,
+        .page-map-layout label {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* ── Full-height layout ─────────────────────────────────────────── */
         .page-map-layout {
-            display: flex;
-            flex-direction: column;
+            position: relative;
             height: calc(100vh - 80px);
             overflow: hidden;
         }
+        #map { position: absolute; inset: 0; }
 
-        /* ── Map-only: color-by controls ─────────────────────────────────── */
-        .filter-radio-row {
-            display: flex;
-            gap: 10px;
-            padding-bottom: 2px;
+        /* ── Floating filter panel (top-left) ────────────────────────────── */
+        .filter-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
         }
 
-        .filter-radio-row label {
-            display: inline-flex;
+        .filter-panel-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            white-space: nowrap;
+        }
+        .filter-panel-toggle:hover { background: #f9fafb; }
+        .filter-panel-toggle svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+        .filter-panel-body {
+            display: none;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
+            min-width: 260px;
+        }
+        .filter-panel-body.is-open { display: block; }
+
+        /* Compact filter styles inside the floating panel */
+        .filter-panel-body .filter-bar {
+            padding: 0;
+            border: none;
+        }
+        .filter-panel-body .filter-bar-row {
+            flex-direction: column;
+            gap: 6px;
+            align-items: stretch;
+        }
+        .filter-panel-body .filter-bar-group {
+            width: 100%;
+        }
+        .filter-panel-body .filter-bar-group select,
+        .filter-panel-body .filter-bar-group input[type="number"] {
+            padding: 4px 6px;
+            font-size: 11px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .filter-panel-body .filter-bar-group label {
+            font-size: 9px;
+            margin-bottom: 1px;
+        }
+        .filter-panel-body .filter-bar-year {
+            width: 100%;
+        }
+        .filter-panel-body .filter-bar-year .filter-bar-group {
+            flex: 1;
+        }
+        .filter-panel-body .filter-bar-year input[type="number"] {
+            width: 100%;
+        }
+        .filter-panel-body .filter-bar-person {
+            min-width: 0;
+        }
+        .filter-panel-body .filter-bar-actions {
+            margin-left: 0;
+            justify-content: stretch;
+            order: -1;
+        }
+        .filter-panel-body .filter-action-btn {
+            padding: 4px 12px;
+            font-size: 11px;
+            flex: 1;
+        }
+        .filter-panel-body .ts-wrapper { min-width: 0 !important; width: 100%; }
+        .filter-panel-body .ts-control { min-height: 24px !important; padding: 2px 6px !important; }
+        .filter-panel-body .ts-control .item { font-size: 10px; }
+
+        /* ── Floating map controls panel (top-right) ─────────────────────── */
+        .map-controls {
+            position: absolute;
+            top: 52px;
+            left: 10px;
+            z-index: 1000;
+        }
+
+        .map-controls-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            white-space: nowrap;
+        }
+        .map-controls-toggle:hover { background: #f9fafb; }
+        .map-controls-toggle svg {
+            width: 14px; height: 14px; flex-shrink: 0;
+        }
+
+        .map-controls-panel {
+            display: none;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+        }
+        .map-controls-panel.is-open { display: block; }
+
+        .mc-group {
+            margin-bottom: 8px;
+        }
+        .mc-group:last-child { margin-bottom: 0; }
+
+        .mc-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+        .mc-group select {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 11px;
+            background: #fff;
+        }
+        .mc-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mc-row label {
+            font-size: 11px;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
             align-items: center;
             gap: 3px;
-            font-weight: normal;
-            font-size: 11px;
-            text-transform: none;
-            letter-spacing: 0;
-            color: #374151;
-            margin-bottom: 0;
-            cursor: pointer;
         }
-
-        /* ── Map + sidebar row ──────────────────────────────────────────── */
-        .map-and-sidebar {
+        .mc-radio-row {
             display: flex;
-            flex: 1;
-            overflow: hidden;
+            gap: 8px;
+            margin-top: 3px;
+        }
+        .mc-radio-row label {
+            font-size: 11px;
+            color: #374151;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
         }
 
-        /* ── Sidebar (case list only) ───────────────────────────────────── */
+        /* ── Slide-out sidebar ───────────────────────────────────────────── */
         .map-sidebar {
-            width: 288px;
-            flex-shrink: 0;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 300px;
+            background: #fff;
+            border-left: 1px solid #e5e7eb;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            overflow: hidden;
+            transform: translateX(100%);
+            transition: transform 0.2s ease;
         }
+        .map-sidebar.is-open {
+            transform: translateX(0);
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 999;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: left 0.2s ease;
+        }
+        .sidebar-toggle:hover { background: #f9fafb; }
+        .sidebar-toggle svg { width: 14px; height: 14px; }
+        .sidebar-toggle.is-shifted { right: 10px; }
 
         .case-list-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 16px 8px;
+            padding: 10px 14px 8px;
             flex-shrink: 0;
             border-bottom: 1px solid #f3f4f6;
         }
@@ -70,7 +265,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #9ca3af;
+            color: #6b7280;
             margin: 0;
         }
 
@@ -83,23 +278,32 @@
             padding: 0;
             white-space: nowrap;
         }
-
         .case-list-sort:hover { color: #6b7280; }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0 4px;
+        }
+        .sidebar-close:hover { color: #374151; }
 
         .case-location-chip {
             display: flex;
             align-items: center;
             gap: 6px;
-            margin: 8px 16px 0;
-            padding: 6px 10px;
+            margin: 8px 14px 0;
+            padding: 5px 8px;
             background: #fef3c7;
             border: 1px solid #fcd34d;
             border-radius: 6px;
             flex-shrink: 0;
         }
-
         .case-location-chip-name {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #92400e;
             flex: 1;
@@ -108,107 +312,82 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
         .case-location-chip-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #92400e;
-            font-size: 14px;
-            line-height: 1;
-            padding: 0 2px;
-            flex-shrink: 0;
-            opacity: 0.6;
+            background: none; border: none; cursor: pointer;
+            color: #92400e; font-size: 14px; line-height: 1;
+            padding: 0 2px; flex-shrink: 0; opacity: 0.6;
         }
-
         .case-location-chip-close:hover { opacity: 1; }
 
         .case-search-wrap {
-            padding: 8px 16px;
+            padding: 6px 14px;
             flex-shrink: 0;
             border-bottom: 1px solid #f3f4f6;
         }
-
         #case-search {
             width: 100%;
-            padding: 5px 8px;
+            padding: 4px 8px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             box-sizing: border-box;
             background: white;
         }
-
         #case-search:focus {
             outline: none;
             border-color: #8B4513;
             box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.15);
         }
-
         #case-search::placeholder { color: #9ca3af; }
 
         .case-list-scroll { flex: 1; overflow-y: auto; }
 
         .case-row {
-            padding: 9px 16px;
+            padding: 7px 14px;
             border-bottom: 1px solid #f3f4f6;
             transition: background 0.1s;
             cursor: default;
         }
-
         .case-row:hover { background: #fafafa; }
-
         .case-row-link {
-            font-size: 13px;
-            font-weight: 600;
-            color: #0077be;
-            text-decoration: none;
+            font-size: 12px; font-weight: 600;
+            color: #0077be; text-decoration: none;
         }
-
         .case-row-link:hover { text-decoration: underline; }
         .case-row-type { font-size: 11px; color: #6b7280; }
-        .case-row-meta { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-
+        .case-row-meta { font-size: 10px; color: #6b7280; margin-top: 1px; }
         .case-badge-fatal {
-            display: inline-block;
-            font-size: 9px; font-weight: 700; line-height: 1.4;
-            padding: 0 6px; border-radius: 9999px;
+            display: inline-block; font-size: 9px; font-weight: 700; line-height: 1.4;
+            padding: 0 5px; border-radius: 9999px;
             background: #fee2e2; color: #b91c1c;
             vertical-align: middle; margin-left: 3px;
         }
-
         .case-badge-approx {
-            display: inline-block;
-            font-size: 9px; font-weight: 600; line-height: 1.4;
-            padding: 0 6px; border-radius: 9999px;
+            display: inline-block; font-size: 9px; font-weight: 600; line-height: 1.4;
+            padding: 0 5px; border-radius: 9999px;
             background: #fef3c7; color: #92400e;
             vertical-align: middle; margin-left: 3px;
         }
-
         .case-list-message {
-            padding: 20px 16px;
+            padding: 20px 14px;
             font-size: 12px; color: #9ca3af;
             text-align: center; line-height: 1.5;
         }
 
-        /* ── Map area ─────────────────────────────────────────────────── */
-        .map-area { position: relative; flex: 1; }
-        #map { position: absolute; inset: 0; }
-
+        /* ── Legend ──────────────────────────────────────────────────────── */
         .legend-box {
             position: absolute; bottom: 20px; right: 20px;
             background: white; padding: 10px 14px; border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 1000; font-size: 12px; color: #374151;
+            z-index: 999; font-size: 12px; color: #374151;
         }
-
         .legend-item { display: flex; align-items: center; margin: 3px 0; }
-
         .legend-dot {
             display: inline-block; width: 10px; height: 10px;
             border-radius: 50%; margin-right: 7px; flex-shrink: 0;
         }
 
+        /* ── Empty state ────────────────────────────────────────────────── */
         .empty-state {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -219,80 +398,184 @@
             color: #374151; pointer-events: none;
             text-align: center; line-height: 1.6;
         }
-
         .empty-state-hint { font-size: 12px; font-weight: 400; color: #6b7280; margin-top: 4px; }
+
+        /* ── Cluster icon overrides ───────────────────────────────────── */
+        .marker-cluster {
+            background: none !important;
+        }
+        .marker-cluster div {
+            background: rgba(139, 69, 19, 0.8) !important;
+            color: #fff !important;
+            font-weight: 700;
+            font-size: 12px;
+            border-radius: 50%;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Loading overlay ──────────────────────────────────────────── */
+        .map-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 1001;
+            background: rgba(255,255,255,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .map-loading.is-active { display: flex; }
+        .map-loading-inner {
+            background: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .map-loading-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #8B4513;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Size legend (proportional circles) ───────────────────────── */
+        .legend-size-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .legend-size-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .legend-size-circle {
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.5);
+            border: 1.5px solid #FBBF24;
+        }
+        .legend-size-label {
+            font-size: 9px;
+            color: #6b7280;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <div class="page-map-layout">
+        <div id="map">
+            <div id="empty-state" class="empty-state" style="display:none">
+                No cases match the current filters.
+                <div class="empty-state-hint">
+                    Try broadening your search or click Reset to clear all filters.
+                </div>
+            </div>
+        </div>
 
-        <!-- ── Shared filter bar + map-specific color-by ── -->
-        {% include "includes/_filter_bar.html" with filter_mode="map" %}
+            <!-- ── Loading overlay ── -->
+        <div class="map-loading" id="map-loading">
+            <div class="map-loading-inner">
+                <div class="map-loading-spinner"></div>
+                Loading data...
+            </div>
+        </div>
 
-        <!-- ── Map-only: color-by controls (appended after filter bar) ── -->
-        <div style="background:#fff;border-bottom:1px solid #e5e7eb;padding:4px 16px;">
-            <div class="filter-bar-row" style="gap:12px;">
-                <div class="filter-bar-group">
-                    <label for="color-by-select">Colour by</label>
-                    <select id="color-by-select" style="padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;background:white;min-width:120px;">
+            <!-- ── Floating filter panel (top-left) ── -->
+        <div class="filter-panel" id="filter-panel">
+            <button class="filter-panel-toggle" id="filter-panel-toggle" type="button">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filters
+            </button>
+            <div class="filter-panel-body" id="filter-panel-body">
+                {% include "includes/_filter_bar.html" with filter_mode="map" %}
+            </div>
+        </div>
+
+            <!-- ── Sidebar toggle button ── -->
+        <button class="sidebar-toggle" id="sidebar-toggle" type="button" title="Toggle case list">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            Cases
+        </button>
+
+            <!-- ── Slide-out sidebar ── -->
+        <aside class="map-sidebar" id="map-sidebar">
+            <div class="case-list-header">
+                <h2 id="case-list-title">All Cases</h2>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button class="case-list-sort" id="sort-btn" type="button"
+                            title="Change sort order">Date &#9660;</button>
+                    <button class="sidebar-close" id="sidebar-close" type="button" title="Close">&times;</button>
+                </div>
+            </div>
+            <div class="case-location-chip" id="location-chip" style="display:none">
+                <span class="case-location-chip-name" id="location-chip-name"></span>
+                <button class="case-location-chip-close" id="location-chip-close"
+                        type="button" title="Show all cases">&times;</button>
+            </div>
+            <div class="case-search-wrap">
+                <input type="text" id="case-search" placeholder="Search cases...">
+            </div>
+            <div class="case-list-scroll" id="case-list">
+                <div class="case-list-message">Loading&hellip;</div>
+            </div>
+        </aside>
+
+            <!-- ── Floating map controls (top-right) ── -->
+        <div class="map-controls" id="map-controls">
+            <button class="map-controls-toggle" id="map-controls-toggle" type="button">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                Display
+            </button>
+            <div class="map-controls-panel" id="map-controls-panel">
+                <div class="mc-group">
+                    <div class="mc-label">Color by</div>
+                    <select id="color-by-select">
                         <option value="none">None (default)</option>
                         <option value="crime_type">Crime Type</option>
                         <option value="fatality">Fatal / Non-fatal</option>
                         <option value="gender">Gender</option>
                     </select>
                 </div>
-
-                <div class="filter-bar-group" id="gender-field-group" style="display:none">
-                    <label>Gender of</label>
-                    <div class="filter-radio-row">
+                <div class="mc-group" id="gender-field-group" style="display:none">
+                    <div class="mc-label">Gender of</div>
+                    <div class="mc-radio-row">
                         <label><input type="radio" name="gender_field" value="victim" checked> Victim</label>
                         <label><input type="radio" name="gender_field" value="perpetrator"> Perpetrator</label>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- ── Sidebar + Map ── -->
-        <div class="map-and-sidebar">
-
-            <!-- ── Sidebar (case list) ── -->
-            <aside class="map-sidebar">
-                <div class="case-list-header">
-                    <h2 id="case-list-title">All Cases</h2>
-                    <button class="case-list-sort" id="sort-btn" type="button"
-                            title="Change sort order">Date &#9660;</button>
-                </div>
-
-                <div class="case-location-chip" id="location-chip" style="display:none">
-                    <span class="case-location-chip-name" id="location-chip-name"></span>
-                    <button class="case-location-chip-close" id="location-chip-close"
-                            type="button" title="Show all cases">&times;</button>
-                </div>
-
-                <div class="case-search-wrap">
-                    <input type="text" id="case-search" placeholder="Search cases...">
-                </div>
-
-                <div class="case-list-scroll" id="case-list">
-                    <div class="case-list-message">Loading&hellip;</div>
-                </div>
-            </aside>
-
-            <!-- ── Map area ── -->
-            <div class="map-area">
-                <div id="map">
-                    <div id="empty-state" class="empty-state" style="display:none">
-                        No cases match the current filters.
-                        <div class="empty-state-hint">
-                            Try broadening your search or click Reset to clear all filters.
-                        </div>
+                <div class="mc-group">
+                    <div class="mc-label">Clustering</div>
+                    <div class="mc-row">
+                        <label><input type="checkbox" id="cluster-toggle"> Enable</label>
                     </div>
                 </div>
-                <div id="legend-box" class="legend-box" style="display:none"></div>
+                <div class="mc-group">
+                    <div class="mc-label">Basemap</div>
+                    <select id="basemap-select">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
             </div>
-
         </div>
+
+            <!-- ── Legend ── -->
+        <div id="legend-box" class="legend-box" style="display:none"></div>
 
     </div>
 {% endblock %}
@@ -301,8 +584,12 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-    <script>window.LOCATIONS_BY_CITY = {{ locations_by_city_json|safe }};</script>
+    <script>
+        window.LOCATIONS_BY_CITY = {{ locations_by_city_json|safe }};
+        window.CITIES_BY_COUNTRY = {{ cities_by_country_json|safe }};
+    </script>
     {% include "includes/_filter_bar_js.html" %}
     <script>
         const crimeListUrl  = '{% url "crime_list" %}';
@@ -319,6 +606,49 @@
         let currentLocationName = null;
         let currentSort = 'date_desc';
 
+        // ── Filter panel toggle ──────────────────────────────────────────────
+        (function() {
+            const toggle = document.getElementById('filter-panel-toggle');
+            const body = document.getElementById('filter-panel-body');
+            toggle.addEventListener('click', () => body.classList.toggle('is-open'));
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('filter-panel').contains(e.target)) {
+                    body.classList.remove('is-open');
+                }
+            });
+        })();
+
+        // ── Sidebar slide-out ───────────────────────────────────────────────
+        const sidebar = document.getElementById('map-sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+
+        function openSidebar() {
+            sidebar.classList.add('is-open');
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('is-open');
+        }
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.contains('is-open') ? closeSidebar() : openSidebar();
+        });
+        document.getElementById('sidebar-close').addEventListener('click', closeSidebar);
+
+        // ── Map controls panel ──────────────────────────────────────────────
+        (function() {
+            const toggle = document.getElementById('map-controls-toggle');
+            const panel = document.getElementById('map-controls-panel');
+            toggle.addEventListener('click', () => {
+                panel.classList.toggle('is-open');
+            });
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('map-controls').contains(e.target)) {
+                    panel.classList.remove('is-open');
+                }
+            });
+        })();
+
         // ── HTML escaping ─────────────────────────────────────────────────────
         function escHtml(s) {
             return String(s)
@@ -326,6 +656,11 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
+        }
+
+        // ── Bubble sizing — sqrt scale for proportional area ────────────────
+        function bubbleRadius(count) {
+            return Math.min(4 + Math.sqrt(count) * 3, 30);
         }
 
         // ── Sorting ─────────────────────────────────────────────────────────
@@ -403,6 +738,7 @@
                 titleEl.textContent = 'Cases at';
                 chipName.textContent = locationName;
                 chipEl.style.display = 'flex';
+                openSidebar();
             } else {
                 const n = crimes.length;
                 titleEl.textContent = n + ' case' + (n !== 1 ? 's' : '');
@@ -472,7 +808,7 @@
         function pushUrlState(params) {
             const p = new URLSearchParams();
             Object.entries(params).forEach(([k, v]) => {
-                if (v && v !== "none") p.set(k, v);
+                if (v && v !== "none" && v !== "false") p.set(k, v);
             });
             history.replaceState(null, "", "?" + p.toString());
         }
@@ -500,27 +836,71 @@
                 ).join("");
             }
 
+            // Size legend (proportional circles)
+            html += '<div class="legend-size-row">';
+            [1, 10, 50].forEach(n => {
+                const d = Math.round(bubbleRadius(n) * 2);
+                html += '<div class="legend-size-item">' +
+                '<div class="legend-size-circle" style="width:' + d + 'px;height:' + d + 'px;"></div>' +
+                '<span class="legend-size-label">' + n + '</span></div>';
+            });
+            html += '</div>';
+
             box.innerHTML = html;
             box.style.display = "block";
         }
 
         // ── Map setup ─────────────────────────────────────────────────────────
+        const BASEMAPS = {
+            light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd', maxZoom: 20
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd', maxZoom: 20
+            }),
+        };
+
         const map = L.map('map', {
             wheelDebounceTime: 100,
             wheelPxPerZoomLevel: 200,
+            zoomControl: false,
         }).setView([43.0, 12.0], 7);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
+        // Place zoom controls bottom-left to avoid overlap with sidebar toggle
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+        let currentBasemap = 'light';
+        BASEMAPS[currentBasemap].addTo(map);
+
+        function setBasemap(name) {
+            if (name === currentBasemap) return;
+            map.removeLayer(BASEMAPS[currentBasemap]);
+            BASEMAPS[name].addTo(map);
+            currentBasemap = name;
+        }
+
+        document.getElementById('basemap-select').addEventListener('change', function() {
+            setBasemap(this.value);
+            const p = new URLSearchParams(window.location.search);
+            if (this.value === 'light') p.delete('basemap');
+            else p.set('basemap', this.value);
+            history.replaceState(null, "", "?" + p.toString());
+        });
 
         let markersLayer = null;
+        let clusterGroup = null;
+
+        // ── Loading state ────────────────────────────────────────────────────
+        const loadingEl = document.getElementById('map-loading');
+        function showLoading() { loadingEl.classList.add('is-active'); }
+        function hideLoading() { loadingEl.classList.remove('is-active'); }
 
         // ── Load and render locations ─────────────────────────────────────────
         function loadLocations() {
-            // Read from shared filter bar (standardized IDs)
+            showLoading();
+            const country    = document.getElementById('filter-country').value;
             const city       = document.getElementById('filter-city').value;
             const locationId = document.getElementById('filter-location').value;
             const crimeType  = document.getElementById('filter-crime-type').value;
@@ -532,13 +912,13 @@
             const fatality   = document.getElementById('filter-fatality').checked;
             const colorBy    = document.getElementById('color-by-select').value;
             const genderField = document.querySelector('input[name="gender_field"]:checked').value;
+            const clustering = document.getElementById('cluster-toggle').checked;
 
-            // Person (Tom Select)
             const personEl = document.getElementById('filter-person');
             const personIds = personEl.tomselect ? personEl.tomselect.getValue() : '';
 
             pushUrlState({
-                city, location: locationId,
+                country, city, location: locationId,
                 crime_type: crimeType,
                 weapon_category: weaponCat,
                 weapon_subcategory: weaponSub,
@@ -547,9 +927,11 @@
                 person: personIds,
                 fatality: fatality ? 'true' : '',
                 color_by: colorBy, gender_field: genderField,
+                clustering: clustering ? 'true' : '',
             });
 
             const params = new URLSearchParams();
+            if (country)    params.append('country', country);
             if (locationId) params.append('location', locationId);
             else if (city)  params.append('city', city);
             if (crimeType)  params.append('crime_type', crimeType);
@@ -564,11 +946,14 @@
             const url = '{% url "locations_geojson" %}' + (params.toString() ? '?' + params.toString() : '');
 
             if (markersLayer) { map.removeLayer(markersLayer); markersLayer = null; }
+            if (clusterGroup) { map.removeLayer(clusterGroup); clusterGroup = null; }
 
             fetch(url)
                 .then(r => r.json())
                 .then(data => {
                     const emptyState = document.getElementById('empty-state');
+
+                    hideLoading();
 
                     if (!data.features || data.features.length === 0) {
                         emptyState.style.display = 'block';
@@ -582,14 +967,12 @@
                     crimeTypeColorMap = {};
                     paletteIndex = 0;
 
-                    // Separate features by precision
                     const preciseFeatures = [];
                     const cityFeatures    = [];
                     data.features.forEach(f => {
                         (f.properties.precision === 'precise' ? preciseFeatures : cityFeatures).push(f);
                     });
 
-                    // Aggregate city-level features by city
                     const cityClusters = {};
                     cityFeatures.forEach(feature => {
                         const cid = feature.properties.city_id;
@@ -613,7 +996,6 @@
                         cluster.locationNames.add(feature.properties.name);
                     });
 
-                    // Flatten all crimes for sidebar
                     allLoadedCrimes = [];
                     preciseFeatures.forEach(feature => {
                         (feature.properties.crimes || []).forEach(crime => {
@@ -629,110 +1011,147 @@
                         cluster.crimes.forEach(crime => allLoadedCrimes.push(crime));
                     });
 
-                    renderCaseList(allLoadedCrimes, null);
-                    markersLayer = L.layerGroup().addTo(map);
+                    // Update sidebar count without opening it
+                    const titleEl = document.getElementById('case-list-title');
+                    titleEl.textContent = allLoadedCrimes.length + ' case' + (allLoadedCrimes.length !== 1 ? 's' : '');
+                    document.getElementById('location-chip').style.display = 'none';
+                    currentLocationName = null;
+                    document.getElementById('case-search').value = '';
+                    displayedCrimes = sortCrimes(allLoadedCrimes, currentSort);
+                    renderCaseRows(displayedCrimes);
 
-                    if (colorBy === "none") {
-                        // Precise: solid markers
-                        preciseFeatures.forEach(feature => {
-                            const count = feature.properties.crime_count || 1;
-                            const radius = Math.min(6 + (count * 2), 20);
-                            const latlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-                            const marker = L.circleMarker(latlng, {
-                                radius, fillColor: "#F59E0B", color: "#FBBF24",
-                                weight: 2, opacity: 1, fillOpacity: 0.8,
-                            });
-                            const n = count;
-                            marker.bindTooltip(
-                                '<strong>' + escHtml(feature.properties.name || '') + '</strong><br><span style="color:#6b7280;">' +
-                                n + ' case' + (n !== 1 ? 's' : '') + '</span>',
-                                { sticky: true, direction: 'top' }
-                            );
-                            marker.on('click', () => {
-                                const locCrimes = (feature.properties.crimes || []).map(c =>
-                                    Object.assign({}, c, {
-                                        location_name: feature.properties.name,
-                                        location_id: feature.properties.id,
-                                        city: feature.properties.city,
-                                        precision: 'precise',
-                                    })
-                                );
-                                renderCaseList(locCrimes, feature.properties.name);
-                            });
-                            marker.addTo(markersLayer);
+                    if (clustering) {
+                        clusterGroup = L.markerClusterGroup({
+                            maxClusterRadius: 50,
+                            iconCreateFunction: function(cluster) {
+                                const count = cluster.getChildCount();
+                                const size = count < 10 ? 30 : count < 50 ? 40 : 50;
+                                return L.divIcon({
+                                    html: '<div>' + count + '</div>',
+                                    className: 'marker-cluster',
+                                    iconSize: L.point(size, size),
+                                });
+                            },
                         });
-
-                        // City-level: hollow rings
-                        Object.values(cityClusters).forEach(cluster => {
-                            const n = cluster.crimes.length;
-                            const radius = Math.min(10 + (n * 1.5), 28);
-                            const marker = L.circleMarker([cluster.lat, cluster.lng], {
-                                radius, fillColor: "#8B4513", fillOpacity: 0.15,
-                                color: "#8B4513", weight: 2.5, opacity: 0.7, dashArray: "5 4",
-                            });
-                            const locCount = cluster.locationNames.size;
-                            marker.bindTooltip(
-                                '<strong>' + escHtml(cluster.name) + '</strong><br><span style="color:#6b7280;">' +
-                                n + ' case' + (n !== 1 ? 's' : '') +
-                                ' (city-level, ' + locCount + ' location' + (locCount !== 1 ? 's' : '') + ')</span>',
-                                { sticky: true, direction: 'top' }
-                            );
-                            marker.on('click', () => renderCaseList(cluster.crimes, cluster.name + ' (city-level)'));
-                            marker.addTo(markersLayer);
-                        });
+                        addMarkersToLayer(clusterGroup, preciseFeatures, cityClusters, colorBy, genderField);
+                        map.addLayer(clusterGroup);
                     } else {
-                        // Color-by: precise jittered
-                        preciseFeatures.forEach(feature => {
-                            const crimes = feature.properties.crimes || [];
-                            const baseLat = feature.geometry.coordinates[1];
-                            const baseLng = feature.geometry.coordinates[0];
-                            crimes.forEach((crime, index) => {
-                                const [lat, lng] = jitterCoords(baseLat, baseLng, index, crimes.length);
-                                const color = getMarkerColor(crime, colorBy, genderField);
-                                const marker = L.circleMarker([lat, lng], {
-                                    radius: 7, fillColor: color, color: "#fff",
-                                    weight: 1.5, opacity: 1, fillOpacity: 0.85,
-                                });
-                                marker.bindTooltip(
-                                    '<strong>' + escHtml(feature.properties.name || '') + '</strong>' +
-                                    (crime.crime ? '<br>' + escHtml(crime.crime) : ''),
-                                    { sticky: true, direction: 'top' }
-                                );
-                                marker.on('click', () => {
-                                    renderCaseList([Object.assign({}, crime, {
-                                        location_name: feature.properties.name,
-                                        location_id: feature.properties.id,
-                                        city: feature.properties.city,
-                                        precision: 'precise',
-                                    })], feature.properties.name);
-                                });
-                                marker.addTo(markersLayer);
-                            });
-                        });
-
-                        // City-level: hollow rings (same in all modes)
-                        Object.values(cityClusters).forEach(cluster => {
-                            const n = cluster.crimes.length;
-                            const radius = Math.min(10 + (n * 1.5), 28);
-                            const marker = L.circleMarker([cluster.lat, cluster.lng], {
-                                radius, fillColor: "#8B4513", fillOpacity: 0.15,
-                                color: "#8B4513", weight: 2.5, opacity: 0.7, dashArray: "5 4",
-                            });
-                            const locCount = cluster.locationNames.size;
-                            marker.bindTooltip(
-                                '<strong>' + escHtml(cluster.name) + '</strong><br><span style="color:#6b7280;">' +
-                                n + ' case' + (n !== 1 ? 's' : '') +
-                                ' (city-level, ' + locCount + ' location' + (locCount !== 1 ? 's' : '') + ')</span>',
-                                { sticky: true, direction: 'top' }
-                            );
-                            marker.on('click', () => renderCaseList(cluster.crimes, cluster.name + ' (city-level)'));
-                            marker.addTo(markersLayer);
-                        });
+                        markersLayer = L.layerGroup();
+                        addMarkersToLayer(markersLayer, preciseFeatures, cityClusters, colorBy, genderField);
+                        markersLayer.addTo(map);
                     }
 
                     buildLegend(colorBy, genderField);
                 })
-                .catch(err => console.error('Error loading location data:', err));
+                .catch(err => { hideLoading(); console.error('Error loading location data:', err); });
+        }
+
+        // ── Add markers to layer ────────────────────────────────────────────
+        function addMarkersToLayer(layer, preciseFeatures, cityClusters, colorBy, genderField) {
+            if (colorBy === "none") {
+                const sortedPrecise = preciseFeatures.slice().sort((a, b) =>
+                    (b.properties.crime_count || 1) - (a.properties.crime_count || 1)
+                );
+
+                sortedPrecise.forEach(feature => {
+                    const count = feature.properties.crime_count || 1;
+                    const radius = bubbleRadius(count);
+                    const latlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                    const marker = L.circleMarker(latlng, {
+                        radius, fillColor: "#F59E0B", color: "#FBBF24",
+                        weight: 2, opacity: 1, fillOpacity: 0.8,
+                        _precision: 'precise',
+                    });
+                    marker.bindTooltip(
+                        '<strong>' + escHtml(feature.properties.name || '') + '</strong><br><span style="color:#6b7280;">' +
+                        count + ' case' + (count !== 1 ? 's' : '') + '</span>',
+                        { sticky: true, direction: 'top' }
+                    );
+                    marker.on('click', () => {
+                        const locCrimes = (feature.properties.crimes || []).map(c =>
+                            Object.assign({}, c, {
+                                location_name: feature.properties.name,
+                                location_id: feature.properties.id,
+                                city: feature.properties.city,
+                                precision: 'precise',
+                            })
+                        );
+                        renderCaseList(locCrimes, feature.properties.name);
+                    });
+                    marker.addTo(layer);
+                });
+
+                const sortedClusters = Object.values(cityClusters).sort((a, b) =>
+                    b.crimes.length - a.crimes.length
+                );
+
+                sortedClusters.forEach(cluster => {
+                    const n = cluster.crimes.length;
+                    const radius = bubbleRadius(n) * 1.2;
+                    const marker = L.circleMarker([cluster.lat, cluster.lng], {
+                        radius, fillColor: "#8B4513", fillOpacity: 0.15,
+                        color: "#8B4513", weight: 2.5, opacity: 0.7, dashArray: "5 4",
+                        _precision: 'city',
+                    });
+                    const locCount = cluster.locationNames.size;
+                    marker.bindTooltip(
+                        '<strong>' + escHtml(cluster.name) + '</strong><br><span style="color:#6b7280;">' +
+                        n + ' case' + (n !== 1 ? 's' : '') +
+                        ' (city-level, ' + locCount + ' location' + (locCount !== 1 ? 's' : '') + ')</span>',
+                        { sticky: true, direction: 'top' }
+                    );
+                    marker.on('click', () => renderCaseList(cluster.crimes, cluster.name + ' (city-level)'));
+                    marker.addTo(layer);
+                });
+            } else {
+                preciseFeatures.forEach(feature => {
+                    const crimes = feature.properties.crimes || [];
+                    const baseLat = feature.geometry.coordinates[1];
+                    const baseLng = feature.geometry.coordinates[0];
+                    crimes.forEach((crime, index) => {
+                        const [lat, lng] = jitterCoords(baseLat, baseLng, index, crimes.length);
+                        const color = getMarkerColor(crime, colorBy, genderField);
+                        const marker = L.circleMarker([lat, lng], {
+                            radius: 7, fillColor: color, color: "#fff",
+                            weight: 1.5, opacity: 1, fillOpacity: 0.85,
+                            _precision: 'precise',
+                        });
+                        marker.bindTooltip(
+                            '<strong>' + escHtml(feature.properties.name || '') + '</strong>' +
+                            (crime.crime ? '<br>' + escHtml(crime.crime) : ''),
+                            { sticky: true, direction: 'top' }
+                        );
+                        marker.on('click', () => {
+                            renderCaseList([Object.assign({}, crime, {
+                                location_name: feature.properties.name,
+                                location_id: feature.properties.id,
+                                city: feature.properties.city,
+                                precision: 'precise',
+                            })], feature.properties.name);
+                        });
+                        marker.addTo(layer);
+                    });
+                });
+
+                Object.values(cityClusters).forEach(cluster => {
+                    const n = cluster.crimes.length;
+                    const radius = bubbleRadius(n) * 1.2;
+                    const marker = L.circleMarker([cluster.lat, cluster.lng], {
+                        radius, fillColor: "#8B4513", fillOpacity: 0.15,
+                        color: "#8B4513", weight: 2.5, opacity: 0.7, dashArray: "5 4",
+                        _precision: 'city',
+                    });
+                    const locCount = cluster.locationNames.size;
+                    marker.bindTooltip(
+                        '<strong>' + escHtml(cluster.name) + '</strong><br><span style="color:#6b7280;">' +
+                        n + ' case' + (n !== 1 ? 's' : '') +
+                        ' (city-level, ' + locCount + ' location' + (locCount !== 1 ? 's' : '') + ')</span>',
+                        { sticky: true, direction: 'top' }
+                    );
+                    marker.on('click', () => renderCaseList(cluster.crimes, cluster.name + ' (city-level)'));
+                    marker.addTo(layer);
+                });
+            }
         }
 
         // ── Event listeners ─────────────────────────────────────────────────
@@ -745,7 +1164,7 @@
 
         document.getElementById('color-by-select').addEventListener('change', function () {
             document.getElementById('gender-field-group').style.display =
-                this.value === 'gender' ? 'flex' : 'none';
+                this.value === 'gender' ? '' : 'none';
             loadLocations();
         });
 
@@ -753,44 +1172,51 @@
             radio.addEventListener('change', () => loadLocations());
         });
 
-        // ── Apply / Reset (map mode — JS-driven) ────────────────────────────
-        document.getElementById('apply-filters-btn').addEventListener('click', () => {
-            loadLocations();
-        });
+        document.getElementById('cluster-toggle').addEventListener('change', () => loadLocations());
+
+        // ── Apply / Reset ───────────────────────────────────────────────────
+        document.getElementById('apply-filters-btn').addEventListener('click', () => loadLocations());
 
         document.getElementById('reset-filters-btn').addEventListener('click', () => {
-            // Clear shared filter controls
-            ['filter-city', 'filter-location', 'filter-crime-type',
+            ['filter-country', 'filter-city', 'filter-location', 'filter-crime-type',
                 'filter-weapon-category', 'filter-weapon-subcategory',
                 'filter-urban-rural', 'filter-year-from', 'filter-year-to'
             ].forEach(id => { document.getElementById(id).value = ''; });
+            populateCityDropdown('', '');
             populateLocationDropdown('', '');
             document.getElementById('filter-fatality').checked = false;
-            // Clear Tom Select
             const ts = document.getElementById('filter-person').tomselect;
             if (ts) ts.clear();
-            // Clear map-only controls
             document.getElementById('color-by-select').value = 'none';
             document.getElementById('gender-field-group').style.display = 'none';
+            document.getElementById('cluster-toggle').checked = false;
+            document.getElementById('basemap-select').value = 'light';
+            setBasemap('light');
             const radio = document.querySelector('input[name="gender_field"][value="victim"]');
             if (radio) radio.checked = true;
             loadLocations();
         });
 
-        // ── Restore map-specific URL state and initial load ─────────────────
+        // ── Restore URL state and initial load ──────────────────────────────
         (function initMap() {
             const p = new URLSearchParams(window.location.search);
-            // Shared filter state is restored by _filter_bar_js.html
 
-            // Map-specific: color-by and gender
             const colorBy = p.get('color_by') || 'none';
             document.getElementById('color-by-select').value = colorBy;
             if (colorBy === 'gender') {
-                document.getElementById('gender-field-group').style.display = 'flex';
+                document.getElementById('gender-field-group').style.display = '';
             }
             const gf = p.get('gender_field') || 'victim';
             const radio = document.querySelector('input[name="gender_field"][value="' + gf + '"]');
             if (radio) radio.checked = true;
+
+            if (p.get('clustering') === 'true') {
+                document.getElementById('cluster-toggle').checked = true;
+            }
+
+            const basemap = p.get('basemap') || 'light';
+            document.getElementById('basemap-select').value = basemap;
+            setBasemap(basemap);
 
             loadLocations();
         })();

@@ -12,6 +12,7 @@ class CrimeTable(tables.Table):
     crime = tables.Column(verbose_name="Violence Type")
     date = tables.DateColumn(format="Y-m-d", verbose_name="Date")
     city = tables.Column(accessor="address__city__name", verbose_name="City")
+    location = tables.Column(accessor="address__name", verbose_name="Location")
     victims = tables.Column(empty_values=(), orderable=False, verbose_name="Victim(s)")
     perpetrators = tables.Column(
         empty_values=(), orderable=False, verbose_name="Perpetrator(s)"
@@ -26,6 +27,7 @@ class CrimeTable(tables.Table):
             "crime",
             "date",
             "city",
+            "location",
             "victims",
             "perpetrators",
             "status",
