@@ -99,7 +99,7 @@ The project digitizes archival records (court documents, criminal registers) int
 
 ### Weapon Records
 
-- Weapons have a two-level classification: `weapon_category` (controlled: firearm, blade, blunt_instrument, hands, other) and `weapon_subcategory` (free text, e.g., "sword", "dagger")
+- Weapons have a two-level classification: `weapon_category` (controlled: firearm, blade, blunt_instrument, no_weapon, other) and `weapon_subcategory` (free text, e.g., "sword", "dagger")
 - The legacy `category` FK to `WeaponCategory` model coexists with the newer choice-based fields; prefer `weapon_category` for new data entry
 
 ### Data Entry

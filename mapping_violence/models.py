@@ -21,7 +21,7 @@ WEAPON_CATEGORY_CHOICES = [
     ("firearm", "Firearm"),
     ("blade", "Blade"),
     ("blunt_instrument", "Blunt Instrument"),
-    ("hands", "Hands"),
+    ("no_weapon", "No weapon"),
     ("other", "Other"),
 ]
 
@@ -343,7 +343,7 @@ class Crime(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         verbose_name="Type of Weapon",
-        help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, hands)",
+        help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, no weapon)",
     )
 
     # Location
