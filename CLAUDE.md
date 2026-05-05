@@ -71,12 +71,15 @@ Location
 
 ```
 /                        → home page (HomePageContent + ProjectPerson snippets)
-/map/                    → Leaflet map with collapsible filter panel
-/api/locations.geojson   → GeoJSON endpoint (filtered by city, crime_type, year, weapon_category)
+/map/                    → Leaflet map with floating filter/display panels and clustering
+/api/locations.geojson   → GeoJSON endpoint (filtered by country, city, crime_type, year, weapon_category)
 /data/                   → paginated crime table (CrimeFilter + CrimeTable)
+/data/export.csv         → CSV download of filtered crime data (respects all CrimeFilter params)
 /crime/<id>/             → crime detail page
 /admin/                  → Django Unfold admin
 /cms/                    → Wagtail admin
+/api/docs/               → API documentation page (public endpoints reference)
+/schema-viewer/          → django-schema-viewer (interactive DB schema docs)
 /<path>/                 → Wagtail catch-all pages
 ```
 
@@ -86,11 +89,15 @@ Uses **django-unfold** (not stock Django admin). `CrimeAdmin` extends `ImportExp
 
 ### Map frontend
 
-`/map/` uses Leaflet with Alpine.js for the sliding drawer. Filter state (city, crime type, weapon category, year range, color-by mode) is persisted to URL query params via `history.replaceState`. The GeoJSON endpoint returns per-crime data including `fatality`, `victim_gender`, and `perpetrator_gender` for client-side color-by rendering.
+`/map/` uses Leaflet with Alpine.js. Features: floating filter panel (top-left), display options panel, Leaflet.markercluster with toggle, bubble sizing (sqrt scale, small on top), light/dark basemap toggle, and a slide-out case sidebar (right). Filter state (country, city, crime type, weapon category, year range, color-by mode) is persisted to URL query params via `history.replaceState`. The GeoJSON endpoint returns per-crime data including `fatality`, `victim_gender`, and `perpetrator_gender` for client-side color-by rendering.
 
 ### Data loading
 
 Bulk data comes in via CSV import through the Django admin (CrimeAdmin import). Seed fixtures: `make fixtures` loads `fixtures/weapon_types.json`. Source CSVs live in `static-data/`.
+
+### Data export
+
+Public CSV download at `/data/export.csv` — applies the same `CrimeFilter` params as the data table. Exports human-readable values (person names, city names, weapon names). The data table page includes a "Download CSV" button that passes current filter state to this endpoint. Admin export via `CrimeAdmin` also includes `dehydrate_*` methods for readable victim/perpetrator fields.
 
 ### Settings and environment
 

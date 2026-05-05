@@ -236,6 +236,19 @@ else:
     MEDIA_URL = "media/"
     MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
 
+# Cache
+# https://docs.djangoproject.com/en/5.1/topics/cache/
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "mapping-violence",
+    }
+}
+
+# django-ratelimit
+# https://django-ratelimit.readthedocs.io/
+RATELIMIT_USE_CACHE = "default"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

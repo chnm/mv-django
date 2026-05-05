@@ -14,6 +14,7 @@ dependencies = [
     "django-extensions>=4.1",
     "django-filter>=24.3",
     "django-import-export>=4.3.12",
+    "django-ratelimit>=4.1.0",
     "django-schema-viewer>=0.5.3",
     "django-tables2>=2.7.0",
     "django-tailwind>=4.3.1",

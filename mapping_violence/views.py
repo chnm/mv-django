@@ -3,6 +3,7 @@ import csv
 from django.db.models import Q
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
+from django_ratelimit.decorators import ratelimit
 from django_tables2 import RequestConfig
 
 from content.models import HomePageContent, ProjectPerson
@@ -114,6 +115,7 @@ class Echo:
         return value
 
 
+@ratelimit(key="ip", rate="10/m", method="GET", block=True)
 def crime_export_csv(request):
     """Export filtered crimes as a CSV download."""
     crimes = (
