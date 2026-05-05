@@ -429,6 +429,26 @@ class CrimeResource(resources.ModelResource):
         column_name="Input by", attribute="input_by_name", readonly=True
     )
 
+    def dehydrate_victim_name(self, crime):
+        """Export victim names as semicolon-separated list."""
+        return "; ".join(str(v) for v in crime.victim.all())
+
+    def dehydrate_victim_gender(self, crime):
+        genders = [v.gender for v in crime.victim.all() if v.gender]
+        return "; ".join(genders)
+
+    def dehydrate_victim_occupation(self, crime):
+        occupations = [v.occupation for v in crime.victim.all() if v.occupation]
+        return "; ".join(occupations)
+
+    def dehydrate_assailant_name(self, crime):
+        """Export perpetrator names as semicolon-separated list."""
+        return "; ".join(str(p) for p in crime.perpetrator.all())
+
+    def dehydrate_assailant_gender(self, crime):
+        genders = [p.gender for p in crime.perpetrator.all() if p.gender]
+        return "; ".join(genders)
+
     class Meta:
         model = Crime
         # Don't use number as import_id since we're auto-generating it

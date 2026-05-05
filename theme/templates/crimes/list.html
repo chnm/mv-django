@@ -140,15 +140,47 @@
             color: #d1d5db;
             pointer-events: none;
         }
+
+        /* ── Export button ────────────────────────────────────────────── */
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .export-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+            color: #111827;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <div class="data-page">
         <!-- Header -->
-        <div class="data-page-header">
-            <h1>Violence Events</h1>
-            <p>Browse and filter documented cases of violence in early modern Italy</p>
+        <div class="data-page-header" style="display: flex; align-items: baseline; justify-content: space-between;">
+            <div>
+                <h1>Violence Events</h1>
+                <p>Browse and filter documented cases of violence in early modern Italy</p>
+            </div>
+            <a id="export-csv-btn"
+               href="{% url 'crime_export_csv' %}"
+               class="export-btn"
+               title="Download filtered data as CSV">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download CSV
+            </a>
         </div>
 
         <!-- Filter Panel -->
@@ -172,4 +204,28 @@
         window.CITIES_BY_COUNTRY = {{ cities_by_country_json|safe }};
     </script>
     {% include "includes/_filter_bar_js.html" %}
+    <script>
+        // Keep the CSV export link in sync with current filter params
+        const exportBtn = document.getElementById('export-csv-btn');
+        const baseExportUrl = exportBtn.href;
+
+        function updateExportUrl() {
+            const params = new URLSearchParams(window.location.search);
+            // Remove pagination params — export all matching rows
+            params.delete('page');
+            params.delete('sort');
+            const qs = params.toString();
+            exportBtn.href = baseExportUrl + (qs ? '?' + qs : '');
+        }
+
+        updateExportUrl();
+        // Update when the filter form is submitted
+        const filterForm = document.querySelector('.data-filter-wrap form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function() {
+                // Brief delay to let form params update the URL
+                setTimeout(updateExportUrl, 100);
+            });
+        }
+    </script>
 {% endblock %}
