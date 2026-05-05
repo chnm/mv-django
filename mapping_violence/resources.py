@@ -300,9 +300,16 @@ class CrimeResource(resources.ModelResource):
         super().__init__(**kwargs)
 
     def before_save_instance(self, instance, row, **kwargs):
-        """Set input_by to the importing user for new records."""
+        """Set input_by to the importing user for new records.
+        New imports default to 'triage'; re-imported 'done' records get
+        kicked back to 'needs_review'.
+        """
         if self.importing_user and not instance.input_by_id:
             instance.input_by = self.importing_user
+        if not instance.pk:
+            instance.status = "triage"
+        elif instance.status == "done":
+            instance.status = "needs_review"
         return super().before_save_instance(instance, row, **kwargs)
 
     # Map CSV columns to model fields - column mapping handled in before_import_row

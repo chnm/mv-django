@@ -16,11 +16,13 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 from locations.models import City, Location
 from mapping_violence.forms import CrimeForm, PersonForm
 from mapping_violence.models import (
+    STATUS_CHOICES,
     Crime,
     Event,
     Person,
     PersonRelation,
     PersonRelationType,
+    StatusLog,
     Weapon,
     Witness,
 )
@@ -121,6 +123,23 @@ class WitnessInline(StackedInline):
     fields = ("name", "date_of_testimony", "claims", "notes")
     verbose_name = "Witness"
     verbose_name_plural = "Witnesses"
+
+
+class StatusLogInline(TabularInline):
+    """Read-only audit trail of status changes."""
+
+    model = StatusLog
+    extra = 0
+    max_num = 0
+    readonly_fields = ("from_status", "to_status", "changed_by", "timestamp", "note")
+    fields = ("timestamp", "from_status", "to_status", "changed_by", "note")
+    verbose_name = "Status Change"
+    verbose_name_plural = "Status History"
+
+
+def _is_editor(user):
+    """Check if a user is in the Editor group (and not a superuser/admin)."""
+    return not user.is_superuser and user.groups.filter(name="Editor").exists()
 
 
 @admin.register(PersonRelationType)
@@ -299,9 +318,13 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "weapon",
         "date",
         "fatality",
+        "status",
+        "assigned_to",
         "get_location",
     )
     list_filter = (
+        "status",
+        "assigned_to",
         "offense_category",
         "fatality",
         "violence_caused_death",
@@ -315,7 +338,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     )
     search_fields = ("number", "crime", "motive", "description_of_case")
     date_hierarchy = "date"
-    inlines = (WitnessInline,)
+    inlines = (WitnessInline, StatusLogInline)
     readonly_fields = (
         "year",
         "month",
@@ -325,9 +348,13 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "date_of_entry",
         "updated_by",
     )
-    actions = ["reassign_input_by"]
+    actions = ["reassign_input_by", "assign_to_editor", "set_status"]
 
     fieldsets = (
+        (
+            "Workflow",
+            {"fields": ("status", "assigned_to")},
+        ),
         (
             "Basic Information",
             {"fields": ("number", "crime", "offense_category", "description_of_case")},
@@ -429,6 +456,32 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
 
     get_location.short_description = "Location"
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Editors see all records but can only edit their own (handled in has_change_permission)
+        return qs
+
+    def has_change_permission(self, request, obj=None):
+        if obj is None:
+            return super().has_change_permission(request, obj)
+        if _is_editor(request.user):
+            # Editors can only edit records assigned to them or that they created
+            return obj.assigned_to == request.user or obj.input_by == request.user
+        return super().has_change_permission(request, obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if _is_editor(request.user):
+            # Editors cannot set status to "done" or reassign records
+            readonly.extend(["assigned_to"])
+        return readonly
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == "status" and _is_editor(request.user):
+            # Editors can only set triage, assigned, or needs_review — not done
+            kwargs["choices"] = [c for c in STATUS_CHOICES if c[0] != "done"]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
+
     def save_model(self, request, obj, form, change):
         # Auto-populate date components from the main date field
         if obj.date:
@@ -436,6 +489,16 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
             obj.month = str(obj.date.month)
             obj.day = str(obj.date.day)
             obj.day_of_week = obj.date.strftime("%A")
+
+        # Log status changes
+        if change and "status" in form.changed_data:
+            old_status = form.initial.get("status", "")
+            StatusLog.objects.create(
+                crime=obj,
+                from_status=old_status,
+                to_status=obj.status,
+                changed_by=request.user,
+            )
 
         # Record the user who created the object
         if not change:
@@ -482,6 +545,136 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
                 "action": "reassign_input_by",
             },
         )
+
+    @admin.action(description="Assign selected records to an editor")
+    def assign_to_editor(self, request, queryset):
+        class AssignForm(forms.Form):
+            editor = forms.ModelChoiceField(
+                queryset=User.objects.filter(is_active=True).order_by("username"),
+                label="Assign to",
+                empty_label="— select a user —",
+            )
+
+        if "apply" in request.POST:
+            form = AssignForm(request.POST)
+            if form.is_valid():
+                editor = form.cleaned_data["editor"]
+                old_statuses = dict(queryset.values_list("pk", "status"))
+                count = queryset.update(assigned_to=editor, status="assigned")
+                # Log the status changes
+                logs = []
+                for pk, old_status in old_statuses.items():
+                    if old_status != "assigned":
+                        logs.append(
+                            StatusLog(
+                                crime_id=pk,
+                                from_status=old_status,
+                                to_status="assigned",
+                                changed_by=request.user,
+                                note=f"Bulk assigned to {editor}",
+                            )
+                        )
+                if logs:
+                    StatusLog.objects.bulk_create(logs)
+                self.message_user(request, f"Assigned {count} record(s) to {editor}.")
+                return None
+        else:
+            form = AssignForm()
+
+        return render(
+            request,
+            "admin/assign_to_editor.html",
+            {
+                "title": "Assign records to an editor",
+                "form": form,
+                "queryset": queryset,
+                "opts": self.model._meta,
+                "action": "assign_to_editor",
+            },
+        )
+
+    @admin.action(description="Set status on selected records")
+    def set_status(self, request, queryset):
+        class StatusForm(forms.Form):
+            status = forms.ChoiceField(
+                choices=STATUS_CHOICES,
+                label="New status",
+            )
+
+        if "apply" in request.POST:
+            form = StatusForm(request.POST)
+            if form.is_valid():
+                new_status = form.cleaned_data["status"]
+                old_statuses = dict(queryset.values_list("pk", "status"))
+                count = queryset.update(status=new_status)
+                # Log the status changes
+                logs = []
+                for pk, old_status in old_statuses.items():
+                    if old_status != new_status:
+                        logs.append(
+                            StatusLog(
+                                crime_id=pk,
+                                from_status=old_status,
+                                to_status=new_status,
+                                changed_by=request.user,
+                                note="Bulk status change",
+                            )
+                        )
+                if logs:
+                    StatusLog.objects.bulk_create(logs)
+                self.message_user(
+                    request,
+                    f"Set {count} record(s) to '{dict(STATUS_CHOICES)[new_status]}'.",
+                )
+                return None
+        else:
+            form = StatusForm()
+
+        return render(
+            request,
+            "admin/set_status.html",
+            {
+                "title": "Set status on selected records",
+                "form": form,
+                "queryset": queryset,
+                "opts": self.model._meta,
+                "action": "set_status",
+            },
+        )
+
+
+@admin.register(StatusLog)
+class StatusLogAdmin(ModelAdmin):
+    """Read-only admin for the workflow status audit trail."""
+
+    list_display = (
+        "crime",
+        "from_status",
+        "to_status",
+        "changed_by",
+        "timestamp",
+        "note",
+    )
+    list_filter = ("to_status", "changed_by")
+    search_fields = ("crime__number", "note")
+    readonly_fields = (
+        "crime",
+        "from_status",
+        "to_status",
+        "changed_by",
+        "timestamp",
+        "note",
+    )
+    date_hierarchy = "timestamp"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Person)

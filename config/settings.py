@@ -262,6 +262,7 @@ UNFOLD = {
     "SITE_TITLE": "Mapping Violence Admin",
     "SITE_HEADER": "Mapping Violence",
     "SITE_URL": "/",
+    "DASHBOARD_CALLBACK": "mapping_violence.dashboard.dashboard_callback",
     "COLORS": {
         "primary": {
             "50": "250 245 255",
@@ -292,7 +293,6 @@ UNFOLD = {
             {
                 "title": "Data Management",
                 "separator": True,
-                "collapsible": True,
                 "items": [
                     {
                         "title": "Violence Events",
@@ -312,9 +312,19 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Workflow",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Status Log",
+                        "icon": "history",
+                        "link": "/admin/mapping_violence/statuslog/",
+                    },
+                ],
+            },
+            {
                 "title": "Reference Data",
                 "separator": True,
-                "collapsible": True,
                 "items": [
                     {
                         "title": "Cities",
@@ -346,7 +356,6 @@ UNFOLD = {
             {
                 "title": "Website Content",
                 "separator": True,
-                "collapsible": True,
                 "items": [
                     {
                         "title": "Content Management",
@@ -358,7 +367,6 @@ UNFOLD = {
             {
                 "title": "System Configuration",
                 "separator": True,
-                "collapsible": True,
                 "items": [
                     {
                         "title": "Users",

@@ -6,6 +6,13 @@ from locations.models import Location
 
 User = get_user_model()
 
+STATUS_CHOICES = [
+    ("triage", "Triage"),
+    ("assigned", "Assigned"),
+    ("needs_review", "Needs Review"),
+    ("done", "Done"),
+]
+
 
 class WeaponCategory(models.Model):
     name = models.CharField(max_length=500)
@@ -394,6 +401,24 @@ class Crime(models.Model):
         help_text="Input any bibliographic references to case, if available",
     )
 
+    # Workflow
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="triage",
+        db_index=True,
+        help_text="Workflow status of this record",
+    )
+    assigned_to = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assigned_crimes",
+        verbose_name="Assigned to",
+        help_text="Editor responsible for this record",
+    )
+
     # Metadata
     input_by = models.ForeignKey(
         User,
@@ -428,6 +453,25 @@ class Crime(models.Model):
 
     class Meta:
         verbose_name = "Violence Event"
+
+
+class StatusLog(models.Model):
+    """Lightweight audit trail for workflow status changes."""
+
+    crime = models.ForeignKey(
+        Crime, on_delete=models.CASCADE, related_name="status_logs"
+    )
+    from_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    to_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"{self.from_status} → {self.to_status} by {self.changed_by} at {self.timestamp:%Y-%m-%d %H:%M}"
 
 
 class PersonRelationTypeManager(models.Manager):
