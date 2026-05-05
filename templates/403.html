@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Permission Denied - Mapping Early Modern Violence{% endblock %}
+
+{% block content %}
+    <div style="max-width: 600px; margin: 4rem auto; padding: 2rem 1rem; text-align: center;">
+        <h1 style="font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">Permission Denied</h1>
+        <p style="font-size: 1rem; color: #4b5563; margin-bottom: 1.5rem;">
+            You don't have permission to access this page.
+            {% if user.is_authenticated %}
+                If you think this is an error, contact a project administrator.
+            {% endif %}
+        </p>
+        {% if user.is_authenticated %}
+            <a href="/admin/" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Return to the admin dashboard</a>
+        {% else %}
+            <a href="{% url 'index' %}" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Return to the home page</a>
+        {% endif %}
+    </div>
+{% endblock %}
