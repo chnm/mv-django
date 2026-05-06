@@ -1,6 +1,8 @@
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.cache import cache_page
+from django_ratelimit.decorators import ratelimit
 
 from locations.models import Location
 from mapping_violence.context_helpers import get_filter_context
@@ -12,6 +14,8 @@ def map_view(request):
     return render(request, "locations/map.html", context)
 
 
+@ratelimit(key="ip", rate="60/m", method="GET", block=True)
+@cache_page(60 * 5)  # 5-minute cache
 def locations_geojson(request):
     """Return locations with crimes as GeoJSON for the map"""
     # Start with locations that have crimes

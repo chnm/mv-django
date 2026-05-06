@@ -300,9 +300,16 @@ class CrimeResource(resources.ModelResource):
         super().__init__(**kwargs)
 
     def before_save_instance(self, instance, row, **kwargs):
-        """Set input_by to the importing user for new records."""
+        """Set input_by to the importing user for new records.
+        New imports default to 'triage'; re-imported 'done' records get
+        kicked back to 'needs_review'.
+        """
         if self.importing_user and not instance.input_by_id:
             instance.input_by = self.importing_user
+        if not instance.pk:
+            instance.status = "triage"
+        elif instance.status == "done":
+            instance.status = "needs_review"
         return super().before_save_instance(instance, row, **kwargs)
 
     # Map CSV columns to model fields - column mapping handled in before_import_row
@@ -428,6 +435,26 @@ class CrimeResource(resources.ModelResource):
     input_by_name = fields.Field(
         column_name="Input by", attribute="input_by_name", readonly=True
     )
+
+    def dehydrate_victim_name(self, crime):
+        """Export victim names as semicolon-separated list."""
+        return "; ".join(str(v) for v in crime.victim.all())
+
+    def dehydrate_victim_gender(self, crime):
+        genders = [v.gender for v in crime.victim.all() if v.gender]
+        return "; ".join(genders)
+
+    def dehydrate_victim_occupation(self, crime):
+        occupations = [v.occupation for v in crime.victim.all() if v.occupation]
+        return "; ".join(occupations)
+
+    def dehydrate_assailant_name(self, crime):
+        """Export perpetrator names as semicolon-separated list."""
+        return "; ".join(str(p) for p in crime.perpetrator.all())
+
+    def dehydrate_assailant_gender(self, crime):
+        genders = [p.gender for p in crime.perpetrator.all() if p.gender]
+        return "; ".join(genders)
 
     class Meta:
         model = Crime

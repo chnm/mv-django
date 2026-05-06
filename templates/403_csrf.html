@@ -1,9 +1,14 @@
-{% extends '_base.html' %}
-{% load i18n %}
-{% block title %}{% translate "Forbidden" %}{% endblock title %}
+{% extends 'base.html' %}
+
+{% block title %}Forbidden - Mapping Early Modern Violence{% endblock %}
+
 {% block content %}
-    <section class="page">
-        <h1>{% translate "Forbidden" %}</h1>
-        <p>{% translate "CSRF verification failed. Request aborted." %}</p>
-    </section>
-{% endblock content %}
+    <div style="max-width: 600px; margin: 4rem auto; padding: 2rem 1rem; text-align: center;">
+        <h1 style="font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">Forbidden</h1>
+        <p style="font-size: 1rem; color: #4b5563; margin-bottom: 1.5rem;">
+            CSRF verification failed. This usually happens when your session has expired.
+            Please go back and try again.
+        </p>
+        <a href="{% url 'index' %}" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Return to the home page</a>
+    </div>
+{% endblock %}

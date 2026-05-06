@@ -1,9 +1,11 @@
 from django.db.models import Q
 from django.http import JsonResponse
+from django_ratelimit.decorators import ratelimit
 
 from .models import Person
 
 
+@ratelimit(key="ip", rate="60/m", method="GET", block=True)
 def person_search(request):
     """AJAX endpoint for person autocomplete.
 

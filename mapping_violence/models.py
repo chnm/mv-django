@@ -6,6 +6,13 @@ from locations.models import Location
 
 User = get_user_model()
 
+STATUS_CHOICES = [
+    ("triage", "Triage"),
+    ("assigned", "Assigned"),
+    ("needs_review", "Needs Review"),
+    ("done", "Done"),
+]
+
 
 class WeaponCategory(models.Model):
     name = models.CharField(max_length=500)
@@ -21,7 +28,7 @@ WEAPON_CATEGORY_CHOICES = [
     ("firearm", "Firearm"),
     ("blade", "Blade"),
     ("blunt_instrument", "Blunt Instrument"),
-    ("hands", "Hands"),
+    ("no_weapon", "No weapon"),
     ("other", "Other"),
 ]
 
@@ -254,8 +261,6 @@ class Crime(models.Model):
         help_text="If sentence was carried about, check Y. If not, leave unchecked.",
     )
 
-    # TODO: image fields
-
     # Date and time information
     date = models.DateField(
         null=True,
@@ -343,7 +348,7 @@ class Crime(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         verbose_name="Type of Weapon",
-        help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, hands)",
+        help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, no weapon)",
     )
 
     # Location
@@ -394,6 +399,24 @@ class Crime(models.Model):
         help_text="Input any bibliographic references to case, if available",
     )
 
+    # Workflow
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="triage",
+        db_index=True,
+        help_text="Workflow status of this record",
+    )
+    assigned_to = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assigned_crimes",
+        verbose_name="Assigned to",
+        help_text="Editor responsible for this record",
+    )
+
     # Metadata
     input_by = models.ForeignKey(
         User,
@@ -428,6 +451,52 @@ class Crime(models.Model):
 
     class Meta:
         verbose_name = "Violence Event"
+
+
+class StatusLog(models.Model):
+    """Lightweight audit trail for workflow status changes."""
+
+    crime = models.ForeignKey(
+        Crime, on_delete=models.CASCADE, related_name="status_logs"
+    )
+    from_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    to_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"{self.from_status} → {self.to_status} by {self.changed_by} at {self.timestamp:%Y-%m-%d %H:%M}"
+
+
+class CrimeImage(models.Model):
+    """An image attached to a crime record (e.g. archival scan, photograph)."""
+
+    crime = models.ForeignKey(Crime, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(
+        upload_to="crime_images/%Y/%m/",
+        help_text="Upload an image related to this crime record",
+    )
+    caption = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Optional caption or description of the image",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)",
+    )
+
+    class Meta:
+        ordering = ["order", "pk"]
+        verbose_name = "Image"
+        verbose_name_plural = "Images"
+
+    def __str__(self):
+        return self.caption or f"Image for {self.crime}"
 
 
 class PersonRelationTypeManager(models.Manager):

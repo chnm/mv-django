@@ -15,6 +15,9 @@
 
         {% tailwind_css %}
         <style>
+            /* Ensure nav sits above map and other high-z-index content */
+            body > nav { z-index: 1100; }
+
             /* Dark nav theme for non-home pages (hero image background) */
             .nav-hero .nav-link,
             .nav-hero .dropdown-toggle,
@@ -215,38 +218,33 @@
         </div>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-gray-300 pt-12">
+        <footer class="bg-gray-800 text-gray-300 pt-12 font-sans">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid md:grid-cols-2 gap-12">
-                    <!-- About + Logo column -->
+                <div class="grid md:grid-cols-[1fr_auto_auto] gap-16">
+                    <!-- Logo column -->
                     <div>
                         <div class="flex items-center gap-6 mb-4">
-                            <img class="w-48 h-auto" src="/static/images/rrchnm-logo-white.png" alt="Roy Rosenzweig Center for History and New Media logo"/>
-                            <img class="w-56 h-auto" src="/static/images/gmu-logo-light.png" alt="George Mason University logo"/>
+                            <a href="https://rrchnm.org"><img class="w-48 h-auto" src="/static/images/rrchnm-logo-white.png" alt="Roy Rosenzweig Center for History and New Media logo"/></a>
+                            <a href="https://gmu.edu"><img class="w-56 h-auto" src="/static/images/gmu-logo-light.png" alt="George Mason University logo"/></a>
                         </div>
-                        <p class="text-gray-300 text-base mb-4">
-                            Mapping Early Modern Violence is an endeavor of the <a class="underline hover:text-white" href="https://rrchnm.org">Roy Rosenzweig Center for History and New Media</a>.
-                        </p>
-                        <p class="text-gray-300 text-base">
-                            <a class="underline hover:text-white" href="mailto:chnm@gmu.edu">Contact us</a>
-                        </p>
                     </div>
-                    <!-- Navigation columns -->
+                    <!-- Project column -->
                     <div>
-                        <ul class="flex flex-wrap gap-x-8 gap-y-2 list-none m-0 p-0">
-                            {% for nav_item in nav_data %}
-                                <li>
-                                    <a href="{{ nav_item.page.url }}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-semibold uppercase tracking-wider">
-                                        {{ nav_item.page.title }}
-                                    </a>
-                                </li>
-                            {% endfor %}
-                            <li>
-                                <a href="{% url 'map' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-semibold uppercase tracking-wider">Map</a>
-                            </li>
-                            <li>
-                                <a href="{% url 'crime_list' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-semibold uppercase tracking-wider">Data</a>
-                            </li>
+                        <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-4">Project</h3>
+                        <ul class="list-none m-0 p-0 space-y-2">
+                            <li><a href="/about/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">About</a></li>
+                            <li><a href="/blog/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Blog</a></li>
+                            <li><a href="/guides-to-the-documents/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Guides to the Documents</a></li>
+                            <li><a href="{% url 'api_docs' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">API Docs</a></li>
+                        </ul>
+                    </div>
+                    <!-- Research column -->
+                    <div>
+                        <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-4">Research</h3>
+                        <ul class="list-none m-0 p-0 space-y-2">
+                            <li><a href="{% url 'map' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Map</a></li>
+                            <li><a href="{% url 'crime_list' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Data</a></li>
+                            <li><a href="/research-resources/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Research Resources</a></li>
                         </ul>
                     </div>
                 </div>
@@ -260,7 +258,7 @@
             {% endblock footer_content %}
             {% block copyright %}
                 <div class="bg-gray-900 text-gray-400 text-center text-sm py-4 mt-4">
-                    &copy; 2024&mdash;{% now "Y" %} | Roy Rosenzweig Center for History and New Media
+                    &copy; 2025&mdash;{% now "Y" %} | Roy Rosenzweig Center for History and New Media | <a class="underline hover:no-underline" href="mailto:chnm@gmu.edu">Contact us</a>
                 </div>
             {% endblock copyright%}
         </footer>

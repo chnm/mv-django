@@ -3,7 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic.base import TemplateView
+from django.views.generic import TemplateView
 from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
@@ -11,12 +11,18 @@ from wagtail.documents import urls as wagtaildocs_urls
 from content.views import download_blog_post_markdown
 from locations.views import locations_geojson, map_view
 from mapping_violence.api import person_search
-from mapping_violence.views import crime_detail, crime_list, index
+from mapping_violence.views import crime_detail, crime_export_csv, crime_list, index
 
 urlpatterns = [
     path("", index, name="index"),
     path("map/", map_view, name="map"),
     path("data/", crime_list, name="crime_list"),
+    path("data/export.csv", crime_export_csv, name="crime_export_csv"),
+    path(
+        "api/docs/",
+        TemplateView.as_view(template_name="api_docs.html"),
+        name="api_docs",
+    ),
     path("api/locations.geojson", locations_geojson, name="locations_geojson"),
     path("api/persons/search/", person_search, name="person_search"),
     path("crime/<int:crime_id>/", crime_detail, name="crime_detail"),

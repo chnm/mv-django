@@ -1,10 +1,13 @@
-{% extends '_base.html' %}
-{% load i18n %}
-{% block title %}{% translate "Page not found" %}{% endblock title %}
+{% extends 'base.html' %}
+
+{% block title %}Page not found - Mapping Early Modern Violence{% endblock %}
+
 {% block content %}
-    <section class="page">
-        <h1>{% translate "Page not found" %}</h1>
-        <p>{% translate "The requested page doesn't exist on the server." %}</p>
-        <p><a href="{% url 'index' %}">{% translate "Continue to home page" %}</a></p>
-    </section>
-{% endblock content %}
+    <div style="max-width: 600px; margin: 4rem auto; padding: 2rem 1rem; text-align: center;">
+        <h1 style="font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">Page not found</h1>
+        <p style="font-size: 1rem; color: #4b5563; margin-bottom: 1.5rem;">
+            The page you're looking for doesn't exist or has been moved.
+        </p>
+        <a href="{% url 'index' %}" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Return to the home page</a>
+    </div>
+{% endblock %}
