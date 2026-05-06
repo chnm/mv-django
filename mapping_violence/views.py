@@ -40,7 +40,7 @@ def crime_detail(request, crime_id):
     crime = get_object_or_404(
         Crime.objects.select_related(
             "address", "address__city", "weapon", "connected_event", "judge"
-        ).prefetch_related("victim", "perpetrator", "witnesses"),
+        ).prefetch_related("victim", "perpetrator", "witnesses", "images"),
         pk=crime_id,
     )
 

@@ -794,7 +794,7 @@
             if (colorBy === "fatality")   return crime.fatality ? "#ef4444" : "#22c55e";
             if (colorBy === "gender")     return GENDER_COLORS[crime[genderField + "_gender"]] || "#6b7280";
             if (colorBy === "crime_type") return getCrimeTypeColor(crime.crime);
-            return "#F59E0B";
+            return "#e6ab02";
         }
 
         function jitterCoords(lat, lng, index, total) {
@@ -819,10 +819,10 @@
             let html = '';
 
             html += '<div class="legend-item">' +
-            '<span class="legend-dot" style="background:#F59E0B;border:2px solid #FBBF24;box-sizing:border-box;"></span>' +
+            '<span class="legend-dot" style="background:#e6ab02;border:2px solid #c99200;box-sizing:border-box;"></span>' +
             'Precise location</div>';
             html += '<div class="legend-item">' +
-            '<span class="legend-dot" style="background:rgba(139,69,19,0.15);border:2px dashed #8B4513;box-sizing:border-box;"></span>' +
+            '<span class="legend-dot" style="background:rgba(42,157,143,0.15);border:2px dashed #21867a;box-sizing:border-box;"></span>' +
             'City-level (approx.)</div>';
 
             if (colorBy !== "none") {
@@ -924,9 +924,10 @@
                 weapon_subcategory: weaponSub,
                 urban_rural: urbanRural,
                 year_from: yearFrom, year_to: yearTo,
-                person: personIds,
+                person: personIds || '',
                 fatality: fatality ? 'true' : '',
-                color_by: colorBy, gender_field: genderField,
+                color_by: colorBy,
+                gender_field: colorBy === 'gender' ? genderField : '',
                 clustering: clustering ? 'true' : '',
             });
 
@@ -1058,8 +1059,8 @@
                     const radius = bubbleRadius(count);
                     const latlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
                     const marker = L.circleMarker(latlng, {
-                        radius, fillColor: "#F59E0B", color: "#FBBF24",
-                        weight: 2, opacity: 1, fillOpacity: 0.8,
+                        radius, fillColor: "#e6ab02", color: "#c99200",
+                        weight: 2, opacity: 1, fillOpacity: 0.65,
                         _precision: 'precise',
                     });
                     marker.bindTooltip(
@@ -1089,8 +1090,8 @@
                     const n = cluster.crimes.length;
                     const radius = bubbleRadius(n) * 1.2;
                     const marker = L.circleMarker([cluster.lat, cluster.lng], {
-                        radius, fillColor: "#8B4513", fillOpacity: 0.15,
-                        color: "#8B4513", weight: 2.5, opacity: 0.7, dashArray: "5 4",
+                        radius, fillColor: "#2a9d8f", fillOpacity: 0.15,
+                        color: "#21867a", weight: 2.5, opacity: 0.7, dashArray: "5 4",
                         _precision: 'city',
                     });
                     const locCount = cluster.locationNames.size;
@@ -1113,7 +1114,7 @@
                         const color = getMarkerColor(crime, colorBy, genderField);
                         const marker = L.circleMarker([lat, lng], {
                             radius: 7, fillColor: color, color: "#fff",
-                            weight: 1.5, opacity: 1, fillOpacity: 0.85,
+                            weight: 1.5, opacity: 1, fillOpacity: 0.65,
                             _precision: 'precise',
                         });
                         marker.bindTooltip(
@@ -1137,8 +1138,8 @@
                     const n = cluster.crimes.length;
                     const radius = bubbleRadius(n) * 1.2;
                     const marker = L.circleMarker([cluster.lat, cluster.lng], {
-                        radius, fillColor: "#8B4513", fillOpacity: 0.15,
-                        color: "#8B4513", weight: 2.5, opacity: 0.7, dashArray: "5 4",
+                        radius, fillColor: "#2a9d8f", fillOpacity: 0.15,
+                        color: "#21867a", weight: 2.5, opacity: 0.7, dashArray: "5 4",
                         _precision: 'city',
                     });
                     const locCount = cluster.locationNames.size;

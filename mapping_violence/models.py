@@ -261,8 +261,6 @@ class Crime(models.Model):
         help_text="If sentence was carried about, check Y. If not, leave unchecked.",
     )
 
-    # TODO: image fields
-
     # Date and time information
     date = models.DateField(
         null=True,
@@ -472,6 +470,33 @@ class StatusLog(models.Model):
 
     def __str__(self):
         return f"{self.from_status} → {self.to_status} by {self.changed_by} at {self.timestamp:%Y-%m-%d %H:%M}"
+
+
+class CrimeImage(models.Model):
+    """An image attached to a crime record (e.g. archival scan, photograph)."""
+
+    crime = models.ForeignKey(Crime, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(
+        upload_to="crime_images/%Y/%m/",
+        help_text="Upload an image related to this crime record",
+    )
+    caption = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Optional caption or description of the image",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)",
+    )
+
+    class Meta:
+        ordering = ["order", "pk"]
+        verbose_name = "Image"
+        verbose_name_plural = "Images"
+
+    def __str__(self):
+        return self.caption or f"Image for {self.crime}"
 
 
 class PersonRelationTypeManager(models.Manager):

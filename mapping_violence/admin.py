@@ -18,6 +18,7 @@ from mapping_violence.forms import CrimeForm, PersonForm
 from mapping_violence.models import (
     STATUS_CHOICES,
     Crime,
+    CrimeImage,
     Event,
     Person,
     PersonRelation,
@@ -123,6 +124,14 @@ class WitnessInline(StackedInline):
     fields = ("name", "date_of_testimony", "claims", "notes")
     verbose_name = "Witness"
     verbose_name_plural = "Witnesses"
+
+
+class CrimeImageInline(TabularInline):
+    """Image attachments for a crime record."""
+
+    model = CrimeImage
+    extra = 1
+    fields = ("image", "caption", "order")
 
 
 class StatusLogInline(TabularInline):
@@ -338,7 +347,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     )
     search_fields = ("number", "crime", "motive", "description_of_case")
     date_hierarchy = "date"
-    inlines = (WitnessInline, StatusLogInline)
+    inlines = (WitnessInline, CrimeImageInline, StatusLogInline)
     readonly_fields = (
         "year",
         "month",

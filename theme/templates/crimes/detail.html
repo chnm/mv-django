@@ -443,6 +443,28 @@
                         </section>
                     {% endif %}
 
+                    {# Images #}
+                    {% if crime.images.all %}
+                        <section>
+                            <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-3 mb-4">
+                                <span>Images</span>
+                                <span class="flex-1 h-px bg-gray-200"></span>
+                            </h2>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {% for img in crime.images.all %}
+                                    <figure class="group">
+                                        <a href="{{ img.image.url }}" target="_blank" class="block rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-colors">
+                                            <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Crime record image' }}" class="w-full h-40 object-cover group-hover:opacity-90 transition-opacity" loading="lazy">
+                                        </a>
+                                        {% if img.caption %}
+                                            <figcaption class="text-xs text-gray-500 mt-1.5">{{ img.caption }}</figcaption>
+                                        {% endif %}
+                                    </figure>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endif %}
+
                     {# Related Cases — other crimes sharing a victim or perpetrator #}
                     {% if related_crimes %}
                         <section>
@@ -515,8 +537,8 @@
 
             const marker = L.circleMarker([{{ crime.address.effective_latitude }}, {{ crime.address.effective_longitude }}], {
                 radius: 8,
-                fillColor: "#F59E0B",
-                color: "#FBBF24",
+                fillColor: "#e6ab02",
+                color: "#c99200",
                 weight: 2,
                 opacity: 1,
                 fillOpacity: 0.8
