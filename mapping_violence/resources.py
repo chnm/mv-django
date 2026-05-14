@@ -41,17 +41,22 @@ class PersonWidget(widgets.ForeignKeyWidget):
         return person
 
 
-class WeaponWidget(widgets.ForeignKeyWidget):
-    """Custom widget for Weapon fields"""
+class WeaponWidget(widgets.ManyToManyWidget):
+    """Custom widget for Weapon M2M field — resolves semicolon-separated names."""
 
     def clean(self, value, row=None, **kwargs):
         if not value:
-            return None
+            return []
 
-        weapon, created = Weapon.objects.get_or_create(
-            name=value, defaults={"name": value}
-        )
-        return weapon
+        weapons = []
+        for name in str(value).split(";"):
+            name = name.strip()
+            if name:
+                weapon, created = Weapon.objects.get_or_create(
+                    name=name, defaults={"name": name}
+                )
+                weapons.append(weapon)
+        return weapons
 
 
 class EventWidget(widgets.ForeignKeyWidget):
@@ -411,7 +416,7 @@ class CrimeResource(resources.ModelResource):
     weapon = fields.Field(
         column_name="Type_of_Weapon",
         attribute="weapon",
-        widget=WeaponWidget(Weapon, "name"),
+        widget=WeaponWidget(Weapon, separator=";"),
     )
 
     description_of_location = fields.Field(

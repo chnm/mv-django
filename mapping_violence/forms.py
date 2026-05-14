@@ -34,4 +34,5 @@ class CrimeForm(forms.ModelForm):
         widgets = {
             "victim": FilteredSelectMultiple("Victims", is_stacked=False),
             "perpetrator": FilteredSelectMultiple("Assailants", is_stacked=False),
+            "weapon": FilteredSelectMultiple("Weapons", is_stacked=False),
         }

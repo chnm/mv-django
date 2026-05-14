@@ -14,16 +14,6 @@ STATUS_CHOICES = [
 ]
 
 
-class WeaponCategory(models.Model):
-    name = models.CharField(max_length=500)
-
-    class Meta:
-        ordering = ["name"]
-
-    def __str__(self) -> str:
-        return self.name
-
-
 WEAPON_CATEGORY_CHOICES = [
     ("firearm", "Firearm"),
     ("blade", "Blade"),
@@ -36,9 +26,6 @@ WEAPON_CATEGORY_CHOICES = [
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
     definition = models.TextField(blank=True)
-    category = models.ForeignKey(
-        WeaponCategory, null=True, blank=True, on_delete=models.SET_NULL
-    )
     weapon_category = models.CharField(
         max_length=50,
         blank=True,
@@ -342,13 +329,11 @@ class Crime(models.Model):
         max_length=255,
         help_text="Input relationship between victim and assailant, if known. Example: husband and wife, friend, enemy",
     )
-    weapon = models.ForeignKey(
+    weapon = models.ManyToManyField(
         Weapon,
-        null=True,
         blank=True,
-        on_delete=models.SET_NULL,
-        verbose_name="Type of Weapon",
-        help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, no weapon)",
+        verbose_name="Weapon(s)",
+        help_text="Select weapon(s) used. Hold Ctrl/Cmd to select multiple.",
     )
 
     # Location
