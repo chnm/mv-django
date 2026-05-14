@@ -186,16 +186,18 @@
                             </div>
                         {% endif %}
 
-                        {# Weapon #}
-                        {% if crime.weapon %}
+                        {# Weapon(s) #}
+                        {% if crime.weapon.all %}
                             <div>
                                 <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-200 pb-1.5 mb-3">Weapon</h2>
-                                <div class="text-sm">
-                                    <p class="text-gray-900">{{ crime.weapon.name }}</p>
-                                    {% if crime.weapon.weapon_category %}
-                                        <a href="{% url 'crime_list' %}?weapon_category={{ crime.weapon.weapon_category }}"
-                                           class="text-xs text-mediterranean-600 hover:underline">{{ crime.weapon.get_weapon_category_display }} &rarr;</a>
-                                    {% endif %}
+                                <div class="text-sm space-y-1">
+                                    {% for w in crime.weapon.all %}
+                                        <p class="text-gray-900">{{ w.name }}</p>
+                                        {% if w.weapon_category %}
+                                            <a href="{% url 'crime_list' %}?weapon_category={{ w.weapon_category }}"
+                                               class="text-xs text-mediterranean-600 hover:underline">{{ w.get_weapon_category_display }} &rarr;</a>
+                                        {% endif %}
+                                    {% endfor %}
                                 </div>
                             </div>
                         {% endif %}
@@ -214,7 +216,7 @@
                         {% endif %}
 
                         {# Browse / navigation buttons #}
-                        {% if crime.crime or crime.address.city or crime.weapon %}
+                        {% if crime.crime or crime.address.city or crime.weapon.all %}
                             <div class="border-t border-gray-200 pt-4 space-y-2">
                                 {% if crime.crime %}
                                     <a href="{% url 'crime_list' %}?crime={{ crime.crime|urlencode }}"
@@ -230,13 +232,15 @@
                                         <span class="ml-2">&rarr;</span>
                                     </a>
                                 {% endif %}
-                                {% if crime.weapon.weapon_category %}
-                                    <a href="{% url 'crime_list' %}?weapon_category={{ crime.weapon.weapon_category }}"
-                                       class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
-                                        <span>Browse {{ crime.weapon.get_weapon_category_display|lower }} cases</span>
-                                        <span class="ml-2">&rarr;</span>
-                                    </a>
-                                {% endif %}
+                                {% for w in crime.weapon.all %}
+                                    {% if w.weapon_category %}
+                                        <a href="{% url 'crime_list' %}?weapon_category={{ w.weapon_category }}"
+                                           class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
+                                            <span>Browse {{ w.get_weapon_category_display|lower }} cases</span>
+                                            <span class="ml-2">&rarr;</span>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
                                 {% if crime.address.effective_latitude and crime.address.effective_longitude %}
                                     <a href="{% url 'map' %}{% if crime.address.city %}?city={{ crime.address.city.pk }}{% endif %}"
                                        class="flex items-center justify-between text-sm font-medium px-3 py-2 rounded border border-mediterranean-200 text-mediterranean-700 hover:bg-mediterranean-50 hover:border-mediterranean-400 transition-colors">
@@ -554,8 +558,8 @@
 
             let popupContent = '<div style="color:#1f2937;font-size:0.85rem;line-height:1.6;max-width:200px;">';
             popupContent += '<strong>{{ crime.address.name|escapejs }}</strong>';
-            {% if crime.weapon %}
-                popupContent += '<br><span style="color:#9ca3af;font-size:0.75rem;">Weapon</span><br>{{ crime.weapon.name|escapejs }}';
+            {% if crime.weapon.all %}
+                popupContent += '<br><span style="color:#9ca3af;font-size:0.75rem;">Weapon</span><br>{% for w in crime.weapon.all %}{{ w.name|escapejs }}{% if not forloop.last %}, {% endif %}{% endfor %}';
             {% endif %}
             if (victims.length) {
                 popupContent += '<br><span style="color:#9ca3af;font-size:0.75rem;">' + (victims.length > 1 ? 'Victims' : 'Victim') + '</span><br>' + victims.join(', ');

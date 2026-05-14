@@ -39,8 +39,8 @@ def crime_detail(request, crime_id):
     """Display detailed information about a specific crime"""
     crime = get_object_or_404(
         Crime.objects.select_related(
-            "address", "address__city", "weapon", "connected_event", "judge"
-        ).prefetch_related("victim", "perpetrator", "witnesses", "images"),
+            "address", "address__city", "connected_event", "judge"
+        ).prefetch_related("victim", "perpetrator", "weapon", "witnesses", "images"),
         pk=crime_id,
     )
 
@@ -87,8 +87,8 @@ def crime_detail(request, crime_id):
 def crime_list(request):
     """Display a data table of all crimes with filtering"""
     crimes = (
-        Crime.objects.select_related("address", "address__city", "weapon")
-        .prefetch_related("victim", "perpetrator")
+        Crime.objects.select_related("address", "address__city")
+        .prefetch_related("victim", "perpetrator", "weapon")
         .order_by("-date", "-year")
     )
 
@@ -119,10 +119,8 @@ class Echo:
 def crime_export_csv(request):
     """Export filtered crimes as a CSV download."""
     crimes = (
-        Crime.objects.select_related(
-            "address", "address__city", "weapon", "connected_event"
-        )
-        .prefetch_related("victim", "perpetrator")
+        Crime.objects.select_related("address", "address__city", "connected_event")
+        .prefetch_related("victim", "perpetrator", "weapon")
         .order_by("-date", "-year")
     )
     crime_filter = CrimeFilter(request.GET, queryset=crimes)
@@ -147,7 +145,7 @@ def crime_export_csv(request):
             "Perpetrator Gender",
             lambda c: "; ".join(p.gender for p in c.perpetrator.all() if p.gender),
         ),
-        ("Weapon", lambda c: str(c.weapon) if c.weapon else ""),
+        ("Weapon", lambda c: "; ".join(str(w) for w in c.weapon.all())),
         ("Motive", lambda c: c.motive),
         ("Fatality", lambda c: "Y" if c.fatality else "N"),
         (

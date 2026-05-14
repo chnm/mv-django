@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
+from django.db.models import Count
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
 from django.shortcuts import render
@@ -324,7 +325,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "crime",
         "get_victims",
         "get_perpetrators",
-        "weapon",
+        "get_weapons",
         "date",
         "fatality",
         "status",
@@ -341,7 +342,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "pardoned",
         "arbitration",
         "sentence_enforced",
-        "weapon",
+        "weapon__weapon_category",
         "year",
         "input_by",
     )
@@ -458,6 +459,12 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         )
 
     get_perpetrators.short_description = "Perpetrators"
+
+    def get_weapons(self, obj):
+        """Display comma-separated list of weapons"""
+        return ", ".join([str(w) for w in obj.weapon.all()]) or "—"
+
+    get_weapons.short_description = "Weapon(s)"
 
     def get_location(self, obj):
         """Display location if available"""
@@ -744,13 +751,76 @@ class PersonAdmin(ModelAdmin):
 class WeaponAdmin(ModelAdmin):
     """Admin for Weapon entities"""
 
-    list_display = ("__str__", "weapon_category", "weapon_subcategory", "category")
+    list_display = ("__str__", "weapon_category", "weapon_subcategory", "crime_count")
     list_filter = ("weapon_category",)
     search_fields = ("name", "weapon_subcategory")
+    actions = ["merge_weapons"]
     fieldsets = (
         ("Basic Information", {"fields": ("name", "definition")}),
         (
             "Classification",
-            {"fields": ("weapon_category", "weapon_subcategory", "category")},
+            {"fields": ("weapon_category", "weapon_subcategory")},
         ),
     )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(_crime_count=Count("crime"))
+
+    def crime_count(self, obj):
+        return obj._crime_count
+
+    crime_count.short_description = "Cases"
+    crime_count.admin_order_field = "_crime_count"
+
+    @admin.action(description="Merge selected weapons into one")
+    def merge_weapons(self, request, queryset):
+        if queryset.count() < 2:
+            self.message_user(request, "Select at least two weapons to merge.")
+            return None
+
+        class MergeForm(forms.Form):
+            primary = forms.ModelChoiceField(
+                queryset=queryset,
+                label="Keep this weapon",
+                empty_label=None,
+                widget=forms.RadioSelect,
+            )
+
+        if "apply" in request.POST:
+            form = MergeForm(request.POST)
+            form.fields["primary"].queryset = queryset
+            if form.is_valid():
+                primary = form.cleaned_data["primary"]
+                duplicates = queryset.exclude(pk=primary.pk)
+
+                # Transfer all crime associations from duplicates to primary
+                merged_count = 0
+                for dup in duplicates:
+                    for crime in dup.crime_set.all():
+                        crime.weapon.add(primary)
+                        crime.weapon.remove(dup)
+                        merged_count += 1
+                    dup.delete()
+
+                dup_count = len(duplicates)
+                self.message_user(
+                    request,
+                    f'Merged {dup_count} weapon(s) into "{primary.name}". '
+                    f"{merged_count} crime association(s) transferred.",
+                )
+                return None
+        else:
+            form = MergeForm()
+
+        return render(
+            request,
+            "admin/merge_weapons.html",
+            {
+                "title": "Merge weapons",
+                "form": form,
+                "queryset": queryset,
+                "opts": self.model._meta,
+                "action": "merge_weapons",
+            },
+        )
