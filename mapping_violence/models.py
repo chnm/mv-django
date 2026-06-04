@@ -570,9 +570,12 @@ class PersonRelation(models.Model):
         ]
 
     def __str__(self):
-        relation_type = (
-            f"{self.type}-{self.type.converse_name}"
-            if self.type.converse_name
-            else self.type
-        )
+        if self.type:
+            relation_type = (
+                f"{self.type}-{self.type.converse_name}"
+                if self.type.converse_name
+                else self.type
+            )
+        else:
+            relation_type = "Unknown"
         return f"{relation_type} relation: {self.to_person} and {self.from_person}"
