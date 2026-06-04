@@ -1,7 +1,7 @@
 import csv
 
 from django.db.models import Q
-from django.http import StreamingHttpResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
 from django_ratelimit.decorators import ratelimit
 from django_tables2 import RequestConfig
@@ -175,3 +175,7 @@ def crime_export_csv(request):
     )
     response["Content-Disposition"] = 'attachment; filename="mapping_violence_data.csv"'
     return response
+
+
+def health(request):
+    return JsonResponse({"status": "ok", "code": 200})
