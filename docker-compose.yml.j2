@@ -5,87 +5,64 @@ name: {{ compose_stack_name }}
 
 services:
 
-  {% set service = 'app' %}
+  {{ caddy_svc | indent(width=2, first=True ) }}
+
+  {% set service = (stack.services | selectattr('name', 'eq', 'app') | first) %}
 
   app:
     image: ghcr.io/{{ template.git.package.image_name }}:{{ template.git.package.tag }}
     restart: unless-stopped
-    ports:
-      - "{{ template.env.host_app_port }}:8000"
+    {{ service | get_deploy_resources_by_service | indent(width=2) }}
+    {% if service.environment is defined %}
+
     environment:
-      - DEBUG={{ template.env.debug_flag }}
-      - DJANGO_SECRET_KEY={{ template.env.secret_key }}
-      - DJANGO_ALLOWED_HOSTS={{ template.env.allowed_hosts }}
-      - DJANGO_CSRF_TRUSTED_ORIGINS={{ template.env.trusted_origins }}
-      - DB_HOST=db
-      - DB_PORT={{ template.env.host_db_port }}
-      - DB_NAME={{ template.env.db_name }}
-      - DB_USER={{ template.env.db_user }}
-      - DB_PASS={{ template.env.db_pass }}
-      - ALLAUTH_ORCID_CLIENT_ID={{ template.env.allauth_orcid_client_id }}
-      - ALLAUTH_ORCID_CLIENT_SECRET={{ template.env.allauth_orcid_client_secret }}
-      - ALLAUTH_GITHUB_CLIENT_ID={{ template.env.allauth_github_client_id }}
-      - ALLAUTH_GITHUB_CLIENT_SECRET={{ template.env.allauth_github_client_secret }}
-      - ALLAUTH_SLACK_CLIENT_ID={{ template.env.allauth_slack_client_id }}
-      - ALLAUTH_SLACK_CLIENT_SECRET={{ template.env.allauth_slack_client_secret }}
-     #- OBJ_STORAGE={{ template.env.obj_storage }}
-     #- OBJ_STORAGE_ACCESS_KEY_ID={{ template.env.obj_storage_access_key_id }}
-     #- OBJ_STORAGE_SECRET_ACCESS_KEY={{ template.env.obj_storage_secret_access_key }}
-     #- OBJ_STORAGE_BUCKET_NAME={{ template.env.obj_storage_bucket_name }}
-     #- OBJ_STORAGE_ENDPOINT_URL={{ template.env.obj_storage_endpoint_url }}
+{% for env in service.environment %}
+      - {{ env.key }}={{ env.value }}
+{% endfor %}
+    {% endif %}
+
     command: >
         sh -c "uv run manage.py migrate &&
                uv run manage.py runserver 0.0.0.0:8000"
-    {% if template.volumes is defined %}
-    {% set vols = (template.volumes | selectattr('service', 'eq', service)) %}
-    {% if vols is iterable and vols | length > 0 %}
+    {% if service.volumes | default([]) | length > 0 %}
 
     volumes:
-    {% for vol in vols %}
-
-      - {{ vol.name }}:{{ vol.container_path }}
-    {% endfor %}
-    {% endif %}
+{% for vol in service.volumes %}
+    - {{ vol.host_path if vol.host_path is defined else vol.name }}:{{ vol.container_path }}
+{% endfor %}
     {% endif %}
 
     depends_on:
       db:
         condition: service_healthy
 
-  {% set service = 'db' %}
+  {% set service = (stack.services | selectattr('name', 'eq', 'db') | first) %}
 
   db:
-    image: postgres:17
+    image: {{ service.image if service.image is defined else "postgres:latest" }}
     restart: unless-stopped
+    {% if service.environment is defined %}
+
     environment:
-      - POSTGRES_DB={{ template.env.db_name }}
-      - POSTGRES_USER={{ template.env.db_user }}
-      - POSTGRES_PASSWORD={{ template.env.db_pass }}
-      - POSTGRES_HOST=db
-    {% if template.volumes is defined %}
-    {% set vols = (template.volumes | selectattr('service', 'eq', service)) %}
-    {% if vols is iterable and vols | length > 0 %}
-
-    volumes:
-      #- ./initdb:/docker-entrypoint-initdb.d
-    {% for vol in vols %}
-
-      - {{ vol.name }}:{{ vol.container_path }}
-    {% endfor %}
-    {% endif %}
+{% for env in service.environment %}
+      - {{ env.key }}={{ env.value }}
+{% endfor %}
     {% endif %}
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U {{ template.env.db_user }}"]
+      test: ["CMD-SHELL", "pg_isready -U {{ (service.environment | selectattr('key', 'eq', 'POSTGRES_USER')
+ | first).value }}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    {% if service.volumes | default([]) | length > 0 %}
 
-# external volumes managed and defined by ansible
-volumes:
-{% for vol in template.volumes %}
-
-  {{ vol.name }}:
-    name: "{{ compose_stack_name }}--{{ vol.name }}"
-    #external: true
+    volumes:
+{% for vol in service.volumes %}
+    - {{ vol.host_path if vol.host_path is defined else vol.name }}:{{ vol.container_path }}
 {% endfor %}
+    {% endif %}
+
+volumes:
+  {{ caddy_vols | indent(width=2, first=True ) }}
+  {{ stack | get_all_named_volumes(compose_stack_name) | indent(width=2) }}
