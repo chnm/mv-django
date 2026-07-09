@@ -11,7 +11,13 @@ from wagtail.documents import urls as wagtaildocs_urls
 from content.views import download_blog_post_markdown
 from locations.views import locations_geojson, map_view
 from mapping_violence.api import person_search
-from mapping_violence.views import crime_detail, crime_export_csv, crime_list, index
+from mapping_violence.views import (
+    crime_detail,
+    crime_export_csv,
+    crime_list,
+    health,
+    index,
+)
 
 urlpatterns = [
     path("", index, name="index"),
@@ -36,6 +42,7 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/profile/", TemplateView.as_view(template_name="profile.html")),
+    path("health/", health, name="health"),
     path("schema-viewer/", include("schema_viewer.urls")),
     # Wagtail pages - must be last to act as catch-all
     path("", include(wagtail_urls)),
