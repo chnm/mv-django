@@ -1,4 +1,11 @@
+from datetime import date
+
 from edtf import parse_edtf
+
+
+def _struct_time_to_date(value):
+    return date(value.tm_year, value.tm_mon, value.tm_mday)
+
 
 def parse_edtf_to_dates(edtf_string):
     """
@@ -10,9 +17,12 @@ def parse_edtf_to_dates(edtf_string):
 
     try:
         parsed = parse_edtf(edtf_string)
-        if hasattr(parsed, 'lower_strict') and hasattr(parsed, 'upper_strict'):
-            return (parsed.lower_strict.date(), parsed.upper_strict.date())
-        elif hasattr(parsed, 'date'):
+        if hasattr(parsed, "lower_strict") and hasattr(parsed, "upper_strict"):
+            return (
+                _struct_time_to_date(parsed.lower_strict()),
+                _struct_time_to_date(parsed.upper_strict()),
+            )
+        elif hasattr(parsed, "date"):
             d = parsed.date()
             return (d, d)
     except Exception:
