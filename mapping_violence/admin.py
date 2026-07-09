@@ -21,14 +21,17 @@ from mapping_violence.models import (
     Crime,
     CrimeImage,
     Event,
+    ExternalPersonIdentifier,
+    ImportBatch,
     Person,
     PersonRelation,
     PersonRelationType,
+    SourceDataset,
     StatusLog,
     Weapon,
     Witness,
 )
-from mapping_violence.resources import CrimeResource
+from mapping_violence.resources import CrimeResource, MiduraCrimeResource
 
 # Unregister then re-register to get Unfold styling applied
 admin.site.unregister(User)
@@ -164,6 +167,81 @@ class PersonRelationTypeAdmin(ModelAdmin):
     fieldsets = (
         ("Relationship Names", {"fields": ("name", "converse_name")}),
         ("Classification", {"fields": ("category",)}),
+    )
+
+
+@admin.register(SourceDataset)
+class SourceDatasetAdmin(ModelAdmin):
+    """Admin for researcher/source datasets used in imports."""
+
+    list_display = ("name", "contact_name")
+    search_fields = ("name", "contact_name", "description", "notes")
+
+    fieldsets = (
+        ("Dataset", {"fields": ("name", "description", "contact_name")}),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
+    )
+
+
+@admin.register(ExternalPersonIdentifier)
+class ExternalPersonIdentifierAdmin(ModelAdmin):
+    """Admin for external person IDs mapped onto local Person records."""
+
+    list_display = (
+        "source_dataset",
+        "external_id",
+        "person",
+        "raw_name",
+        "resolution_status",
+    )
+    list_filter = ("source_dataset", "resolution_status")
+    search_fields = (
+        "external_id",
+        "raw_name",
+        "person__first_name",
+        "person__last_name",
+        "person__given_name",
+    )
+
+    fieldsets = (
+        (
+            "Identifier",
+            {"fields": ("source_dataset", "external_id", "raw_name")},
+        ),
+        ("Resolution", {"fields": ("person", "resolution_status", "notes")}),
+    )
+
+
+@admin.register(ImportBatch)
+class ImportBatchAdmin(ModelAdmin):
+    """Admin for tracking imported source files."""
+
+    list_display = (
+        "original_filename",
+        "source_dataset",
+        "import_profile",
+        "status",
+        "uploaded_by",
+        "uploaded_at",
+    )
+    list_filter = ("source_dataset", "import_profile", "status", "uploaded_by")
+    search_fields = ("original_filename", "import_profile", "notes")
+    readonly_fields = ("uploaded_at",)
+
+    fieldsets = (
+        (
+            "Import",
+            {
+                "fields": (
+                    "source_dataset",
+                    "original_filename",
+                    "import_profile",
+                    "status",
+                )
+            },
+        ),
+        ("Metadata", {"fields": ("uploaded_by", "uploaded_at")}),
+        ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
     )
 
 
@@ -316,7 +394,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     """Admin for Crime entities with import/export functionality"""
 
     form = CrimeForm
-    resource_class = CrimeResource
+    resource_classes = [CrimeResource, MiduraCrimeResource]
     import_form_class = ImportForm
     export_form_class = ExportForm
 
@@ -357,6 +435,7 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "input_by",
         "date_of_entry",
         "updated_by",
+        "import_batch",
     )
     actions = ["reassign_input_by", "assign_to_editor", "set_status"]
 
@@ -442,6 +521,10 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
                 "fields": ("input_by", "updated_by", "date_of_entry"),
                 "classes": ("collapse",),
             },
+        ),
+        (
+            "Import Provenance",
+            {"fields": ("import_batch",), "classes": ("collapse",)},
         ),
     )
 

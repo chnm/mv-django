@@ -128,6 +128,115 @@ class Person(models.Model):
         return name
 
 
+class SourceDataset(models.Model):
+    """A dataset or researcher source that contributed imported records."""
+
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    contact_name = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ExternalPersonIdentifier(models.Model):
+    """Stable person identifier supplied by an external source dataset."""
+
+    MATCHED = "matched"
+    CREATED = "created"
+    AMBIGUOUS_NAME_REUSED = "ambiguous_name_reused"
+    UNRESOLVED = "unresolved"
+    RESOLUTION_STATUS_CHOICES = (
+        (MATCHED, "Matched"),
+        (CREATED, "Created"),
+        (AMBIGUOUS_NAME_REUSED, "Ambiguous name reused"),
+        (UNRESOLVED, "Unresolved"),
+    )
+
+    source_dataset = models.ForeignKey(
+        SourceDataset,
+        on_delete=models.CASCADE,
+        related_name="person_identifiers",
+    )
+    external_id = models.CharField(max_length=255)
+    person = models.ForeignKey(
+        Person,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="external_identifiers",
+    )
+    raw_name = models.CharField(max_length=500, blank=True)
+    resolution_status = models.CharField(
+        max_length=50,
+        choices=RESOLUTION_STATUS_CHOICES,
+        default=UNRESOLVED,
+    )
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["source_dataset__name", "external_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_dataset", "external_id"],
+                name="unique_external_person_identifier",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.source_dataset}: {self.external_id}"
+
+
+class ImportBatch(models.Model):
+    """A single file import or normalization run."""
+
+    STAGED = "staged"
+    IMPORTED = "imported"
+    NEEDS_REVIEW = "needs_review"
+    FAILED = "failed"
+    STATUS_CHOICES = (
+        (STAGED, "Staged"),
+        (IMPORTED, "Imported"),
+        (NEEDS_REVIEW, "Needs Review"),
+        (FAILED, "Failed"),
+    )
+
+    source_dataset = models.ForeignKey(
+        SourceDataset,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_batches",
+    )
+    original_filename = models.CharField(max_length=500, blank=True)
+    import_profile = models.CharField(max_length=255, blank=True)
+    uploaded_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_batches",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STAGED,
+    )
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-uploaded_at", "original_filename"]
+
+    def __str__(self):
+        label = self.original_filename or self.import_profile or f"Batch {self.pk}"
+        return f"{label} ({self.get_status_display()})"
+
+
 class Event(models.Model):
     """Model for ceremonial events that may be connected to crimes"""
 
@@ -422,6 +531,13 @@ class Crime(models.Model):
         null=True,
         blank=True,
         related_name="updated_by",
+    )
+    import_batch = models.ForeignKey(
+        ImportBatch,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="crimes",
     )
 
     def __str__(self) -> str:

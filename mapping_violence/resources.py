@@ -1,13 +1,30 @@
 import re
 import time
+from collections import OrderedDict
 from datetime import datetime
 
 from import_export import fields, resources, widgets
 from import_export.widgets import BooleanWidget
+from tablib import Dataset
 
 from locations.models import City, Location
 
-from .models import Crime, Event, Person, Weapon
+from .models import (
+    Crime,
+    Event,
+    ExternalPersonIdentifier,
+    Person,
+    SourceDataset,
+    Weapon,
+)
+
+
+def _is_blankish(value):
+    return str(value or "").strip().lower() in {"", "nan", "none", "null"}
+
+
+def _clean_value(value):
+    return "" if _is_blankish(value) else str(value).strip()
 
 
 class PersonWidget(widgets.ForeignKeyWidget):
@@ -32,13 +49,14 @@ class PersonWidget(widgets.ForeignKeyWidget):
                 first_name = ""
                 last_name = parts[0] if parts else value
 
-        # Try to find existing person or create new one
-        person, created = Person.objects.get_or_create(
-            first_name=first_name,
-            last_name=last_name,
-            defaults={"first_name": first_name, "last_name": last_name},
+        person = (
+            Person.objects.filter(first_name=first_name, last_name=last_name)
+            .order_by("pk")
+            .first()
         )
-        return person
+        if person:
+            return person
+        return Person.objects.create(first_name=first_name, last_name=last_name)
 
 
 class WeaponWidget(widgets.ManyToManyWidget):
@@ -300,9 +318,29 @@ class HistoricalDateWidget(widgets.Widget):
 class CrimeResource(resources.ModelResource):
     """Import/Export resource for Crime model"""
 
-    def __init__(self, user=None, **kwargs):
+    source_dataset_name = ""
+    import_profile = "canonical"
+
+    def __init__(self, user=None, source_dataset=None, import_batch=None, **kwargs):
         self.importing_user = user
+        self.source_dataset = self._coerce_source_dataset(source_dataset)
+        self.import_batch = import_batch
         super().__init__(**kwargs)
+
+    def _coerce_source_dataset(self, source_dataset):
+        if source_dataset:
+            if isinstance(source_dataset, SourceDataset):
+                return source_dataset
+            source_dataset, _ = SourceDataset.objects.get_or_create(
+                name=str(source_dataset)
+            )
+            return source_dataset
+        if self.source_dataset_name:
+            source_dataset, _ = SourceDataset.objects.get_or_create(
+                name=self.source_dataset_name
+            )
+            return source_dataset
+        return None
 
     def before_save_instance(self, instance, row, **kwargs):
         """Set input_by to the importing user for new records.
@@ -311,6 +349,8 @@ class CrimeResource(resources.ModelResource):
         """
         if self.importing_user and not instance.input_by_id:
             instance.input_by = self.importing_user
+        if self.import_batch and not instance.import_batch_id:
+            instance.import_batch = self.import_batch
         if not instance.pk:
             instance.status = "triage"
         elif instance.status == "done":
@@ -401,6 +441,12 @@ class CrimeResource(resources.ModelResource):
         column_name="Assailant_Gender", attribute="assailant_gender", readonly=True
     )
 
+    assailant_external_ids = fields.Field(
+        column_name="Assailant_External_IDs",
+        attribute="assailant_external_ids",
+        readonly=True,
+    )
+
     victim_description = fields.Field(
         column_name="Victim_Description", attribute="victim_description"
     )
@@ -461,9 +507,17 @@ class CrimeResource(resources.ModelResource):
         genders = [p.gender for p in crime.perpetrator.all() if p.gender]
         return "; ".join(genders)
 
+    def dehydrate_weapon(self, crime):
+        """Export weapon names in the same format accepted by WeaponWidget."""
+        return "; ".join(str(w) for w in crime.weapon.all())
+
+    def dehydrate_address(self, crime):
+        """Export the city name for the import LocationWidget."""
+        return crime.address.city.name if crime.address and crime.address.city else ""
+
     class Meta:
         model = Crime
-        # Don't use number as import_id since we're auto-generating it
+        # Number is the stable archival identifier used for round-trip imports.
         fields = (
             "number",
             "crime",
@@ -489,6 +543,7 @@ class CrimeResource(resources.ModelResource):
             "assailant_name",
             "assailant_first_name",
             "assailant_gender",
+            "assailant_external_ids",
             "victim_description",
             "assailant_description",
             "motive",
@@ -504,7 +559,7 @@ class CrimeResource(resources.ModelResource):
         skip_unchanged = False
         report_skipped = False
         use_bulk = False
-        import_id_fields = []
+        import_id_fields = ("number",)
 
     def skip_row(self, instance, original, row, import_validation_errors=None):
         """Silently skip empty rows instead of raising an error."""
@@ -530,10 +585,15 @@ class CrimeResource(resources.ModelResource):
             "Date_of_Crime": "Date (Modern Format)",
             "Weapon": "Type_of_Weapon",
             "Archival_Location": "Archival Location",
+            "Sentence_Enforced": "Sentence_Enforced (Y/N)",
         }
         for src, dst in column_mappings.items():
             if src in row and dst not in row:
                 row[dst] = row[src]
+
+        for key, value in list(row.items()):
+            if isinstance(value, str) and value.strip().lower() == "nan":
+                row[key] = ""
 
         # LocationWidget reads 'City' from the row; fall back to 'Location'
         # when only a single combined location column is present
@@ -564,24 +624,14 @@ class CrimeResource(resources.ModelResource):
                 value = str(row[field]).strip().upper()
                 row[field] = value == "Y" or value == "YES"
 
-        # Handle number field conflicts - ensure uniqueness
+        # Populate missing case numbers for sparse rows. Existing numbers are
+        # left intact so import-export can update matching records.
         number = row.get("Number", "")
         if not number or str(number).strip() == "":
-            # Generate a unique number based on timestamp and microseconds
             timestamp = int(time.time() * 1000000)  # microseconds since epoch
             row["Number"] = f"AUTO_{timestamp}"
         else:
-            # Check if this number already exists and make it unique
-            original_number = str(number).strip()
-            counter = 1
-            test_number = original_number
-
-            # Keep checking until we find a unique number
-            while Crime.objects.filter(number=test_number).exists():
-                test_number = f"{original_number}_v{counter}"
-                counter += 1
-
-            row["Number"] = test_number
+            row["Number"] = str(number).strip()
 
         return super().before_import_row(row, **kwargs)
 
@@ -608,127 +658,177 @@ class CrimeResource(resources.ModelResource):
         """Process instance after saving - this is called after the instance is saved to DB"""
         # Handle many-to-many relationships for victims and perpetrators
         if instance and instance.pk:
-            # Handle victim names - check for split fields first, then combined
-            victim_first = self._get_flexible_value(row, ["Victim_First_Name"])
-            victim_last = self._get_flexible_value(
-                row, ["Victim_Last_Name"]
-            )  # Only check split last name, not combined
-
-            if victim_first or victim_last:
-                # We have split name fields
-                if victim_first and victim_last:
-                    first_name = victim_first.strip()
-                    last_name = victim_last.strip()
-                elif victim_last:
-                    # Parse combined name from last name field
-                    name = victim_last.strip()
-                    first_name, last_name = self._parse_name(name)
-                else:
-                    first_name = victim_first.strip()
-                    last_name = ""
-
-                if first_name or last_name:
-                    # Clean gender field to fit max_length=1
-                    gender = str(row.get("Victim_Gender", "")).strip().upper()
-                    if len(gender) > 1:
-                        gender = gender[0]  # Take first character only
-
-                    person, created = Person.objects.get_or_create(
-                        first_name=first_name,
-                        last_name=last_name,
-                        defaults={
-                            "first_name": first_name,
-                            "last_name": last_name,
-                            "gender": gender,
-                            "occupation": row.get("Victim_Occupation", ""),
-                        },
+            victim_columns = [
+                "Victim_First_Name",
+                "Victim_Last_Name",
+                "Victim_Name",
+            ]
+            if self._row_has_any_column(row, victim_columns):
+                instance.victim.set(
+                    self._people_from_row(
+                        row,
+                        first_columns=["Victim_First_Name"],
+                        last_columns=["Victim_Last_Name"],
+                        combined_columns=["Victim_Name"],
+                        gender_column="Victim_Gender",
+                        occupation_column="Victim_Occupation",
+                        external_id_columns=["Victim_External_IDs"],
                     )
-                    instance.victim.add(person)
-            else:
-                # Fallback to old combined name handling
-                victim_names = self._get_flexible_value(row, ["Victim_Name"])
-                if victim_names and str(victim_names).strip():
-                    for name in str(victim_names).split(";"):
-                        name = name.strip()
-                        if name:
-                            first_name, last_name = self._parse_name(name)
-                            # Clean gender field to fit max_length=1
-                            gender = str(row.get("Victim_Gender", "")).strip().upper()
-                            if len(gender) > 1:
-                                gender = gender[0]  # Take first character only
+                )
 
-                            person, created = Person.objects.get_or_create(
-                                first_name=first_name,
-                                last_name=last_name,
-                                defaults={
-                                    "first_name": first_name,
-                                    "last_name": last_name,
-                                    "gender": gender,
-                                    "occupation": row.get("Victim_Occupation", ""),
-                                },
-                            )
-                            instance.victim.add(person)
-
-            # Handle perpetrator names - check for split fields first, then combined
-            assailant_first = self._get_flexible_value(row, ["Assailant_First"])
-            assailant_last = self._get_flexible_value(
-                row, ["Assailant _ Last_Name"]
-            )  # Only check split last name, not combined
-
-            if assailant_first or assailant_last:
-                # We have split name fields
-                if assailant_first and assailant_last:
-                    first_name = assailant_first.strip()
-                    last_name = assailant_last.strip()
-                elif assailant_last:
-                    # Parse combined name from last name field
-                    name = assailant_last.strip()
-                    first_name, last_name = self._parse_name(name)
-                else:
-                    first_name = assailant_first.strip()
-                    last_name = ""
-
-                if first_name or last_name:
-                    # Clean gender field to fit max_length=1
-                    gender = str(row.get("Assailant_Gender", "")).strip().upper()
-                    if len(gender) > 1:
-                        gender = gender[0]  # Take first character only
-
-                    person, created = Person.objects.get_or_create(
-                        first_name=first_name,
-                        last_name=last_name,
-                        defaults={
-                            "first_name": first_name,
-                            "last_name": last_name,
-                            "gender": gender,
-                        },
+            assailant_columns = [
+                "Assailant_First",
+                "Assailant_Last_Name",
+                "Assailant_Last",
+                "Assailant _ Last_Name",
+                "Assailant_Name",
+            ]
+            if self._row_has_any_column(row, assailant_columns):
+                instance.perpetrator.set(
+                    self._people_from_row(
+                        row,
+                        first_columns=["Assailant_First"],
+                        last_columns=[
+                            "Assailant_Last_Name",
+                            "Assailant_Last",
+                            "Assailant _ Last_Name",
+                        ],
+                        combined_columns=["Assailant_Name"],
+                        gender_column="Assailant_Gender",
+                        external_id_columns=["Assailant_External_IDs"],
                     )
-                    instance.perpetrator.add(person)
-            else:
-                # Fallback to old combined name handling
-                perpetrator_names = self._get_flexible_value(row, ["Assailant_Name"])
-                if perpetrator_names and str(perpetrator_names).strip():
-                    for name in str(perpetrator_names).split(";"):
-                        name = name.strip()
-                        if name:
-                            first_name, last_name = self._parse_name(name)
-                            # Clean gender field to fit max_length=1
-                            gender = (
-                                str(row.get("Assailant_Gender", "")).strip().upper()
-                            )
-                            if len(gender) > 1:
-                                gender = gender[0]  # Take first character only
+                )
 
-                            person, created = Person.objects.get_or_create(
-                                first_name=first_name,
-                                last_name=last_name,
-                                defaults={
-                                    "first_name": first_name,
-                                    "last_name": last_name,
-                                    "gender": gender,
-                                },
-                            )
-                            instance.perpetrator.add(person)
+    def _row_has_any_column(self, row, column_names):
+        """Return True when a CSV row includes any column in a logical group."""
+        return any(col_name in row for col_name in column_names)
+
+    def _people_from_row(
+        self,
+        row,
+        *,
+        first_columns,
+        last_columns,
+        combined_columns,
+        gender_column,
+        occupation_column=None,
+        external_id_columns=None,
+    ):
+        """Build Person instances from split or semicolon-separated name columns."""
+        first = self._get_flexible_value(row, first_columns)
+        last = self._get_flexible_value(row, last_columns)
+        gender = self._clean_gender(row.get(gender_column, ""))
+        occupation = row.get(occupation_column, "") if occupation_column else ""
+        external_ids = self._split_multi_value(
+            self._get_flexible_value(row, external_id_columns or [])
+        )
+        people = []
+
+        if first or last:
+            names = [(first or "", last or "")]
+        else:
+            names = []
+            combined = self._get_flexible_value(row, combined_columns)
+            if combined:
+                for name in str(combined).split(";"):
+                    name = name.strip()
+                    if name:
+                        names.append(self._parse_name(name))
+
+        for index, (first_name, last_name) in enumerate(names):
+            if not (first_name or last_name):
+                continue
+            external_id = external_ids[index] if index < len(external_ids) else ""
+            person = self._resolve_person(
+                first_name=first_name,
+                last_name=last_name,
+                raw_name=", ".join(part for part in [last_name, first_name] if part),
+                external_id=external_id,
+                gender=gender,
+                occupation=occupation,
+            )
+            update_fields = []
+            if gender and not person.gender:
+                person.gender = gender
+                update_fields.append("gender")
+            if occupation and not person.occupation:
+                person.occupation = occupation
+                update_fields.append("occupation")
+            if update_fields:
+                person.save(update_fields=update_fields)
+            people.append(person)
+
+        return people
+
+    def _resolve_person(
+        self,
+        *,
+        first_name,
+        last_name,
+        raw_name,
+        external_id="",
+        gender="",
+        occupation="",
+    ):
+        external_id = _clean_value(external_id)
+        if self.source_dataset and external_id:
+            identifier = (
+                ExternalPersonIdentifier.objects.filter(
+                    source_dataset=self.source_dataset,
+                    external_id=external_id,
+                )
+                .select_related("person")
+                .first()
+            )
+            if identifier and identifier.person:
+                if raw_name and identifier.raw_name != raw_name:
+                    identifier.raw_name = raw_name
+                    identifier.save(update_fields=["raw_name"])
+                return identifier.person
+
+        matches = Person.objects.filter(first_name=first_name, last_name=last_name)
+        status = ExternalPersonIdentifier.CREATED
+        notes = ""
+        if matches.exists():
+            person = matches.order_by("pk").first()
+            status = ExternalPersonIdentifier.MATCHED
+            if matches.count() > 1:
+                status = ExternalPersonIdentifier.AMBIGUOUS_NAME_REUSED
+                notes = (
+                    "Multiple local people had this exact first/last name during "
+                    "import; the earliest matching Person was reused."
+                )
+        else:
+            person = Person.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                gender=gender,
+                occupation=occupation,
+            )
+
+        if self.source_dataset and external_id:
+            ExternalPersonIdentifier.objects.update_or_create(
+                source_dataset=self.source_dataset,
+                external_id=external_id,
+                defaults={
+                    "person": person,
+                    "raw_name": raw_name,
+                    "resolution_status": status,
+                    "notes": notes,
+                },
+            )
+        return person
+
+    def _clean_gender(self, value):
+        gender = str(value or "").strip().upper()
+        if len(gender) > 1:
+            gender = gender[0]
+        return gender
+
+    def _split_multi_value(self, value):
+        if not value:
+            return []
+        return [part.strip() for part in str(value).split(";") if part.strip()]
 
     def _get_flexible_value(self, row, column_names):
         """Helper method to get value from first available column"""
@@ -755,6 +855,126 @@ class CrimeResource(resources.ModelResource):
                 last_name = name
         return first_name, last_name
 
-    def get_instance(self, instance_loader, row, **kwargs):
-        """Always return None to create new instances instead of updating existing ones"""
-        return None
+
+MIDURA_HEADERS = [
+    "Number",
+    "Crime",
+    "Description of Case",
+    "Court",
+    "Trial_Phase",
+    "Sentence",
+    "Convicted",
+    "Sentence_Enforced (Y/N)",
+    "Date (Modern Format)",
+    "Year",
+    "Month",
+    "Day",
+    "Victim_Name",
+    "Assailant_Name",
+    "Assailant_External_IDs",
+    "Reference",
+    "Input by",
+]
+
+
+def normalize_midura_dataset(dataset):
+    """Convert Midura's one-row-per-subject TSV into canonical crime rows."""
+    grouped = OrderedDict()
+    for source_row in dataset.dict:
+        number = _clean_value(source_row.get("Number"))
+        if not number:
+            number = f"AUTO_{int(time.time() * 1000000)}"
+
+        row = grouped.setdefault(
+            number,
+            {
+                "Number": number,
+                "Crime": "",
+                "Description of Case": "",
+                "Court": "",
+                "Trial_Phase": "",
+                "Sentence": "",
+                "Convicted": "",
+                "Sentence_Enforced (Y/N)": "",
+                "Date (Modern Format)": "",
+                "Year": "",
+                "Month": "",
+                "Day": "",
+                "Victim_Name": "",
+                "Assailant_Name": "",
+                "Assailant_External_IDs": "",
+                "Reference": "",
+                "Input by": "",
+            },
+        )
+
+        for source, destination in [
+            ("Crime", "Crime"),
+            ("Description of Case", "Description of Case"),
+            ("Court", "Court"),
+            ("Trial_Phase", "Trial_Phase"),
+            ("Sentence", "Sentence"),
+            ("Convicted", "Convicted"),
+            ("Sentence_Enforced", "Sentence_Enforced (Y/N)"),
+            ("Sentence_Enforced (Y/N)", "Sentence_Enforced (Y/N)"),
+            ("Date (Modern Format)", "Date (Modern Format)"),
+            ("Year", "Year"),
+            ("Month", "Month"),
+            ("Day", "Day"),
+            ("Victim_Name", "Victim_Name"),
+            ("Reference", "Reference"),
+            ("Input by", "Input by"),
+        ]:
+            value = _clean_value(source_row.get(source))
+            if value and not row[destination]:
+                row[destination] = value
+
+        # Year-only values belong in Year, not in the exact DateField.
+        if re.fullmatch(r"\d{4}", row["Date (Modern Format)"]):
+            if not row["Year"]:
+                row["Year"] = row["Date (Modern Format)"]
+            row["Date (Modern Format)"] = ""
+
+        assailant = _clean_value(source_row.get("Assailant_Name"))
+        if assailant:
+            existing = (
+                set(row["Assailant_Name"].split("; "))
+                if row["Assailant_Name"]
+                else set()
+            )
+            if assailant not in existing:
+                row["Assailant_Name"] = "; ".join(
+                    part for part in [row["Assailant_Name"], assailant] if part
+                )
+
+        external_id = _clean_value(source_row.get("subject_ids"))
+        if external_id:
+            existing_ids = (
+                set(row["Assailant_External_IDs"].split("; "))
+                if row["Assailant_External_IDs"]
+                else set()
+            )
+            if external_id not in existing_ids:
+                row["Assailant_External_IDs"] = "; ".join(
+                    part
+                    for part in [row["Assailant_External_IDs"], external_id]
+                    if part
+                )
+
+    normalized = Dataset(headers=MIDURA_HEADERS)
+    for row in grouped.values():
+        normalized.append([row.get(header, "") for header in MIDURA_HEADERS])
+    return normalized
+
+
+class MiduraCrimeResource(CrimeResource):
+    """Import profile for Rachel Midura's High Crime in Venice TSV."""
+
+    source_dataset_name = "Midura"
+    import_profile = "midura_high_crime_venice"
+
+    class Meta(CrimeResource.Meta):
+        name = "Midura High Crime TSV"
+
+    def import_data(self, dataset, *args, **kwargs):
+        return super().import_data(normalize_midura_dataset(dataset), *args, **kwargs)
