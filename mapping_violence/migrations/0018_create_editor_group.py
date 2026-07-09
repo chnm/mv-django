@@ -25,13 +25,14 @@ def create_editor_group(apps, schema_editor):
     }
 
     for (app_label, model), codenames in model_permissions.items():
-        ct = ContentType.objects.get(app_label=app_label, model=model)
+        ct, _ = ContentType.objects.get_or_create(app_label=app_label, model=model)
         for codename in codenames:
-            try:
-                perm = Permission.objects.get(content_type=ct, codename=codename)
-                group.permissions.add(perm)
-            except Permission.DoesNotExist:
-                pass
+            perm, _ = Permission.objects.get_or_create(
+                content_type=ct,
+                codename=codename,
+                defaults={"name": f"Can {codename.split('_', 1)[0]} {model}"},
+            )
+            group.permissions.add(perm)
 
 
 def remove_editor_group(apps, schema_editor):
