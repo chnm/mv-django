@@ -2,6 +2,9 @@ import csv
 from datetime import date
 from io import StringIO
 
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from tablib import Dataset
@@ -11,6 +14,7 @@ from mapping_violence.models import (
     Crime,
     ExternalPersonIdentifier,
     ImportBatch,
+    ImportProfile,
     Person,
     SourceDataset,
     Weapon,
@@ -18,8 +22,11 @@ from mapping_violence.models import (
 from mapping_violence.resources import (
     CrimeResource,
     MiduraCrimeResource,
+    apply_column_mapping,
     normalize_midura_dataset,
 )
+
+User = get_user_model()
 
 
 class CrimeResourceImportTestCase(TestCase):
@@ -422,3 +429,123 @@ class CrimeExportCsvTestCase(TestCase):
         self.assertFalse(result.has_errors())
         self.assertEqual(Crime.objects.count(), 1)
         self.assertEqual(Crime.objects.get(number="MV-005").crime, "homicide")
+
+
+class ColumnMappingImportTestCase(TestCase):
+    """Tests for importing contributor spreadsheets through the mapping wizard."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser(
+            username="importer",
+            email="importer@example.com",
+            password="password",
+        )
+
+    def test_apply_column_mapping_renames_and_ignores_columns(self):
+        source = Dataset(headers=["Case No.", "Incident Type", "Private Notes"])
+        source.append(["MV-101", "assault", "not for import"])
+
+        mapped = apply_column_mapping(
+            source,
+            {
+                "Case No.": "Number",
+                "Incident Type": "Crime",
+                "Private Notes": "",
+            },
+        )
+
+        self.assertEqual(mapped.headers, ["Number", "Crime"])
+        self.assertEqual(list(mapped[0]), ["MV-101", "assault"])
+
+    def test_resource_imports_nonstandard_headers_with_mapping(self):
+        source = Dataset(headers=["Case No.", "Incident Type", "Harmed Person"])
+        source.append(["MV-102", "assault", "Badoer, Angelo"])
+
+        result = CrimeResource(
+            column_mapping={
+                "Case No.": "Number",
+                "Incident Type": "Crime",
+                "Harmed Person": "Victim_Name",
+            }
+        ).import_data(source, dry_run=False, raise_errors=True)
+
+        self.assertFalse(result.has_errors())
+        crime = Crime.objects.get(number="MV-102")
+        self.assertEqual(crime.crime, "assault")
+        self.assertEqual(
+            [str(person) for person in crime.victim.all()], ["Angelo Badoer"]
+        )
+
+    def test_admin_mapping_wizard_imports_and_saves_profile(self):
+        self.client.force_login(self.user)
+        source_dataset = SourceDataset.objects.create(name="Rossi collection")
+        crime_admin = admin.site._registry[Crime]
+        csv_format_index = next(
+            index
+            for index, format_class in enumerate(crime_admin.get_import_formats())
+            if format_class().get_title() == "csv"
+        )
+        import_url = reverse("admin:mapping_violence_crime_import")
+
+        upload_response = self.client.post(
+            import_url,
+            {
+                "resource": "0",
+                "format": str(csv_format_index),
+                "source_dataset": str(source_dataset.pk),
+                "import_profile": "",
+                "import_file": SimpleUploadedFile(
+                    "rossi.csv",
+                    b"Case No.,Incident Type,Harmed Person,Private Notes\n"
+                    b"MV-103,assault,Grimani Giovanni,omit me\n",
+                    content_type="text/csv",
+                ),
+            },
+        )
+
+        self.assertEqual(upload_response.status_code, 200)
+        mapping_form = upload_response.context["mapping_form"]
+        self.assertEqual(mapping_form["column_0"].value(), "Number")
+        self.assertEqual(mapping_form["column_1"].value(), "Crime")
+
+        mapping_post = {
+            name: mapping_form[name].value() or ""
+            for name, field in mapping_form.fields.items()
+            if field.widget.is_hidden
+        }
+        mapping_post.update(
+            {
+                "column_0": "Number",
+                "column_1": "Crime",
+                "column_2": "Victim_Name",
+                "column_3": "",
+                "save_mapping": "on",
+                "profile_name": "Rossi standard export",
+            }
+        )
+        preview_response = self.client.post(import_url, mapping_post)
+
+        self.assertEqual(preview_response.status_code, 200)
+        confirm_form = preview_response.context["confirm_form"]
+        self.assertIsNotNone(confirm_form)
+        profile = ImportProfile.objects.get(name="Rossi standard export")
+        self.assertEqual(profile.source_dataset, source_dataset)
+        self.assertEqual(profile.column_mapping["Harmed Person"], "Victim_Name")
+
+        confirm_post = {
+            name: confirm_form[name].value() or "" for name in confirm_form.fields
+        }
+        process_url = reverse("admin:mapping_violence_crime_process_import")
+        final_response = self.client.post(process_url, confirm_post)
+
+        self.assertRedirects(
+            final_response,
+            reverse("admin:mapping_violence_crime_changelist"),
+        )
+        crime = Crime.objects.get(number="MV-103")
+        self.assertEqual(crime.crime, "assault")
+        self.assertEqual(crime.input_by, self.user)
+        self.assertEqual(
+            [str(person) for person in crime.victim.all()], ["Grimani Giovanni"]
+        )

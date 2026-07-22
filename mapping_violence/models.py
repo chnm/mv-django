@@ -143,6 +143,35 @@ class SourceDataset(models.Model):
         return self.name
 
 
+class ImportProfile(models.Model):
+    """Reusable column mappings for a contributor's tabular data."""
+
+    name = models.CharField(max_length=255, unique=True)
+    source_dataset = models.ForeignKey(
+        SourceDataset,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_profiles",
+    )
+    column_mapping = models.JSONField(default=dict)
+    created_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_import_profiles",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class ExternalPersonIdentifier(models.Model):
     """Stable person identifier supplied by an external source dataset."""
 

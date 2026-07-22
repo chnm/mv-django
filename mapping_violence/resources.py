@@ -18,6 +18,40 @@ from .models import (
     Weapon,
 )
 
+ADDITIONAL_IMPORT_COLUMNS = (
+    "Victim_First_Name",
+    "Victim_Last_Name",
+    "Victim_External_IDs",
+    "Assailant_First",
+    "Assailant_Last_Name",
+    "Assailant_External_IDs",
+    "Location",
+    "Parish",
+    "Category of Space",
+    "Latitude",
+    "Longitude",
+)
+
+
+def apply_column_mapping(dataset, column_mapping):
+    """Return a dataset whose source headers have been renamed to canonical ones."""
+    if not column_mapping:
+        return dataset
+
+    mapped_headers = []
+    kept_indexes = []
+    for index, header in enumerate(dataset.headers or []):
+        target = column_mapping.get(header, header)
+        if not target:
+            continue
+        mapped_headers.append(target)
+        kept_indexes.append(index)
+
+    mapped = Dataset(headers=mapped_headers)
+    for row in dataset:
+        mapped.append([row[index] for index in kept_indexes])
+    return mapped
+
 
 def _is_blankish(value):
     return str(value or "").strip().lower() in {"", "nan", "none", "null"}
@@ -321,11 +355,23 @@ class CrimeResource(resources.ModelResource):
     source_dataset_name = ""
     import_profile = "canonical"
 
-    def __init__(self, user=None, source_dataset=None, import_batch=None, **kwargs):
+    def __init__(
+        self,
+        user=None,
+        source_dataset=None,
+        import_batch=None,
+        column_mapping=None,
+        **kwargs,
+    ):
         self.importing_user = user
         self.source_dataset = self._coerce_source_dataset(source_dataset)
         self.import_batch = import_batch
+        self.column_mapping = column_mapping or {}
         super().__init__(**kwargs)
+
+    def import_data(self, dataset, *args, **kwargs):
+        dataset = apply_column_mapping(dataset, self.column_mapping)
+        return super().import_data(dataset, *args, **kwargs)
 
     def _coerce_source_dataset(self, source_dataset):
         if source_dataset:

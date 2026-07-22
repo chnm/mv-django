@@ -1,3 +1,6 @@
+import json
+import os
+import re
 from itertools import groupby
 
 from django import forms
@@ -5,17 +8,25 @@ from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 from import_export.admin import ImportExportModelAdmin
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
-from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from unfold.contrib.import_export.forms import ExportForm
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from locations.models import City, Location
-from mapping_violence.forms import CrimeForm, PersonForm
+from mapping_violence.forms import (
+    CrimeConfirmImportForm,
+    CrimeForm,
+    CrimeImportForm,
+    ImportColumnMappingForm,
+    PersonForm,
+)
 from mapping_violence.models import (
     STATUS_CHOICES,
     Crime,
@@ -23,6 +34,7 @@ from mapping_violence.models import (
     Event,
     ExternalPersonIdentifier,
     ImportBatch,
+    ImportProfile,
     Person,
     PersonRelation,
     PersonRelationType,
@@ -31,7 +43,11 @@ from mapping_violence.models import (
     Weapon,
     Witness,
 )
-from mapping_violence.resources import CrimeResource, MiduraCrimeResource
+from mapping_violence.resources import (
+    ADDITIONAL_IMPORT_COLUMNS,
+    CrimeResource,
+    MiduraCrimeResource,
+)
 
 # Unregister then re-register to get Unfold styling applied
 admin.site.unregister(User)
@@ -245,6 +261,32 @@ class ImportBatchAdmin(ModelAdmin):
     )
 
 
+@admin.register(ImportProfile)
+class ImportProfileAdmin(ModelAdmin):
+    """Admin for reusable contributor column mappings."""
+
+    list_display = ("name", "source_dataset", "created_by", "updated_at")
+    list_filter = ("source_dataset", "created_by")
+    search_fields = ("name", "source_dataset__name")
+    readonly_fields = ("created_by", "created_at", "updated_at")
+
+    fieldsets = (
+        ("Mapping", {"fields": ("name", "source_dataset", "column_mapping")}),
+        (
+            "Metadata",
+            {
+                "fields": ("created_by", "created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not obj.created_by_id:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
 @admin.register(Event)
 class EventAdmin(ModelAdmin):
     """Admin for Event entities"""
@@ -395,7 +437,8 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
 
     form = CrimeForm
     resource_classes = [CrimeResource, MiduraCrimeResource]
-    import_form_class = ImportForm
+    import_form_class = CrimeImportForm
+    confirm_form_class = CrimeConfirmImportForm
     export_form_class = ExportForm
 
     list_display = (
@@ -609,10 +652,298 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_import_resource_kwargs(self, request, *args, **kwargs):
-        """Pass the logged-in user to the resource so imported rows are attributed."""
+        """Pass attribution and any user-selected column mapping to the resource."""
         kwargs = super().get_import_resource_kwargs(request, *args, **kwargs)
         kwargs["user"] = request.user
+        form = kwargs.pop("form", None)
+        if form and hasattr(form, "cleaned_data"):
+            source_dataset_id = form.cleaned_data.get("source_dataset")
+            if isinstance(source_dataset_id, SourceDataset):
+                kwargs["source_dataset"] = source_dataset_id
+            elif source_dataset_id:
+                kwargs["source_dataset"] = SourceDataset.objects.filter(
+                    pk=source_dataset_id
+                ).first()
+
+            if hasattr(form, "get_column_mapping"):
+                kwargs["column_mapping"] = form.get_column_mapping()
+            else:
+                mapping = form.cleaned_data.get("column_mapping")
+                if isinstance(mapping, str):
+                    try:
+                        mapping = json.loads(mapping)
+                    except (TypeError, ValueError):
+                        mapping = {}
+                kwargs["column_mapping"] = mapping or {}
         return kwargs
+
+    def get_confirm_form_initial(self, request, import_form):
+        initial = super().get_confirm_form_initial(request, import_form)
+        if import_form:
+            source_dataset = import_form.cleaned_data.get("source_dataset")
+            import_profile = import_form.cleaned_data.get("import_profile")
+            initial.update(
+                {
+                    "source_dataset": getattr(source_dataset, "pk", ""),
+                    "import_profile": getattr(import_profile, "pk", ""),
+                    "column_mapping": "",
+                }
+            )
+        return initial
+
+    def import_action(self, request, **kwargs):
+        """Insert an interactive column-mapping step before the import preview."""
+        if request.method != "POST":
+            return super().import_action(request, **kwargs)
+        if "mapping_step" in request.POST:
+            return self._preview_column_mapping(request, **kwargs)
+
+        import_form = self.create_import_form(request)
+        if not import_form.is_valid():
+            return super().import_action(request, **kwargs)
+
+        # Specialized resources retain their existing, profile-specific workflow.
+        resource_index = int(import_form.cleaned_data.get("resource") or 0)
+        if (
+            self.get_import_resource_classes(request)[resource_index]
+            is not CrimeResource
+        ):
+            return super().import_action(request, **kwargs)
+
+        if not self.has_import_permission(request):
+            raise PermissionDenied
+
+        input_format = self.get_import_formats()[
+            int(import_form.cleaned_data["format"])
+        ]()
+        if not input_format.is_binary():
+            input_format.encoding = self.from_encoding
+        import_file = import_form.cleaned_data["import_file"]
+        tmp_storage = self.write_to_tmp_storage(import_file, input_format)
+        import_file.tmp_storage_name = tmp_storage.name
+
+        try:
+            dataset = input_format.create_dataset(tmp_storage.read())
+        except Exception as exc:
+            tmp_storage.remove()
+            self.add_data_read_fail_error_to_form(import_form, exc)
+            return self._render_import_upload(request, import_form)
+
+        if not dataset:
+            tmp_storage.remove()
+            import_form.add_error(
+                "import_file",
+                "No valid data was found in the uploaded file.",
+            )
+            return self._render_import_upload(request, import_form)
+
+        profile = import_form.cleaned_data.get("import_profile")
+        initial_mapping = self._suggest_column_mapping(dataset.headers)
+        if profile:
+            initial_mapping.update(profile.column_mapping)
+
+        initial = {
+            "import_file_name": tmp_storage.name,
+            "original_file_name": import_file.name,
+            "format": import_form.cleaned_data["format"],
+            "resource": import_form.cleaned_data.get("resource", ""),
+            "source_dataset": getattr(
+                import_form.cleaned_data.get("source_dataset"), "pk", ""
+            ),
+            "import_profile": getattr(profile, "pk", ""),
+            "source_headers": json.dumps(dataset.headers),
+            "profile_name": profile.name if profile else "",
+        }
+        mapping_form = ImportColumnMappingForm(
+            source_headers=dataset.headers,
+            target_columns=self._canonical_import_columns(),
+            initial_mapping=initial_mapping,
+            initial=initial,
+        )
+        return self._render_mapping_form(request, mapping_form, dataset)
+
+    def _preview_column_mapping(self, request, **kwargs):
+        try:
+            source_headers = json.loads(request.POST.get("source_headers", "[]"))
+        except (TypeError, ValueError):
+            source_headers = []
+        if not isinstance(source_headers, list):
+            source_headers = []
+
+        mapping_form = ImportColumnMappingForm(
+            request.POST,
+            source_headers=source_headers,
+            target_columns=self._canonical_import_columns(),
+        )
+        try:
+            dataset = self._load_temporary_import(
+                request.POST.get("import_file_name"),
+                request.POST.get("format"),
+            )
+        except (OSError, ValueError, IndexError) as exc:
+            mapping_form.add_error(
+                None, f"The uploaded file could not be reopened: {exc}"
+            )
+            return self._render_mapping_form(request, mapping_form, None)
+
+        if source_headers != list(dataset.headers or []):
+            mapping_form.add_error(
+                None,
+                "The uploaded file headers no longer match this mapping session. "
+                "Please begin the import again.",
+            )
+            return self._render_mapping_form(request, mapping_form, dataset)
+
+        if not mapping_form.is_valid():
+            return self._render_mapping_form(request, mapping_form, dataset)
+
+        mapping = mapping_form.get_column_mapping()
+        profile_id = mapping_form.cleaned_data.get("import_profile")
+        if mapping_form.cleaned_data.get("save_mapping"):
+            profile = (
+                ImportProfile.objects.filter(pk=profile_id).first()
+                if profile_id
+                else None
+            )
+            profile_name = mapping_form.cleaned_data.get("profile_name") or profile.name
+            source_dataset_id = mapping_form.cleaned_data.get("source_dataset") or None
+            profile, _ = ImportProfile.objects.update_or_create(
+                name=profile_name,
+                defaults={
+                    "source_dataset_id": source_dataset_id,
+                    "column_mapping": mapping,
+                    "created_by": request.user,
+                },
+            )
+            profile_id = profile.pk
+
+        res_kwargs = self.get_import_resource_kwargs(
+            request, form=mapping_form, **kwargs
+        )
+        resource = CrimeResource(**res_kwargs)
+        result = resource.import_data(
+            dataset,
+            dry_run=True,
+            raise_errors=False,
+            file_name=mapping_form.cleaned_data["original_file_name"],
+            user=request.user,
+        )
+
+        confirm_form = None
+        if not result.has_errors() and not result.has_validation_errors():
+            confirm_form = CrimeConfirmImportForm(
+                initial={
+                    "import_file_name": mapping_form.cleaned_data["import_file_name"],
+                    "original_file_name": mapping_form.cleaned_data[
+                        "original_file_name"
+                    ],
+                    "format": mapping_form.cleaned_data["format"],
+                    "resource": mapping_form.cleaned_data.get("resource", ""),
+                    "source_dataset": mapping_form.cleaned_data.get(
+                        "source_dataset", ""
+                    ),
+                    "import_profile": profile_id or "",
+                    "column_mapping": json.dumps(mapping),
+                }
+            )
+
+        context = self.get_import_context_data()
+        context.update(self.admin_site.each_context(request))
+        context.update(
+            {
+                "title": "Import preview",
+                "confirm_form": confirm_form,
+                "result": result,
+                "opts": self.model._meta,
+                "media": self.media,
+                "import_error_display": self.import_error_display,
+            }
+        )
+        request.current_app = self.admin_site.name
+        return TemplateResponse(request, [self.import_template_name], context)
+
+    def _load_temporary_import(self, storage_name, format_index):
+        storage_name = os.path.basename(storage_name or "")
+        input_format = self.get_import_formats()[int(format_index)](
+            encoding=self.from_encoding
+        )
+        encoding = None if input_format.is_binary() else self.from_encoding
+        tmp_storage = self.get_tmp_storage_class()(
+            name=storage_name,
+            encoding=encoding,
+            read_mode=input_format.get_read_mode(),
+            **self.get_tmp_storage_class_kwargs(),
+        )
+        return input_format.create_dataset(tmp_storage.read())
+
+    def _canonical_import_columns(self):
+        resource = CrimeResource()
+        declared = [field.column_name for field in resource.get_import_fields()]
+        return list(dict.fromkeys([*declared, *ADDITIONAL_IMPORT_COLUMNS]))
+
+    def _suggest_column_mapping(self, source_headers):
+        targets = self._canonical_import_columns()
+        normalized_targets = {
+            re.sub(r"[^a-z0-9]", "", target.lower()): target for target in targets
+        }
+        aliases = {
+            "caseno": "Number",
+            "casenumber": "Number",
+            "incident": "Crime",
+            "incidenttype": "Crime",
+            "place": "City",
+            "weapon": "Type_of_Weapon",
+        }
+        suggestions = {}
+        for header in source_headers:
+            normalized = re.sub(r"[^a-z0-9]", "", str(header).lower())
+            suggestions[header] = normalized_targets.get(
+                normalized, aliases.get(normalized, "")
+            )
+        return suggestions
+
+    def _render_mapping_form(self, request, form, dataset):
+        mapping_rows = []
+        sample_data = list(dataset[:3]) if dataset else []
+        for index, (header, bound_field) in enumerate(form.mapping_fields):
+            mapping_rows.append(
+                {
+                    "header": header,
+                    "field": bound_field,
+                    "samples": [row[index] for row in sample_data],
+                }
+            )
+        context = self.admin_site.each_context(request)
+        context.update(
+            {
+                "title": "Map spreadsheet columns",
+                "opts": self.model._meta,
+                "mapping_form": form,
+                "mapping_rows": mapping_rows,
+            }
+        )
+        request.current_app = self.admin_site.name
+        return TemplateResponse(
+            request,
+            ["admin/mapping_violence/crime/map_import_columns.html"],
+            context,
+        )
+
+    def _render_import_upload(self, request, import_form):
+        context = self.get_import_context_data()
+        context.update(self.admin_site.each_context(request))
+        context.update(
+            {
+                "title": "Import",
+                "form": import_form,
+                "opts": self.model._meta,
+                "media": self.media + import_form.media,
+                "fields_list": [],
+                "import_error_display": self.import_error_display,
+            }
+        )
+        request.current_app = self.admin_site.name
+        return TemplateResponse(request, [self.import_template_name], context)
 
     @admin.action(description="Reassign selected crimes to a user")
     def reassign_input_by(self, request, queryset):

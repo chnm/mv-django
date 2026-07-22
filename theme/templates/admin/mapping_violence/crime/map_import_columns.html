@@ -1,0 +1,87 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+  <div class="px-4 lg:px-8">
+    <div class="container mb-6 mx-auto -my-3">
+      <ul class="flex flex-wrap">
+        <li class="flex items-center">
+          <a href="{% url 'admin:index' %}">{% translate "Home" %}</a>
+          <span class="mx-2">›</span>
+        </li>
+        <li class="flex items-center">
+          <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+          <span class="mx-2">›</span>
+        </li>
+        <li>{% translate "Map spreadsheet columns" %}</li>
+      </ul>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    <p class="mb-6">
+      Choose what each spreadsheet column means. Unneeded columns can be ignored.
+      The sample values are taken from the first three rows of the file.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ mapping_form.non_field_errors }}
+
+      <div class="border border-base-200 mb-6 overflow-x-auto rounded-default shadow-xs dark:border-base-800">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-base-50 dark:bg-base-900">
+              <th class="px-3 py-3 text-left">Spreadsheet column</th>
+              <th class="px-3 py-3 text-left">Mapping Violence field</th>
+              <th class="px-3 py-3 text-left">Sample values</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in mapping_rows %}
+              <tr class="border-t border-base-200 dark:border-base-800">
+                <th class="px-3 py-3 text-left align-top">{{ row.header }}</th>
+                <td class="px-3 py-3 align-top">
+                  {{ row.field.errors }}
+                  {{ row.field }}
+                </td>
+                <td class="px-3 py-3 align-top text-sm text-font-subtle-light dark:text-font-subtle-dark">
+                  {% for sample in row.samples %}
+                    <div>{{ sample|default:"—"|truncatechars:100 }}</div>
+                  {% empty %}
+                    —
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <fieldset class="module aligned mb-6">
+        <h2>Reuse this mapping</h2>
+        <div class="form-row">
+          {{ mapping_form.save_mapping.errors }}
+          {{ mapping_form.save_mapping }} {{ mapping_form.save_mapping.label_tag }}
+        </div>
+        <div class="form-row">
+          {{ mapping_form.profile_name.errors }}
+          {{ mapping_form.profile_name.label_tag }}
+          {{ mapping_form.profile_name }}
+          {% if mapping_form.profile_name.help_text %}
+            <div class="help">{{ mapping_form.profile_name.help_text }}</div>
+          {% endif %}
+        </div>
+      </fieldset>
+
+      {% for hidden in mapping_form.hidden_fields %}{{ hidden }}{% endfor %}
+
+      <div class="submit-row">
+        <a href="{% url opts|admin_urlname:'import' %}" class="button cancel-link">Cancel</a>
+        <input type="submit" class="default" value="Preview import">
+      </div>
+    </form>
+  </div>
+{% endblock %}
