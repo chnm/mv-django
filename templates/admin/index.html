@@ -1,0 +1,39 @@
+{% extends 'admin/base.html' %}
+
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    {% if kpi %}
+        <div class="mb-8">
+            <h2 class="font-semibold mb-4 text-font-important-light text-lg dark:text-font-important-dark">
+                Workflow Overview
+            </h2>
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                {% for item in kpi %}
+                    <div class="border border-base-200 rounded-default p-4 dark:border-base-800">
+                        <p class="text-font-subtle-light text-xs uppercase tracking-wider dark:text-font-subtle-dark">
+                            {{ item.title }}
+                        </p>
+                        <p class="font-bold mt-1 text-2xl text-font-important-light dark:text-font-important-dark">
+                            {{ item.value }}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="flex flex-col lg:flex-row lg:gap-8">
+        <div class="grow">
+            {% include "unfold/helpers/app_list_default.html" %}
+        </div>
+
+        {% include "unfold/helpers/history.html" %}
+    </div>
+{% endblock %}

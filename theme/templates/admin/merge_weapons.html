@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div style="border: 1px solid #e5e7eb; border-radius: 8px; max-width: 600px; margin: 2rem auto; overflow: hidden;">
+        <div style="padding: 1rem 1.25rem;">
+            <p style="font-weight: 600; font-size: 0.95rem; color: #111827; margin: 0 0 0.5rem 0;">
+                Merge {{ queryset.count }} weapons into one
+            </p>
+            <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">
+                All crime associations from the other weapons will be transferred to the
+                one you keep. The duplicates will then be deleted.
+            </p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for obj in queryset %}
+                <input type="hidden" name="_selected_action" value="{{ obj.pk }}">
+            {% endfor %}
+            <input type="hidden" name="action" value="{{ action }}">
+
+            <div style="border-top: 1px solid #e5e7eb; padding: 1rem 1.25rem;">
+                <label style="display: block; font-weight: 500; font-size: 0.875rem; color: #374151; margin-bottom: 0.75rem;">
+                    Which weapon record should be kept?
+                </label>
+                {% for radio in form.primary %}
+                    <div style="padding: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}" style="font-size: 0.875rem; color: #111827; cursor: pointer;">
+                            {{ radio.choice_label }}
+                        </label>
+                    </div>
+                {% endfor %}
+                {% if form.errors %}
+                    <p style="margin-top: 0.5rem; color: #dc2626; font-size: 0.875rem;">Please select the weapon to keep.</p>
+                {% endif %}
+            </div>
+
+            <div style="border-top: 1px solid #e5e7eb; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <a href="../"
+                   style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; font-weight: 500; color: #374151; text-decoration: none; background: #fff;">
+                    {% trans "Cancel" %}
+                </a>
+                <button type="submit" name="apply"
+                        style="display: inline-flex; align-items: center; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; color: #fff; background: #7c3aed; cursor: pointer;">
+                    {% trans "Merge" %}
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

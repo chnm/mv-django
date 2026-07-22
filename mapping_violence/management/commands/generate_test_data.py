@@ -211,8 +211,8 @@ WEAPON_NAMES = [
     ("Staff", "blunt_instrument"),
     ("Mace", "blunt_instrument"),
     ("Stone", "blunt_instrument"),
-    ("Fists", "hands"),
-    ("Hands", "hands"),
+    ("Fists", "no_weapon"),
+    ("No weapon", "no_weapon"),
     ("Rope", "other"),
     ("Poison", "other"),
 ]

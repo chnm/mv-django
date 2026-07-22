@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}API Documentation - Mapping Early Modern Violence{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .api-docs {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .api-docs h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 0.5rem;
+        }
+
+        .api-docs .lede {
+            font-size: 1rem;
+            color: #4b5563;
+            margin: 0 0 2rem;
+        }
+
+        .api-docs h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 2rem 0 0.75rem;
+            padding-bottom: 0.375rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .api-docs h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 1.5rem 0 0.5rem;
+        }
+
+        .api-docs p, .api-docs li {
+            font-size: 0.9375rem;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .api-docs ul {
+            padding-left: 1.25rem;
+            margin: 0.5rem 0;
+        }
+
+        .api-docs code {
+            background: #f3f4f6;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .api-docs pre {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-size: 0.8125rem;
+            line-height: 1.5;
+            margin: 0.75rem 0;
+        }
+
+        .api-docs pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .endpoint {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.875rem;
+        }
+
+        .param-table th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            background: #f9fafb;
+            border-bottom: 2px solid #e5e7eb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .param-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+            color: #4b5563;
+        }
+
+        .param-table td code {
+            font-size: 0.8125rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="api-docs">
+        <h1>API Documentation</h1>
+        <p class="lede">
+            Public endpoints for accessing Mapping Violence data programmatically.
+            All endpoints are read-only and require no authentication.
+        </p>
+
+        <h2>Endpoints</h2>
+
+        <!-- GeoJSON endpoint -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method-badge">GET</span>
+                <span class="endpoint-path">/api/locations.geojson</span>
+            </div>
+            <p>
+                Returns a GeoJSON <code>FeatureCollection</code> of locations with embedded crime data.
+                Each Feature represents a location with one or more associated crime records.
+            </p>
+
+            <h3>Query Parameters</h3>
+            <p>All parameters are optional. When omitted, all records are returned.</p>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>country</code></td>
+                        <td>string</td>
+                        <td>Filter by country name</td>
+                    </tr>
+                    <tr>
+                        <td><code>city</code></td>
+                        <td>integer</td>
+                        <td>Filter by City primary key</td>
+                    </tr>
+                    <tr>
+                        <td><code>location</code></td>
+                        <td>integer</td>
+                        <td>Filter by Location primary key</td>
+                    </tr>
+                    <tr>
+                        <td><code>crime_type</code></td>
+                        <td>string</td>
+                        <td>Exact match on crime type (e.g., <code>assault</code>, <code>homicide</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>year_from</code></td>
+                        <td>integer</td>
+                        <td>Minimum year (inclusive)</td>
+                    </tr>
+                    <tr>
+                        <td><code>year_to</code></td>
+                        <td>integer</td>
+                        <td>Maximum year (inclusive)</td>
+                    </tr>
+                    <tr>
+                        <td><code>weapon_category</code></td>
+                        <td>string</td>
+                        <td>One of: <code>firearm</code>, <code>blade</code>, <code>blunt_instrument</code>, <code>no_weapon</code>, <code>other</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>weapon_subcategory</code></td>
+                        <td>string</td>
+                        <td>Weapon subcategory (e.g., <code>sword</code>, <code>dagger</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>urban_rural</code></td>
+                        <td>string</td>
+                        <td>One of: <code>urban</code>, <code>rural</code>, <code>unknown</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>person</code></td>
+                        <td>string</td>
+                        <td>Comma-separated Person IDs, or a text search on person names</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Response Format</h3>
+<pre><code>{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.3155, 45.4408]
+      },
+      "properties": {
+        "id": 1,
+        "name": "Venice - Piazza San Marco",
+        "city": "Venice",
+        "category": "public",
+        "crime_count": 3,
+        "crimes": [
+          {
+            "id": 42,
+            "crime": "assault",
+            "number": "ABC-001",
+            "date": "1542-03-15",
+            "year": "1542",
+            "fatality": false,
+            "victim_gender": "M",
+            "perpetrator_gender": "U"
+          }
+        ]
+      }
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <!-- CSV Export endpoint -->
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method-badge">GET</span>
+                <span class="endpoint-path">/data/export.csv</span>
+            </div>
+            <p>
+                Downloads a CSV file of crime records. Supports the same filter parameters as the
+                <a href="{% url 'crime_list' %}">data table</a>. Exports human-readable values
+                (person names, city names, weapon names) rather than database IDs.
+            </p>
+
+            <h3>Query Parameters</h3>
+            <p>All parameters are optional. When omitted, all records are exported.</p>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>country</code></td>
+                        <td>string</td>
+                        <td>Filter by country name</td>
+                    </tr>
+                    <tr>
+                        <td><code>city</code></td>
+                        <td>integer</td>
+                        <td>Filter by City primary key</td>
+                    </tr>
+                    <tr>
+                        <td><code>crime_type</code></td>
+                        <td>string</td>
+                        <td>Filter by crime type</td>
+                    </tr>
+                    <tr>
+                        <td><code>year_from</code></td>
+                        <td>integer</td>
+                        <td>Minimum year (inclusive)</td>
+                    </tr>
+                    <tr>
+                        <td><code>year_to</code></td>
+                        <td>integer</td>
+                        <td>Maximum year (inclusive)</td>
+                    </tr>
+                    <tr>
+                        <td><code>fatality</code></td>
+                        <td>boolean</td>
+                        <td><code>true</code> to show only fatal cases</td>
+                    </tr>
+                    <tr>
+                        <td><code>weapon_category</code></td>
+                        <td>string</td>
+                        <td>One of: <code>firearm</code>, <code>blade</code>, <code>blunt_instrument</code>, <code>no_weapon</code>, <code>other</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>CSV Columns</h3>
+            <p>
+                <code>Case Number</code>, <code>Crime</code>, <code>Date</code>, <code>Year</code>,
+                <code>Month</code>, <code>Day</code>, <code>City</code>, <code>Location</code>,
+                <code>Victim(s)</code>, <code>Victim Gender</code>, <code>Perpetrator(s)</code>,
+                <code>Perpetrator Gender</code>, <code>Weapon</code>, <code>Motive</code>,
+                <code>Fatality</code>, <code>Convicted</code>, <code>Sentence</code>,
+                <code>Description</code>, <code>Connected Event</code>,
+                <code>Archival Location</code>, <code>Reference</code>
+            </p>
+        </div>
+
+        <h2>Database Schema</h2>
+        <p>
+            An interactive visualization of the database schema is available at
+            <a href="/schema-viewer/">/schema-viewer/</a>.
+        </p>
+
+        <h2>Usage Notes</h2>
+        <ul>
+            <li>All endpoints are public and read-only; no authentication is required.</li>
+            <li>Responses use UTF-8 encoding.</li>
+            <li>The GeoJSON endpoint returns coordinates in <code>[longitude, latitude]</code> order per the GeoJSON specification (RFC 7946).</li>
+            <li>Multiple values for person names in CSV exports are separated by semicolons (<code>;</code>).</li>
+            <li>When no filter parameters are provided, all records in the database are returned.</li>
+        </ul>
+    </div>
+{% endblock %}

@@ -77,7 +77,7 @@ Key `pyproject.toml` scripts are not defined; use `make` targets (see [Serving t
 ### Frontend
 
 - **Tailwind CSS** — utility-first styling; source in `theme/static_src/`, compiled to `theme/static/css/`
-- **Alpine.js** — lightweight reactivity for the map drawer (loaded from CDN)
+- **Alpine.js** — lightweight reactivity for map panels and sidebar (loaded from CDN)
 - **Leaflet 1.9.4** — interactive map (loaded from CDN)
 - Django templates with `{% block %}` inheritance from `templates/base.html`
 - No JS build pipeline beyond Tailwind; no bundler (Vite/Webpack/etc.)
@@ -150,7 +150,7 @@ mapping_violence/
 ├── mapping_violence/        # Core domain app
 │   ├── models.py            # Crime, Person, Weapon, Event, Witness, PersonRelation
 │   ├── admin.py             # CrimeAdmin, PersonAdmin, WeaponAdmin, etc.
-│   ├── views.py             # index, crime_list, crime_detail
+│   ├── views.py             # index, crime_list, crime_detail, crime_export_csv
 │   ├── filters.py           # CrimeFilter (django-filter)
 │   ├── tables.py            # CrimeTable (django-tables2)
 │   ├── resources.py         # Import/export resource classes and custom widgets
@@ -220,7 +220,7 @@ Public view flow: visitor loads `/map/` → Leaflet fetches `/api/locations.geoj
 
 ### REST API Design
 
-The application exposes one JSON endpoint (not a full REST API):
+The application exposes two public endpoints (not a full REST API):
 
 **`GET /api/locations.geojson`**
 
@@ -230,11 +230,16 @@ Query parameters (all optional):
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
+| `country` | string | Filter by `City.country` |
 | `city` | integer | City primary key |
+| `location` | integer | Location primary key |
 | `crime_type` | string | Exact match on `Crime.crime` |
 | `year_from` | integer | `Crime.year >= year_from` |
 | `year_to` | integer | `Crime.year <= year_to` |
 | `weapon_category` | string | Matches `Weapon.weapon_category` choices |
+| `weapon_subcategory` | string | Matches `Weapon.weapon_subcategory` |
+| `urban_rural` | string | `Location.urban_rural` |
+| `person` | string | Comma-separated Person IDs or text search |
 
 Response shape per feature:
 ```json
@@ -258,6 +263,12 @@ Response shape per feature:
 ```
 
 Color-by mode (`crime_type`, `fatality`, `gender`) is handled entirely client-side in `map.html`; the API always returns all fields.
+
+**`GET /data/export.csv`**
+
+Returns a CSV download of filtered crime data with human-readable values. Accepts all `CrimeFilter` query parameters (same as the data table at `/data/`). The data table page includes a "Download CSV" button that passes the current filter state.
+
+Additionally, `/schema-viewer/` provides an interactive database schema visualization via `django-schema-viewer`.
 
 ---
 
@@ -400,5 +411,5 @@ When a pre-commit hook reformats a file on the first commit attempt, re-`git add
 
 ---
 
-*Last Updated: 2026-02-18*
+*Last Updated: 2026-05-05*
 *This document is maintained for AI agent context and onboarding.*

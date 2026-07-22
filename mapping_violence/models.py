@@ -6,22 +6,19 @@ from locations.models import Location
 
 User = get_user_model()
 
-
-class WeaponCategory(models.Model):
-    name = models.CharField(max_length=500)
-
-    class Meta:
-        ordering = ["name"]
-
-    def __str__(self) -> str:
-        return self.name
+STATUS_CHOICES = [
+    ("triage", "Triage"),
+    ("assigned", "Assigned"),
+    ("needs_review", "Needs Review"),
+    ("done", "Done"),
+]
 
 
 WEAPON_CATEGORY_CHOICES = [
     ("firearm", "Firearm"),
     ("blade", "Blade"),
     ("blunt_instrument", "Blunt Instrument"),
-    ("hands", "Hands"),
+    ("no_weapon", "No weapon"),
     ("other", "Other"),
 ]
 
@@ -29,9 +26,6 @@ WEAPON_CATEGORY_CHOICES = [
 class Weapon(models.Model):
     name = models.CharField(max_length=255)
     definition = models.TextField(blank=True)
-    category = models.ForeignKey(
-        WeaponCategory, null=True, blank=True, on_delete=models.SET_NULL
-    )
     weapon_category = models.CharField(
         max_length=50,
         blank=True,
@@ -132,6 +126,144 @@ class Person(models.Model):
         if self.honorific:
             return f"{self.honorific} {name}" if name else self.honorific
         return name
+
+
+class SourceDataset(models.Model):
+    """A dataset or researcher source that contributed imported records."""
+
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    contact_name = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ImportProfile(models.Model):
+    """Reusable column mappings for a contributor's tabular data."""
+
+    name = models.CharField(max_length=255, unique=True)
+    source_dataset = models.ForeignKey(
+        SourceDataset,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_profiles",
+    )
+    column_mapping = models.JSONField(default=dict)
+    created_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_import_profiles",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ExternalPersonIdentifier(models.Model):
+    """Stable person identifier supplied by an external source dataset."""
+
+    MATCHED = "matched"
+    CREATED = "created"
+    AMBIGUOUS_NAME_REUSED = "ambiguous_name_reused"
+    UNRESOLVED = "unresolved"
+    RESOLUTION_STATUS_CHOICES = (
+        (MATCHED, "Matched"),
+        (CREATED, "Created"),
+        (AMBIGUOUS_NAME_REUSED, "Ambiguous name reused"),
+        (UNRESOLVED, "Unresolved"),
+    )
+
+    source_dataset = models.ForeignKey(
+        SourceDataset,
+        on_delete=models.CASCADE,
+        related_name="person_identifiers",
+    )
+    external_id = models.CharField(max_length=255)
+    person = models.ForeignKey(
+        Person,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="external_identifiers",
+    )
+    raw_name = models.CharField(max_length=500, blank=True)
+    resolution_status = models.CharField(
+        max_length=50,
+        choices=RESOLUTION_STATUS_CHOICES,
+        default=UNRESOLVED,
+    )
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["source_dataset__name", "external_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_dataset", "external_id"],
+                name="unique_external_person_identifier",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.source_dataset}: {self.external_id}"
+
+
+class ImportBatch(models.Model):
+    """A single file import or normalization run."""
+
+    STAGED = "staged"
+    IMPORTED = "imported"
+    NEEDS_REVIEW = "needs_review"
+    FAILED = "failed"
+    STATUS_CHOICES = (
+        (STAGED, "Staged"),
+        (IMPORTED, "Imported"),
+        (NEEDS_REVIEW, "Needs Review"),
+        (FAILED, "Failed"),
+    )
+
+    source_dataset = models.ForeignKey(
+        SourceDataset,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_batches",
+    )
+    original_filename = models.CharField(max_length=500, blank=True)
+    import_profile = models.CharField(max_length=255, blank=True)
+    uploaded_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_batches",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STAGED,
+    )
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-uploaded_at", "original_filename"]
+
+    def __str__(self):
+        label = self.original_filename or self.import_profile or f"Batch {self.pk}"
+        return f"{label} ({self.get_status_display()})"
 
 
 class Event(models.Model):
@@ -254,8 +386,6 @@ class Crime(models.Model):
         help_text="If sentence was carried about, check Y. If not, leave unchecked.",
     )
 
-    # TODO: image fields
-
     # Date and time information
     date = models.DateField(
         null=True,
@@ -337,13 +467,11 @@ class Crime(models.Model):
         max_length=255,
         help_text="Input relationship between victim and assailant, if known. Example: husband and wife, friend, enemy",
     )
-    weapon = models.ForeignKey(
+    weapon = models.ManyToManyField(
         Weapon,
-        null=True,
         blank=True,
-        on_delete=models.SET_NULL,
-        verbose_name="Type of Weapon",
-        help_text="Input type of weapon if known according to taxonomy (firearm, edged weapon, blunt instrument, hands)",
+        verbose_name="Weapon(s)",
+        help_text="Select weapon(s) used. Hold Ctrl/Cmd to select multiple.",
     )
 
     # Location
@@ -394,6 +522,24 @@ class Crime(models.Model):
         help_text="Input any bibliographic references to case, if available",
     )
 
+    # Workflow
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="triage",
+        db_index=True,
+        help_text="Workflow status of this record",
+    )
+    assigned_to = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assigned_crimes",
+        verbose_name="Assigned to",
+        help_text="Editor responsible for this record",
+    )
+
     # Metadata
     input_by = models.ForeignKey(
         User,
@@ -415,6 +561,13 @@ class Crime(models.Model):
         blank=True,
         related_name="updated_by",
     )
+    import_batch = models.ForeignKey(
+        ImportBatch,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="crimes",
+    )
 
     def __str__(self) -> str:
         if self.number and self.crime:
@@ -428,6 +581,52 @@ class Crime(models.Model):
 
     class Meta:
         verbose_name = "Violence Event"
+
+
+class StatusLog(models.Model):
+    """Lightweight audit trail for workflow status changes."""
+
+    crime = models.ForeignKey(
+        Crime, on_delete=models.CASCADE, related_name="status_logs"
+    )
+    from_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    to_status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"{self.from_status} → {self.to_status} by {self.changed_by} at {self.timestamp:%Y-%m-%d %H:%M}"
+
+
+class CrimeImage(models.Model):
+    """An image attached to a crime record (e.g. archival scan, photograph)."""
+
+    crime = models.ForeignKey(Crime, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(
+        upload_to="crime_images/%Y/%m/",
+        help_text="Upload an image related to this crime record",
+    )
+    caption = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Optional caption or description of the image",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)",
+    )
+
+    class Meta:
+        ordering = ["order", "pk"]
+        verbose_name = "Image"
+        verbose_name_plural = "Images"
+
+    def __str__(self):
+        return self.caption or f"Image for {self.crime}"
 
 
 class PersonRelationTypeManager(models.Manager):
@@ -516,9 +715,12 @@ class PersonRelation(models.Model):
         ]
 
     def __str__(self):
-        relation_type = (
-            f"{self.type}-{self.type.converse_name}"
-            if self.type.converse_name
-            else self.type
-        )
+        if self.type:
+            relation_type = (
+                f"{self.type}-{self.type.converse_name}"
+                if self.type.converse_name
+                else self.type
+            )
+        else:
+            relation_type = "Unknown"
         return f"{relation_type} relation: {self.to_person} and {self.from_person}"

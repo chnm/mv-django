@@ -62,7 +62,8 @@ The project digitizes archival records (court documents, criminal registers) int
 | View crime detail pages | ✓ | ✓ | ✓ |
 | Enter/edit crime records | ✓ | ✓ | ✗ |
 | Import CSV data | ✓ | ✓ | ✗ |
-| Export data | ✓ | ✓ | ✗ |
+| Export data (admin) | ✓ | ✓ | ✗ |
+| Download CSV (public) | ✓ | ✓ | ✓ |
 | Manage user accounts | ✓ | ✗ | ✗ |
 | Edit CMS content pages | ✓ | ✗ | ✗ |
 
@@ -99,7 +100,7 @@ The project digitizes archival records (court documents, criminal registers) int
 
 ### Weapon Records
 
-- Weapons have a two-level classification: `weapon_category` (controlled: firearm, blade, blunt_instrument, hands, other) and `weapon_subcategory` (free text, e.g., "sword", "dagger")
+- Weapons have a two-level classification: `weapon_category` (controlled: firearm, blade, blunt_instrument, no_weapon, other) and `weapon_subcategory` (free text, e.g., "sword", "dagger")
 - The legacy `category` FK to `WeaponCategory` model coexists with the newer choice-based fields; prefer `weapon_category` for new data entry
 
 ### Data Entry
@@ -114,6 +115,7 @@ The project digitizes archival records (court documents, criminal registers) int
 - CSV import matches Weapons by name; creates new Weapon records if no match found
 - CSV import matches City and Location by name with `get_or_create` logic
 - Exported CSV reflects the same field mapping as import; suitable for round-trip editing
+- Public CSV download at `/data/export.csv` respects all filter parameters; exports human-readable values (names, cities, weapons — no FK IDs)
 
 ---
 
@@ -125,15 +127,19 @@ The project digitizes archival records (court documents, criminal registers) int
 A full-page Leaflet map showing all recorded crime locations, with filtering and color-by visualization options.
 
 **Functionality:**
-- Circle markers at each Location; default size scaled to crime count at that location
-- Filter panel (collapsible via header caret) with controls for: City, Crime Type, Weapon Category, Year From, Year To
+- Circle markers at each Location; bubble size scaled by sqrt of crime count with proportional size legend
+- Large bubbles render first so small ones stay clickable on top
+- Floating filter panel (top-left) with controls for: Country, City, Crime Type, Weapon Category/Subcategory, Year From/To, Urban/Rural, Person
+- Floating display panel with: Color-by modes, clustering toggle, light/dark basemap toggle
+- Leaflet.markercluster with on/off toggle for dense areas
 - Color-by modes: None (default amber), Crime Type (categorical palette), Fatal/Non-fatal (red/green), Gender (blue/pink/gray) with victim or perpetrator sub-option
 - In color-by mode, individual crime markers are rendered with jitter when multiple crimes share a location
 - A legend appears bottom-left when any color-by mode is active
 - All filter and color-by state is encoded in the URL query string (survives reload and sharing)
 - Empty-state message displayed over the map when filters return no results
-- Clicking a marker opens a sliding drawer with location details and a list of crimes at that location
-- Each crime in the drawer links to its detail page; crime type label links to the filtered data table
+- Clicking a marker opens a slide-out sidebar (right) with location details and a list of crimes at that location
+- Each crime in the sidebar links to its detail page; crime type label links to the filtered data table
+- Loading spinner during data fetch; sans-serif UI font for controls; zoom controls bottom-left
 
 ### Feature: Crime Data Table
 
@@ -141,11 +147,12 @@ A full-page Leaflet map showing all recorded crime locations, with filtering and
 A paginated, filterable table of all crime records at `/data/`.
 
 **Functionality:**
-- Filter by: case number (text search), crime type (select), city (select), person name (searches both victim and perpetrator), year (text), fatality (boolean), weapon category (select), weapon subcategory (text search)
+- Filter by: case number (text search), country, city, location, crime type, person (searches victim and perpetrator), year range, fatality, weapon category, weapon subcategory, urban/rural
 - 50 records per page; sortable columns
-- Table columns: Case Number (links to detail), Crime Type, Date, City, Victims, Perpetrators, Fatality
+- Table columns: Case Number (links to detail), Violence Type, Date, City, Location, Victims, Perpetrators, Status
 - Apply Filters / Reset Filters button is context-sensitive: shows Apply when no active filters, Reset when filters are present
 - Case number cell links to `/crime/<id>/`
+- "Download CSV" button exports all rows matching current filters (not just current page) via `/data/export.csv`
 
 ### Feature: Crime Detail Page
 
@@ -366,10 +373,8 @@ Wagtail-powered narrative content at `/cms/` for project team to manage.
   - **Status:** Open
 
 ### Features
-- **Q:** Should the map support clustering for dense location areas?
-  - **Context:** When many crimes share nearby locations, individual jittered markers may overlap. Clustering was explicitly kept off in the current design to maintain individual clickability.
-  - **Owner:** PI
-  - **Status:** Decided against for now; revisit if dataset grows significantly
+- **Q:** ~~Should the map support clustering for dense location areas?~~
+  - **Status:** Resolved — Leaflet.markercluster added with a toggle (on/off) so users can choose. Implemented in PR #72.
 
 ### Data Entry
 - **Q:** What is the canonical import CSV format and where should it be documented?
@@ -380,5 +385,5 @@ Wagtail-powered narrative content at `/cms/` for project team to manage.
 
 ---
 
-*Last Updated: 2026-02-19*
+*Last Updated: 2026-05-05*
 *This document is maintained for AI agent context and onboarding.*

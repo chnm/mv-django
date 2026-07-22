@@ -1,9 +1,49 @@
-{% extends '_base.html' %}
-{% load i18n %}
-{% block title %}{% translate "Server Error" %}{% endblock title %}
-{% block content %}
-    <section class="page">
-        <h1>{% translate "Server Error" %}</h1>
-        <p>{% translate "There has been an error on the server. Please try again later." %}</p>
-    </section>
-{% endblock content %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Server Error - Mapping Early Modern Violence</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                background: #f9fafb;
+                color: #374151;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            .container {
+                text-align: center;
+                max-width: 500px;
+                padding: 2rem;
+            }
+            h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #111827;
+                margin-bottom: 0.5rem;
+            }
+            p {
+                font-size: 1rem;
+                color: #4b5563;
+                margin-bottom: 1.5rem;
+            }
+            a {
+                color: #2563eb;
+                text-decoration: underline;
+                font-weight: 500;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Server Error</h1>
+            <p>Something went wrong on our end. Please try again later.</p>
+            <a href="/">Return to the home page</a>
+        </div>
+    </body>
+</html>

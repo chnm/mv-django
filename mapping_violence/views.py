@@ -1,5 +1,9 @@
+import csv
+
 from django.db.models import Q
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
+from django_ratelimit.decorators import ratelimit
 from django_tables2 import RequestConfig
 
 from content.models import HomePageContent, ProjectPerson
@@ -35,8 +39,8 @@ def crime_detail(request, crime_id):
     """Display detailed information about a specific crime"""
     crime = get_object_or_404(
         Crime.objects.select_related(
-            "address", "address__city", "weapon", "connected_event", "judge"
-        ).prefetch_related("victim", "perpetrator", "witnesses"),
+            "address", "address__city", "connected_event", "judge"
+        ).prefetch_related("victim", "perpetrator", "weapon", "witnesses", "images"),
         pk=crime_id,
     )
 
@@ -83,8 +87,8 @@ def crime_detail(request, crime_id):
 def crime_list(request):
     """Display a data table of all crimes with filtering"""
     crimes = (
-        Crime.objects.select_related("address", "address__city", "weapon")
-        .prefetch_related("victim", "perpetrator")
+        Crime.objects.select_related("address", "address__city")
+        .prefetch_related("victim", "perpetrator", "weapon")
         .order_by("-date", "-year")
     )
 
@@ -102,3 +106,99 @@ def crime_list(request):
     context.update(get_filter_context())
 
     return render(request, "crimes/list.html", context)
+
+
+class Echo:
+    """Pseudo-buffer for StreamingHttpResponse with csv.writer."""
+
+    def write(self, value):
+        return value
+
+
+@ratelimit(key="ip", rate="10/m", method="GET", block=True)
+def crime_export_csv(request):
+    """Export filtered crimes as a CSV download."""
+    crimes = (
+        Crime.objects.select_related("address", "address__city", "connected_event")
+        .prefetch_related("victim", "perpetrator", "weapon")
+        .order_by("-date", "-year")
+    )
+    crime_filter = CrimeFilter(request.GET, queryset=crimes)
+    queryset = crime_filter.qs
+
+    columns = [
+        ("Number", lambda c: c.number),
+        ("Crime", lambda c: c.crime),
+        ("Description of Case", lambda c: c.description_of_case),
+        ("Court", lambda c: c.court),
+        ("Court_Classification", lambda c: c.court_classification),
+        ("Trial_Phase", lambda c: c.trial_phase),
+        ("Arbitration (Y/N)", lambda c: "Y" if c.arbitration else "N"),
+        ("Sentence", lambda c: c.sentence),
+        ("Convicted", lambda c: "Y" if c.convicted else "N"),
+        (
+            "Sentence_Enforced (Y/N)",
+            lambda c: "Y" if c.sentence_enforced else "N",
+        ),
+        ("Date (Modern Format)", lambda c: str(c.date) if c.date else ""),
+        ("Year", lambda c: c.year),
+        ("Month", lambda c: c.month),
+        ("Day", lambda c: c.day),
+        ("Day_of_week", lambda c: c.day_of_week),
+        ("Time", lambda c: c.time),
+        (
+            "Connected_Event",
+            lambda c: str(c.connected_event) if c.connected_event else "",
+        ),
+        ("City", lambda c: c.address.city.name if c.address and c.address.city else ""),
+        ("Location", lambda c: c.address.name if c.address else ""),
+        (
+            "Category of Space",
+            lambda c: c.address.category_of_space if c.address else "",
+        ),
+        (
+            "Description_of_Location",
+            lambda c: c.address.description_of_location if c.address else "",
+        ),
+        ("Victim_Name", lambda c: "; ".join(str(v) for v in c.victim.all())),
+        (
+            "Victim_Gender",
+            lambda c: "; ".join(v.gender for v in c.victim.all() if v.gender),
+        ),
+        (
+            "Victim_Occupation",
+            lambda c: "; ".join(v.occupation for v in c.victim.all() if v.occupation),
+        ),
+        ("Assailant_Name", lambda c: "; ".join(str(p) for p in c.perpetrator.all())),
+        (
+            "Assailant_Gender",
+            lambda c: "; ".join(p.gender for p in c.perpetrator.all() if p.gender),
+        ),
+        ("Victim_Description", lambda c: c.victim_description),
+        ("Assailant_Description", lambda c: c.assailant_description),
+        ("Motive", lambda c: c.motive),
+        ("Relationship", lambda c: c.relationship),
+        ("Type_of_Weapon", lambda c: "; ".join(str(w) for w in c.weapon.all())),
+        ("Description of Location", lambda c: c.description_of_location),
+        ("Fatality (Y/N)", lambda c: "Y" if c.fatality else "N"),
+        ("Archival Location", lambda c: c.archival_location),
+        ("Reference", lambda c: c.reference),
+    ]
+
+    def rows():
+        yield [col[0] for col in columns]
+        for crime in queryset.iterator(chunk_size=500):
+            yield [col[1](crime) for col in columns]
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse(
+        (writer.writerow(row) for row in rows()),
+        content_type="text/csv",
+    )
+    response["Content-Disposition"] = 'attachment; filename="mapping_violence_data.csv"'
+    return response
+
+
+def health(request):
+    return JsonResponse({"status": "ok", "code": 200})

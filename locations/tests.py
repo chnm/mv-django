@@ -12,7 +12,10 @@ class CityModelTestCase(TestCase):
     def test_city_creation(self):
         """Test basic city creation"""
         city = City.objects.create(
-            name="Modena", parish="Modena Parish", latitude=44.6471, longitude=10.9250
+            name="Modena",
+            parish="Modena Parish",
+            latitude=Decimal("44.6471"),
+            longitude=Decimal("10.9250"),
         )
 
         self.assertEqual(city.name, "Modena")
@@ -45,7 +48,10 @@ class LocationModelTestCase(TestCase):
     def setUp(self):
         """Set up test data"""
         self.city = City.objects.create(
-            name="Modena", parish="Modena Parish", latitude=44.6471, longitude=10.9250
+            name="Modena",
+            parish="Modena Parish",
+            latitude=Decimal("44.6471"),
+            longitude=Decimal("10.9250"),
         )
 
     def test_location_creation(self):
@@ -83,8 +89,8 @@ class LocationModelTestCase(TestCase):
         location = Location.objects.create(
             name="Specific Location",
             city=self.city,
-            latitude=44.6500,
-            longitude=10.9300,
+            latitude=Decimal("44.6500"),
+            longitude=Decimal("10.9300"),
         )
 
         self.assertEqual(location.effective_latitude, Decimal("44.6500"))
@@ -146,9 +152,8 @@ class LocationModelTestCase(TestCase):
 
         self.assertEqual(location2.city, venice)
 
-    def test_unique_constraint_prevents_duplicate_empty_fields(self):
-        """Test that unique constraint prevents duplicate locations with same empty category/description"""
-        # Create first location with empty category and description
+    def test_unique_constraint_allows_duplicate_empty_fields(self):
+        """Test that blank category/description locations can duplicate in a city."""
         Location.objects.create(
             name="Location 1",
             city=self.city,
@@ -156,14 +161,14 @@ class LocationModelTestCase(TestCase):
             description_of_location="",
         )
 
-        # Try to create another with same empty fields - should fail
-        with self.assertRaises(IntegrityError):
-            Location.objects.create(
-                name="Location 2",
-                city=self.city,
-                category_of_space="",
-                description_of_location="",
-            )
+        Location.objects.create(
+            name="Location 2",
+            city=self.city,
+            category_of_space="",
+            description_of_location="",
+        )
+
+        self.assertEqual(Location.objects.filter(city=self.city).count(), 2)
 
 
 class LocationRelationshipTestCase(TestCase):
