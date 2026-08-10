@@ -127,6 +127,7 @@ def crime_export_csv(request):
     queryset = crime_filter.qs
 
     columns = [
+        ("Database ID", lambda c: c.pk),
         ("Number", lambda c: c.number),
         ("Crime", lambda c: c.crime),
         ("Description of Case", lambda c: c.description_of_case),

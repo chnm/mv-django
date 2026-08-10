@@ -1,15 +1,21 @@
+import csv
 from itertools import groupby
 
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin import helpers
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import FieldDoesNotExist, PermissionDenied
 from django.db.models import Count
 from django.forms import ModelChoiceField
 from django.forms.models import ModelChoiceIterator
+from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import path, reverse
 from import_export.admin import ImportExportModelAdmin
+from import_export.results import RowResult
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
 from unfold.contrib.import_export.forms import ExportForm, ImportForm
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
@@ -31,7 +37,15 @@ from mapping_violence.models import (
     Weapon,
     Witness,
 )
-from mapping_violence.resources import CrimeResource, MiduraCrimeResource
+from mapping_violence.resources import (
+    CANONICAL_HEADER_ALIASES,
+    IMPORT_HEADER_EXAMPLES,
+    IMPORT_HEADER_HELP,
+    CrimeResource,
+    MiduraCrimeResource,
+    canonical_import_headers,
+    dataset_fingerprint,
+)
 
 # Unregister then re-register to get Unfold styling applied
 admin.site.unregister(User)
@@ -221,12 +235,28 @@ class ImportBatchAdmin(ModelAdmin):
         "source_dataset",
         "import_profile",
         "status",
+        "rows_created",
+        "rows_updated",
         "uploaded_by",
         "uploaded_at",
     )
     list_filter = ("source_dataset", "import_profile", "status", "uploaded_by")
-    search_fields = ("original_filename", "import_profile", "notes")
-    readonly_fields = ("uploaded_at",)
+    search_fields = (
+        "original_filename",
+        "import_profile",
+        "content_sha256",
+        "notes",
+    )
+    readonly_fields = (
+        "uploaded_at",
+        "content_sha256",
+        "rows_total",
+        "rows_created",
+        "rows_updated",
+        "rows_skipped",
+        "rows_errored",
+    )
+    actions = ["rollback_batches"]
 
     fieldsets = (
         (
@@ -240,9 +270,66 @@ class ImportBatchAdmin(ModelAdmin):
                 )
             },
         ),
-        ("Metadata", {"fields": ("uploaded_by", "uploaded_at")}),
+        (
+            "Metadata",
+            {"fields": ("uploaded_by", "uploaded_at", "content_sha256")},
+        ),
+        (
+            "Results",
+            {
+                "fields": (
+                    "rows_total",
+                    "rows_created",
+                    "rows_updated",
+                    "rows_skipped",
+                    "rows_errored",
+                )
+            },
+        ),
         ("Notes", {"fields": ("notes",), "classes": ("collapse",)}),
     )
+
+    @admin.action(
+        description="Roll back records created by selected imports",
+        permissions=["delete"],
+    )
+    def rollback_batches(self, request, queryset):
+        """Delete only crimes created by a batch, after explicit confirmation."""
+        crime_queryset = Crime.objects.filter(import_batch__in=queryset)
+        crime_count = crime_queryset.count()
+
+        if request.POST.get("confirm_rollback") == "yes":
+            crime_queryset.delete()
+            for batch in queryset:
+                rollback_note = (
+                    "Rollback deleted records created by this batch. "
+                    "Updates to pre-existing records were not reverted."
+                )
+                batch.notes = "\n".join(
+                    note for note in [batch.notes, rollback_note] if note
+                )
+                batch.status = ImportBatch.ROLLED_BACK
+                batch.save(update_fields=["notes", "status"])
+            self.message_user(
+                request,
+                f"Rolled back {queryset.count()} import batch(es) and deleted "
+                f"{crime_count} crime record(s).",
+                messages.SUCCESS,
+            )
+            return None
+
+        return render(
+            request,
+            "admin/mapping_violence/importbatch/rollback_confirmation.html",
+            {
+                **self.admin_site.each_context(request),
+                "title": "Confirm import rollback",
+                "opts": self.model._meta,
+                "queryset": queryset,
+                "crime_count": crime_count,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+            },
+        )
 
 
 @admin.register(Event)
@@ -397,8 +484,13 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
     resource_classes = [CrimeResource, MiduraCrimeResource]
     import_form_class = ImportForm
     export_form_class = ExportForm
+    import_export_change_list_template = (
+        "admin/mapping_violence/crime/change_list_import_export.html"
+    )
+    import_template_name = "admin/mapping_violence/crime/import.html"
 
     list_display = (
+        "id",
         "number",
         "crime",
         "get_victims",
@@ -438,6 +530,83 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "import_batch",
     )
     actions = ["reassign_input_by", "assign_to_editor", "set_status"]
+
+    def get_urls(self):
+        custom_urls = [
+            path(
+                "import-guide/",
+                self.admin_site.admin_view(self.import_guide_view),
+                name="mapping_violence_crime_import_guide",
+            ),
+            path(
+                "import-guide/template.csv",
+                self.admin_site.admin_view(self.download_import_template),
+                name="mapping_violence_crime_import_template",
+            ),
+        ]
+        return custom_urls + super().get_urls()
+
+    def _require_crime_view_permission(self, request):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+
+    def import_guide_view(self, request):
+        """Render staff-only documentation generated from the import resource."""
+        self._require_crime_view_permission(request)
+        resource = CrimeResource()
+        fields_by_header = {
+            field.column_name: field for field in resource.get_import_fields()
+        }
+        aliases_by_header = {}
+        for alias, canonical in CANONICAL_HEADER_ALIASES.items():
+            aliases_by_header.setdefault(canonical, []).append(alias)
+
+        guide_fields = []
+        for header in canonical_import_headers():
+            resource_field = fields_by_header.get(header)
+            model_field = None
+            if resource_field and resource_field.attribute:
+                try:
+                    model_field = Crime._meta.get_field(resource_field.attribute)
+                except FieldDoesNotExist:
+                    pass
+            description = IMPORT_HEADER_HELP.get(header)
+            if not description and model_field and model_field.help_text:
+                description = str(model_field.help_text)
+            guide_fields.append(
+                {
+                    "header": header,
+                    "description": description or "Optional imported value.",
+                    "example": IMPORT_HEADER_EXAMPLES.get(header, ""),
+                    "aliases": aliases_by_header.get(header, []),
+                }
+            )
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Crime import guide",
+            "opts": self.model._meta,
+            "guide_fields": guide_fields,
+            "template_url": reverse("admin:mapping_violence_crime_import_template"),
+            "import_url": reverse("admin:mapping_violence_crime_import"),
+            "changelist_url": reverse("admin:mapping_violence_crime_changelist"),
+        }
+        request.current_app = self.admin_site.name
+        return render(
+            request,
+            "admin/mapping_violence/crime/import_guide.html",
+            context,
+        )
+
+    def download_import_template(self, request):
+        """Download a header-only canonical CSV generated from CrimeResource."""
+        self._require_crime_view_permission(request)
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            'attachment; filename="mapping-violence-import-template.csv"'
+        )
+        csv.writer(response).writerow(canonical_import_headers())
+        return response
 
     fieldsets = (
         (
@@ -613,6 +782,99 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         kwargs = super().get_import_resource_kwargs(request, *args, **kwargs)
         kwargs["user"] = request.user
         return kwargs
+
+    def process_dataset(self, dataset, form, request, **kwargs):
+        """Import a confirmed upload and retain a durable audit batch."""
+        resource_class = self.choose_import_resource_class(form, request)
+        source_dataset = None
+        if resource_class.source_dataset_name:
+            source_dataset, _ = SourceDataset.objects.get_or_create(
+                name=resource_class.source_dataset_name
+            )
+
+        batch = ImportBatch.objects.create(
+            source_dataset=source_dataset,
+            original_filename=form.cleaned_data.get("original_file_name", ""),
+            import_profile=resource_class.import_profile,
+            uploaded_by=request.user,
+            content_sha256=dataset_fingerprint(dataset),
+            rows_total=len(dataset),
+        )
+
+        resource_kwargs = self.get_import_resource_kwargs(request, form=form, **kwargs)
+        resource_kwargs["import_batch"] = batch
+        if source_dataset:
+            resource_kwargs["source_dataset"] = source_dataset
+        resource = resource_class(**resource_kwargs)
+        import_kwargs = self.get_import_data_kwargs(
+            request=request, form=form, **kwargs
+        )
+        import_kwargs["retain_instance_in_row_result"] = True
+
+        try:
+            result = resource.import_data(
+                dataset,
+                dry_run=False,
+                file_name=form.cleaned_data.get("original_file_name"),
+                user=request.user,
+                **import_kwargs,
+            )
+        except Exception as exc:
+            batch.status = ImportBatch.FAILED
+            batch.notes = f"Import failed before completion: {exc}"
+            batch.save(update_fields=["status", "notes"])
+            raise
+
+        batch.rows_total = result.total_rows
+        batch.rows_created = result.totals[RowResult.IMPORT_TYPE_NEW]
+        batch.rows_updated = result.totals[RowResult.IMPORT_TYPE_UPDATE]
+        batch.rows_skipped = result.totals[RowResult.IMPORT_TYPE_SKIP]
+        batch.rows_errored = (
+            result.totals[RowResult.IMPORT_TYPE_ERROR]
+            + result.totals[RowResult.IMPORT_TYPE_INVALID]
+        )
+        batch.status = (
+            ImportBatch.NEEDS_REVIEW
+            if result.has_errors() or result.has_validation_errors()
+            else ImportBatch.IMPORTED
+        )
+
+        renamed = resource.normalization_summary.get("renamed_headers", {})
+        ignored = resource.normalization_summary.get("ignored_blank_columns", 0)
+        ignored_rows = resource.normalization_summary.get("ignored_empty_rows", 0)
+        notes = []
+        if renamed:
+            mappings = ", ".join(
+                f"{source} -> {destination}" for source, destination in renamed.items()
+            )
+            notes.append(f"Normalized headers: {mappings}.")
+        if ignored:
+            notes.append(f"Ignored {ignored} blank spreadsheet column(s).")
+        if ignored_rows:
+            notes.append(f"Ignored {ignored_rows} completely empty row(s).")
+        if resource.normalization_summary.get("row_diffs_omitted"):
+            notes.append(
+                "Per-field HTML diffs were omitted because this file exceeded "
+                "500 rows; validation and create/update/error totals were retained."
+            )
+        if batch.rows_updated:
+            notes.append(
+                "Updated records are audited in the counts but are not owned by "
+                "this batch and will not be deleted by rollback."
+            )
+        batch.notes = "\n".join(notes)
+        batch.save(
+            update_fields=[
+                "rows_total",
+                "rows_created",
+                "rows_updated",
+                "rows_skipped",
+                "rows_errored",
+                "status",
+                "notes",
+            ]
+        )
+        return result
 
     @admin.action(description="Reassign selected crimes to a user")
     def reassign_input_by(self, request, queryset):

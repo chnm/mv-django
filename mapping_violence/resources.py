@@ -1,9 +1,13 @@
+import hashlib
+import json
 import re
-import time
 from collections import OrderedDict
+from copy import deepcopy
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from import_export import fields, resources, widgets
+from import_export.instance_loaders import ModelInstanceLoader
 from import_export.widgets import BooleanWidget
 from tablib import Dataset
 
@@ -25,6 +29,217 @@ def _is_blankish(value):
 
 def _clean_value(value):
     return "" if _is_blankish(value) else str(value).strip()
+
+
+class MutableCachedInstanceLoader(ModelInstanceLoader):
+    """Cache optional database IDs and records created earlier in the file."""
+
+    def __init__(self, resource, dataset=None):
+        super().__init__(resource, dataset)
+        self.pk_field = resource.fields[resource.get_import_id_fields()[0]]
+        ids = []
+        for row in dataset.dict if dataset else []:
+            value = row.get(self.pk_field.column_name)
+            if not _is_blankish(value):
+                ids.append(self.pk_field.clean(row))
+        queryset = self.get_queryset().filter(pk__in=ids)
+        self.all_instances = {instance.pk: instance for instance in queryset}
+        resource.active_instance_loader = self
+
+    def get_instance(self, row):
+        value = row.get(self.pk_field.column_name)
+        if _is_blankish(value):
+            return None
+        database_id = self.pk_field.clean(row)
+        instance = self.all_instances.get(database_id)
+        if instance is None:
+            raise ValidationError(
+                {
+                    self.pk_field.column_name: (
+                        f"Crime with Database ID {database_id} does not exist. "
+                        "Remove the Database ID to create a new record."
+                    )
+                }
+            )
+        return instance
+
+    def register(self, instance):
+        self.all_instances[instance.pk] = instance
+
+
+CANONICAL_HEADER_ALIASES = {
+    "Case Number": "Number",
+    "Case_number": "Number",
+    "Description_of_Crime": "Description of Case",
+    "Description_of_Case": "Description of Case",
+    "Date_of_Crime (Modern)": "Date (Modern Format)",
+    "Date_of_Crime": "Date (Modern Format)",
+    "Day_of_Week": "Day_of_week",
+    "Weapon": "Type_of_Weapon",
+    "Archival_Location": "Archival Location",
+    "Sentence_Enforced": "Sentence_Enforced (Y/N)",
+    "Description_of_Location": "Description of Location",
+    "Victim Description": "Victim_Description",
+    "Input_By": "Input by",
+}
+
+# These columns are consumed by LocationWidget from the complete row even
+# though they do not map directly to fields on CrimeResource.
+CANONICAL_AUXILIARY_HEADERS = (
+    "Parish",
+    "Latitude",
+    "Longitude",
+    "Category of Space",
+)
+
+IMPORT_HEADER_HELP = {
+    "Database ID": (
+        "Leave blank to create a record. Use an ID from a Mapping Violence export "
+        "to update that exact database record."
+    ),
+    "Number": (
+        "Archival or source case number. It may be blank or repeated and is never "
+        "used to decide whether a row is new."
+    ),
+    "Date (Modern Format)": "Exact date in ISO YYYY-MM-DD format when known.",
+    "Arbitration (Y/N)": "Whether arbitration occurred; use Y or N.",
+    "Convicted": "Whether the perpetrator was convicted; use Y or N.",
+    "Sentence_Enforced (Y/N)": "Whether the sentence was enforced; use Y or N.",
+    "Fatality (Y/N)": "Whether the incident caused a fatality; use Y or N.",
+    "Victim_Name": (
+        "Victim name. Use 'Last, First' for one person and semicolons between "
+        "multiple people."
+    ),
+    "Victim_Last_Name": (
+        "Optional legacy split-name column. Victim_Name is preferred for new files."
+    ),
+    "Victim_Gender": "Victim gender code or label; multiple values use semicolons.",
+    "Victim_Occupation": "Victim occupation; multiple values use semicolons.",
+    "Assailant_Name": (
+        "Assailant name. Use 'Last, First' for one person and semicolons between "
+        "multiple people."
+    ),
+    "Assailant_First": (
+        "Optional legacy split-name column. Assailant_Name is preferred for new files."
+    ),
+    "Assailant_Gender": (
+        "Assailant gender code or label; multiple values use semicolons."
+    ),
+    "Assailant_External_IDs": (
+        "Source-specific person identifiers aligned with semicolon-separated "
+        "assailant names."
+    ),
+    "Type_of_Weapon": "Weapon names separated with semicolons.",
+    "City": "City associated with the crime location.",
+    "Parish": "Optional parish metadata used when creating or enriching a city.",
+    "Latitude": "Optional decimal latitude used when creating or enriching a city.",
+    "Longitude": "Optional decimal longitude used when creating or enriching a city.",
+    "Category of Space": "Optional category used to distinguish locations in a city.",
+}
+
+IMPORT_HEADER_EXAMPLES = {
+    "Database ID": "1427",
+    "Number": "ASVe-001",
+    "Crime": "assault",
+    "Date (Modern Format)": "1621-09-29",
+    "Year": "1621",
+    "Month": "9",
+    "Day": "29",
+    "Time": "evening",
+    "Arbitration (Y/N)": "N",
+    "Convicted": "Y",
+    "Sentence_Enforced (Y/N)": "Y",
+    "Fatality (Y/N)": "N",
+    "Victim_Name": "Ferro, Francesco",
+    "Assailant_Name": "Rossi, Marco; Bianchi, Luca",
+    "Type_of_Weapon": "Sword; Dagger",
+    "City": "Padua",
+    "Parish": "San Lorenzo",
+    "Latitude": "45.4064",
+    "Longitude": "11.8768",
+    "Category of Space": "public",
+}
+
+
+def canonical_import_headers():
+    """Return the generated canonical CSV header order for Crime imports."""
+    resource = CrimeResource()
+    headers = [
+        field.column_name
+        for field in resource.get_import_fields()
+        if field.column_name != "Input by"
+    ]
+    for header in CANONICAL_AUXILIARY_HEADERS:
+        if header not in headers:
+            headers.append(header)
+    return headers
+
+
+def dataset_fingerprint(dataset):
+    """Return a stable hash of a parsed spreadsheet's headers and rows."""
+    payload = {
+        "headers": list(dataset.headers or []),
+        "rows": [list(row) for row in dataset],
+    }
+    encoded = json.dumps(
+        payload,
+        default=str,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def normalize_crime_dataset(dataset):
+    """Normalize known spreadsheet headers before import-export validates them.
+
+    Canonical columns win when both a canonical header and one of its aliases
+    are present. An alias still fills a blank canonical value. Empty trailing
+    spreadsheet columns are discarded.
+    """
+    original_headers = list(dataset.headers or [])
+    header_sources = OrderedDict()
+    renamed_headers = OrderedDict()
+    ignored_headers = []
+
+    for index, original_header in enumerate(original_headers):
+        stripped_header = str(original_header or "").strip()
+        if not stripped_header:
+            ignored_headers.append(original_header)
+            continue
+
+        canonical_header = CANONICAL_HEADER_ALIASES.get(
+            stripped_header, stripped_header
+        )
+        if canonical_header != stripped_header:
+            renamed_headers[stripped_header] = canonical_header
+
+        source = (stripped_header != canonical_header, index)
+        header_sources.setdefault(canonical_header, []).append(source)
+
+    normalized_headers = list(header_sources)
+    normalized_rows = []
+    ignored_empty_rows = 0
+    for source_row in dataset:
+        normalized_row = []
+        for header in normalized_headers:
+            sources = sorted(header_sources[header])  # Canonical source first.
+            values = [source_row[index] for _, index in sources]
+            value = next((value for value in values if not _is_blankish(value)), "")
+            normalized_row.append(value)
+        if any(not _is_blankish(value) for value in normalized_row):
+            normalized_rows.append(normalized_row)
+        else:
+            ignored_empty_rows += 1
+
+    dataset.wipe()
+    dataset.headers = normalized_headers
+    dataset.extend(normalized_rows)
+    return {
+        "renamed_headers": dict(renamed_headers),
+        "ignored_blank_columns": len(ignored_headers),
+        "ignored_empty_rows": ignored_empty_rows,
+    }
 
 
 class PersonWidget(widgets.ForeignKeyWidget):
@@ -62,6 +277,10 @@ class PersonWidget(widgets.ForeignKeyWidget):
 class WeaponWidget(widgets.ManyToManyWidget):
     """Custom widget for Weapon M2M field — resolves semicolon-separated names."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._cache = {}
+
     def clean(self, value, row=None, **kwargs):
         if not value:
             return []
@@ -70,9 +289,12 @@ class WeaponWidget(widgets.ManyToManyWidget):
         for name in str(value).split(";"):
             name = name.strip()
             if name:
-                weapon, created = Weapon.objects.get_or_create(
-                    name=name, defaults={"name": name}
-                )
+                weapon = self._cache.get(name)
+                if weapon is None:
+                    weapon, _ = Weapon.objects.get_or_create(
+                        name=name, defaults={"name": name}
+                    )
+                    self._cache[name] = weapon
                 weapons.append(weapon)
         return weapons
 
@@ -80,18 +302,28 @@ class WeaponWidget(widgets.ManyToManyWidget):
 class EventWidget(widgets.ForeignKeyWidget):
     """Custom widget for Event fields"""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._cache = {}
+
     def clean(self, value, row=None, **kwargs):
         if not value:
             return None
 
-        event, created = Event.objects.get_or_create(
-            name=value, defaults={"name": value}
-        )
+        event = self._cache.get(value)
+        if event is None:
+            event, _ = Event.objects.get_or_create(name=value, defaults={"name": value})
+            self._cache[value] = event
         return event
 
 
 class LocationWidget(widgets.ForeignKeyWidget):
     """Custom widget for Location fields that handles City/Location separation"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._city_cache = {}
+        self._location_cache = {}
 
     def clean(self, value, row=None, **kwargs):
         if not value:
@@ -103,7 +335,11 @@ class LocationWidget(widgets.ForeignKeyWidget):
         latitude = row.get("Latitude", "") if row else ""
         longitude = row.get("Longitude", "") if row else ""
         category_of_space = row.get("Category of Space", "") if row else ""
-        description_of_location = row.get("Description_of_Location", "") if row else ""
+        description_of_location = ""
+        if row:
+            description_of_location = row.get("Description of Location", "") or row.get(
+                "Description_of_Location", ""
+            )
 
         # Use city name from CSV, fall back to main value
         city_name = city_name or value
@@ -135,9 +371,14 @@ class LocationWidget(widgets.ForeignKeyWidget):
         if city_lon is not None:
             city_defaults["longitude"] = city_lon
 
-        city, city_created = City.objects.get_or_create(
-            name=city_name, defaults=city_defaults
-        )
+        city = self._city_cache.get(city_name)
+        if city is None:
+            city, city_created = City.objects.get_or_create(
+                name=city_name, defaults=city_defaults
+            )
+            self._city_cache[city_name] = city
+        else:
+            city_created = False
 
         # Update city with new data if available
         if not city_created:
@@ -185,21 +426,25 @@ class LocationWidget(widgets.ForeignKeyWidget):
 
         # Try to find existing location or create new one
         # Use city + category + description as unique identifier
-        try:
-            location = Location.objects.get(
-                city=city,
-                category_of_space=category_of_space,
-                description_of_location=description_of_location,
-            )
-        except Location.DoesNotExist:
-            location = Location.objects.create(**location_defaults)
-        except Location.MultipleObjectsReturned:
-            # If multiple exist, get the first one
-            location = Location.objects.filter(
-                city=city,
-                category_of_space=category_of_space,
-                description_of_location=description_of_location,
-            ).first()
+        location_key = (city.pk, category_of_space, description_of_location)
+        location = self._location_cache.get(location_key)
+        if location is None:
+            try:
+                location = Location.objects.get(
+                    city=city,
+                    category_of_space=category_of_space,
+                    description_of_location=description_of_location,
+                )
+            except Location.DoesNotExist:
+                location = Location.objects.create(**location_defaults)
+            except Location.MultipleObjectsReturned:
+                # If multiple exist, get the first one
+                location = Location.objects.filter(
+                    city=city,
+                    category_of_space=category_of_space,
+                    description_of_location=description_of_location,
+                ).first()
+            self._location_cache[location_key] = location
 
         return location
 
@@ -325,7 +570,13 @@ class CrimeResource(resources.ModelResource):
         self.importing_user = user
         self.source_dataset = self._coerce_source_dataset(source_dataset)
         self.import_batch = import_batch
+        self.normalization_summary = {}
         super().__init__(**kwargs)
+        # Resource options are class-level by default. Copy them so large-file
+        # preview optimization is isolated to this resource instance/request.
+        self._meta = deepcopy(self._meta)
+        self._person_cache = {}
+        self._new_row_numbers = set()
 
     def _coerce_source_dataset(self, source_dataset):
         if source_dataset:
@@ -347,17 +598,31 @@ class CrimeResource(resources.ModelResource):
         New imports default to 'triage'; re-imported 'done' records get
         kicked back to 'needs_review'.
         """
+        is_new = kwargs.get("row_number") in self._new_row_numbers
         if self.importing_user and not instance.input_by_id:
             instance.input_by = self.importing_user
-        if self.import_batch and not instance.import_batch_id:
+        # A batch owns only records it created. Existing records may be updated
+        # by this import, but attaching them would make batch rollback unsafe.
+        if self.import_batch and is_new:
             instance.import_batch = self.import_batch
-        if not instance.pk:
+        if is_new:
             instance.status = "triage"
         elif instance.status == "done":
             instance.status = "needs_review"
         return super().before_save_instance(instance, row, **kwargs)
 
-    # Map CSV columns to model fields - column mapping handled in before_import_row
+    def after_init_instance(self, instance, new, row, **kwargs):
+        if new:
+            self._new_row_numbers.add(kwargs.get("row_number"))
+        return super().after_init_instance(instance, new, row, **kwargs)
+
+    id = fields.Field(
+        column_name="Database ID",
+        attribute="id",
+        widget=widgets.IntegerWidget(),
+    )
+
+    # Map canonical CSV columns to model fields.
     number = fields.Field(column_name="Number", attribute="number")
 
     crime = fields.Field(column_name="Crime", attribute="crime")
@@ -517,8 +782,10 @@ class CrimeResource(resources.ModelResource):
 
     class Meta:
         model = Crime
-        # Number is the stable archival identifier used for round-trip imports.
+        # Database ID is the only update key. Number is archival/source data and
+        # may be blank or repeated.
         fields = (
+            "id",
             "number",
             "crime",
             "description_of_case",
@@ -559,7 +826,22 @@ class CrimeResource(resources.ModelResource):
         skip_unchanged = False
         report_skipped = False
         use_bulk = False
-        import_id_fields = ("number",)
+        # Keep this as a list to match django-import-export's special handling
+        # for an optional default primary-key column.
+        import_id_fields = ["id"]
+        instance_loader_class = MutableCachedInstanceLoader
+
+    def before_import(self, dataset, **kwargs):
+        """Canonicalize headers before import-export checks import_id_fields."""
+        self.normalization_summary = normalize_crime_dataset(dataset)
+
+        # Rendering a field-by-field HTML diff for thousands of rows can exceed
+        # common web request timeouts. Large imports still perform all parsing,
+        # validation, and create/update classification.
+        if len(dataset) > 500:
+            self._meta.skip_diff = True
+            self.normalization_summary["row_diffs_omitted"] = True
+        return super().before_import(dataset, **kwargs)
 
     def skip_row(self, instance, original, row, import_validation_errors=None):
         """Silently skip empty rows instead of raising an error."""
@@ -573,23 +855,6 @@ class CrimeResource(resources.ModelResource):
         # Drop stray columns with blank/whitespace-only header names
         for key in [k for k in list(row.keys()) if not (k or "").strip()]:
             row.pop(key, None)
-
-        # Normalize column names — handles both the standard format and
-        # rose_data.csv's underscore/spacing variants
-        column_mappings = {
-            "Case Number": "Number",
-            "Case_number": "Number",
-            "Description_of_Crime": "Description of Case",
-            "Description_of_Case": "Description of Case",
-            "Date_of_Crime (Modern)": "Date (Modern Format)",
-            "Date_of_Crime": "Date (Modern Format)",
-            "Weapon": "Type_of_Weapon",
-            "Archival_Location": "Archival Location",
-            "Sentence_Enforced": "Sentence_Enforced (Y/N)",
-        }
-        for src, dst in column_mappings.items():
-            if src in row and dst not in row:
-                row[dst] = row[src]
 
         for key, value in list(row.items()):
             if isinstance(value, str) and value.strip().lower() == "nan":
@@ -624,13 +889,9 @@ class CrimeResource(resources.ModelResource):
                 value = str(row[field]).strip().upper()
                 row[field] = value == "Y" or value == "YES"
 
-        # Populate missing case numbers for sparse rows. Existing numbers are
-        # left intact so import-export can update matching records.
+        # Case numbers are optional source metadata, not database identifiers.
         number = row.get("Number", "")
-        if not number or str(number).strip() == "":
-            timestamp = int(time.time() * 1000000)  # microseconds since epoch
-            row["Number"] = f"AUTO_{timestamp}"
-        else:
+        if number is not None:
             row["Number"] = str(number).strip()
 
         return super().before_import_row(row, **kwargs)
@@ -643,38 +904,34 @@ class CrimeResource(resources.ModelResource):
         Description / Year but still have a case number or archival reference
         are real (if sparse) records and should be imported.
         """
-        id_fields = [
-            "Number",
-            "Case_number",
-            "Archival Location",
-            "Archival_Location",
-        ]
-        for field in id_fields:
-            if (row.get(field) or "").strip():
-                return False
-        return True
+        return not any(not _is_blankish(value) for value in row.values())
 
     def after_save_instance(self, instance, row, **kwargs):
         """Process instance after saving - this is called after the instance is saved to DB"""
         # Handle many-to-many relationships for victims and perpetrators
         if instance and instance.pk:
+            if hasattr(self, "active_instance_loader"):
+                self.active_instance_loader.register(instance)
+            is_new = kwargs.get("row_number") in self._new_row_numbers
             victim_columns = [
                 "Victim_First_Name",
                 "Victim_Last_Name",
                 "Victim_Name",
             ]
             if self._row_has_any_column(row, victim_columns):
-                instance.victim.set(
-                    self._people_from_row(
-                        row,
-                        first_columns=["Victim_First_Name"],
-                        last_columns=["Victim_Last_Name"],
-                        combined_columns=["Victim_Name"],
-                        gender_column="Victim_Gender",
-                        occupation_column="Victim_Occupation",
-                        external_id_columns=["Victim_External_IDs"],
-                    )
+                victims = self._people_from_row(
+                    row,
+                    first_columns=["Victim_First_Name"],
+                    last_columns=["Victim_Last_Name"],
+                    combined_columns=["Victim_Name"],
+                    gender_column="Victim_Gender",
+                    occupation_column="Victim_Occupation",
+                    external_id_columns=["Victim_External_IDs"],
                 )
+                if is_new:
+                    instance.victim.add(*victims)
+                else:
+                    instance.victim.set(victims)
 
             assailant_columns = [
                 "Assailant_First",
@@ -684,20 +941,22 @@ class CrimeResource(resources.ModelResource):
                 "Assailant_Name",
             ]
             if self._row_has_any_column(row, assailant_columns):
-                instance.perpetrator.set(
-                    self._people_from_row(
-                        row,
-                        first_columns=["Assailant_First"],
-                        last_columns=[
-                            "Assailant_Last_Name",
-                            "Assailant_Last",
-                            "Assailant _ Last_Name",
-                        ],
-                        combined_columns=["Assailant_Name"],
-                        gender_column="Assailant_Gender",
-                        external_id_columns=["Assailant_External_IDs"],
-                    )
+                perpetrators = self._people_from_row(
+                    row,
+                    first_columns=["Assailant_First"],
+                    last_columns=[
+                        "Assailant_Last_Name",
+                        "Assailant_Last",
+                        "Assailant _ Last_Name",
+                    ],
+                    combined_columns=["Assailant_Name"],
+                    gender_column="Assailant_Gender",
+                    external_id_columns=["Assailant_External_IDs"],
                 )
+                if is_new:
+                    instance.perpetrator.add(*perpetrators)
+                else:
+                    instance.perpetrator.set(perpetrators)
 
     def _row_has_any_column(self, row, column_names):
         """Return True when a CSV row includes any column in a logical group."""
@@ -771,7 +1030,16 @@ class CrimeResource(resources.ModelResource):
         occupation="",
     ):
         external_id = _clean_value(external_id)
+        external_cache_key = None
         if self.source_dataset and external_id:
+            external_cache_key = (
+                "external",
+                self.source_dataset.pk,
+                external_id,
+            )
+            cached_person = self._person_cache.get(external_cache_key)
+            if cached_person:
+                return cached_person
             identifier = (
                 ExternalPersonIdentifier.objects.filter(
                     source_dataset=self.source_dataset,
@@ -784,27 +1052,38 @@ class CrimeResource(resources.ModelResource):
                 if raw_name and identifier.raw_name != raw_name:
                     identifier.raw_name = raw_name
                     identifier.save(update_fields=["raw_name"])
+                self._person_cache[external_cache_key] = identifier.person
                 return identifier.person
 
-        matches = Person.objects.filter(first_name=first_name, last_name=last_name)
+        name_cache_key = ("name", first_name, last_name)
+        person = self._person_cache.get(name_cache_key)
         status = ExternalPersonIdentifier.CREATED
         notes = ""
-        if matches.exists():
-            person = matches.order_by("pk").first()
-            status = ExternalPersonIdentifier.MATCHED
-            if matches.count() > 1:
-                status = ExternalPersonIdentifier.AMBIGUOUS_NAME_REUSED
-                notes = (
-                    "Multiple local people had this exact first/last name during "
-                    "import; the earliest matching Person was reused."
-                )
-        else:
-            person = Person.objects.create(
-                first_name=first_name,
-                last_name=last_name,
-                gender=gender,
-                occupation=occupation,
+        if person is None:
+            matches = list(
+                Person.objects.filter(
+                    first_name=first_name, last_name=last_name
+                ).order_by("pk")[:2]
             )
+            if matches:
+                person = matches[0]
+                status = ExternalPersonIdentifier.MATCHED
+                if len(matches) > 1:
+                    status = ExternalPersonIdentifier.AMBIGUOUS_NAME_REUSED
+                    notes = (
+                        "Multiple local people had this exact first/last name during "
+                        "import; the earliest matching Person was reused."
+                    )
+            else:
+                person = Person.objects.create(
+                    first_name=first_name,
+                    last_name=last_name,
+                    gender=gender,
+                    occupation=occupation,
+                )
+            self._person_cache[name_cache_key] = person
+        else:
+            status = ExternalPersonIdentifier.MATCHED
 
         if self.source_dataset and external_id:
             ExternalPersonIdentifier.objects.update_or_create(
@@ -817,6 +1096,7 @@ class CrimeResource(resources.ModelResource):
                     "notes": notes,
                 },
             )
+            self._person_cache[external_cache_key] = person
         return person
 
     def _clean_gender(self, value):
@@ -880,13 +1160,12 @@ MIDURA_HEADERS = [
 def normalize_midura_dataset(dataset):
     """Convert Midura's one-row-per-subject TSV into canonical crime rows."""
     grouped = OrderedDict()
-    for source_row in dataset.dict:
+    for row_number, source_row in enumerate(dataset.dict, start=1):
         number = _clean_value(source_row.get("Number"))
-        if not number:
-            number = f"AUTO_{int(time.time() * 1000000)}"
+        group_key = number or f"__blank_row_{row_number}"
 
         row = grouped.setdefault(
-            number,
+            group_key,
             {
                 "Number": number,
                 "Crime": "",

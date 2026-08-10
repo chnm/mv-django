@@ -198,11 +198,13 @@ class ImportBatch(models.Model):
     IMPORTED = "imported"
     NEEDS_REVIEW = "needs_review"
     FAILED = "failed"
+    ROLLED_BACK = "rolled_back"
     STATUS_CHOICES = (
         (STAGED, "Staged"),
         (IMPORTED, "Imported"),
         (NEEDS_REVIEW, "Needs Review"),
         (FAILED, "Failed"),
+        (ROLLED_BACK, "Rolled Back"),
     )
 
     source_dataset = models.ForeignKey(
@@ -214,6 +216,7 @@ class ImportBatch(models.Model):
     )
     original_filename = models.CharField(max_length=500, blank=True)
     import_profile = models.CharField(max_length=255, blank=True)
+    content_sha256 = models.CharField(max_length=64, blank=True, db_index=True)
     uploaded_by = models.ForeignKey(
         User,
         null=True,
@@ -228,6 +231,11 @@ class ImportBatch(models.Model):
         default=STAGED,
     )
     notes = models.TextField(blank=True)
+    rows_total = models.PositiveIntegerField(default=0)
+    rows_created = models.PositiveIntegerField(default=0)
+    rows_updated = models.PositiveIntegerField(default=0)
+    rows_skipped = models.PositiveIntegerField(default=0)
+    rows_errored = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["-uploaded_at", "original_filename"]
@@ -289,10 +297,12 @@ class Crime(models.Model):
     # Basic identification
     number = models.CharField(
         max_length=50,
-        unique=True,
         null=True,
         blank=True,
-        help_text="Input number of case, e.g. 001",
+        help_text=(
+            "Archival or source case number, e.g. 001. This value is optional and "
+            "is not required to be unique."
+        ),
     )
     crime = models.CharField(
         blank=True,

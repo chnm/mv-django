@@ -1,12 +1,18 @@
 import csv
 from datetime import date
 from io import StringIO
+from types import SimpleNamespace
 
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import TestCase
+from django.test.client import RequestFactory
 from django.urls import reverse
 from tablib import Dataset
 
 from locations.models import City, Location
+from mapping_violence.admin import CrimeAdmin, ImportBatchAdmin
 from mapping_violence.models import (
     Crime,
     ExternalPersonIdentifier,
@@ -18,6 +24,7 @@ from mapping_violence.models import (
 from mapping_violence.resources import (
     CrimeResource,
     MiduraCrimeResource,
+    canonical_import_headers,
     normalize_midura_dataset,
 )
 
@@ -53,7 +60,7 @@ class CrimeResourceImportTestCase(TestCase):
         self.assertFalse(result.has_errors())
         return result
 
-    def test_import_updates_existing_crime_by_number(self):
+    def test_repeated_case_number_creates_distinct_crimes(self):
         self.import_rows(
             {
                 "Number": "MV-001",
@@ -74,18 +81,171 @@ class CrimeResourceImportTestCase(TestCase):
             }
         )
 
-        self.assertEqual(Crime.objects.count(), 1)
-        crime = Crime.objects.get(number="MV-001")
+        self.assertEqual(Crime.objects.filter(number="MV-001").count(), 2)
+        crime = Crime.objects.get(crime="homicide")
         self.assertEqual(crime.crime, "homicide")
         self.assertEqual([str(v) for v in crime.victim.all()], ["Marco Rossi"])
         self.assertEqual([str(p) for p in crime.perpetrator.all()], ["Luca Contarini"])
         self.assertEqual([str(w) for w in crime.weapon.all()], ["Dagger"])
 
-    def test_blank_number_gets_auto_number(self):
+    def test_database_id_updates_existing_crime(self):
+        crime = Crime.objects.create(number="MV-UPDATE", crime="assault")
+
+        self.import_rows(
+            {
+                "Database ID": crime.pk,
+                "Number": "MV-UPDATE",
+                "Crime": "homicide",
+                "Victim_Name": "Rossi, Marco",
+            }
+        )
+
+        self.assertEqual(Crime.objects.count(), 1)
+        crime.refresh_from_db()
+        self.assertEqual(crime.crime, "homicide")
+        self.assertEqual([str(v) for v in crime.victim.all()], ["Marco Rossi"])
+
+    def test_unknown_database_id_is_rejected_instead_of_creating_explicit_pk(self):
+        dataset = Dataset(headers=["Database ID", "Number", "Crime"])
+        dataset.append([999999, "MV-UNKNOWN", "assault"])
+
+        result = CrimeResource().import_data(
+            dataset,
+            dry_run=False,
+            raise_errors=False,
+        )
+
+        self.assertTrue(result.has_validation_errors())
+        self.assertEqual(Crime.objects.count(), 0)
+        self.assertIn("does not exist", str(result.invalid_rows[0].error))
+
+    def test_blank_number_remains_blank(self):
         self.import_rows({"Crime": "assault"})
 
         crime = Crime.objects.get()
-        self.assertTrue(crime.number.startswith("AUTO_"))
+        self.assertEqual(crime.number, "")
+
+    def test_case_number_alias_is_normalized_before_header_validation(self):
+        dataset = Dataset(
+            headers=[
+                "Case Number",
+                "Date (Modern Format)",
+                "Year",
+                "Victim_Name",
+                "City",
+            ]
+        )
+        dataset.append(["PAD-001", "1621-09-29", "1621", "Francesco", "Padua"])
+
+        result = CrimeResource().import_data(
+            dataset,
+            dry_run=False,
+            raise_errors=True,
+        )
+
+        self.assertFalse(result.has_errors())
+        crime = Crime.objects.get(number="PAD-001")
+        self.assertEqual(crime.date, date(1621, 9, 29))
+        self.assertEqual(crime.address.city.name, "Padua")
+
+    def test_known_header_variants_are_normalized_to_canonical_columns(self):
+        dataset = Dataset(
+            headers=[
+                "Case_number",
+                "Description_of_Case",
+                "Date_of_Crime",
+                "Day_of_Week",
+                "Weapon",
+                "Archival_Location",
+                "Location",
+                "",
+            ]
+        )
+        dataset.append(
+            [
+                "ROSE-001",
+                "A described case",
+                "1610-05-02",
+                "Sunday",
+                "Sword",
+                "Archive ref",
+                "Venice",
+                "",
+            ]
+        )
+
+        resource = CrimeResource()
+        result = resource.import_data(dataset, dry_run=False, raise_errors=True)
+
+        self.assertFalse(result.has_errors())
+        crime = Crime.objects.get(number="ROSE-001")
+        self.assertEqual(crime.description_of_case, "A described case")
+        self.assertEqual(crime.date, date(1610, 5, 2))
+        self.assertEqual(crime.day_of_week, "Sunday")
+        self.assertEqual(crime.archival_location, "Archive ref")
+        self.assertEqual([weapon.name for weapon in crime.weapon.all()], ["Sword"])
+        self.assertEqual(crime.address.city.name, "Venice")
+        self.assertEqual(resource.normalization_summary["ignored_blank_columns"], 1)
+
+    def test_missing_database_and_case_number_columns_still_create_record(self):
+        dataset = Dataset(headers=["Crime", "City"])
+        dataset.append(["assault", "Padua"])
+
+        result = CrimeResource().import_data(
+            dataset,
+            dry_run=False,
+            raise_errors=True,
+            file_name="no-identifiers.csv",
+        )
+
+        self.assertFalse(result.has_errors())
+        crime = Crime.objects.get()
+        self.assertIsNotNone(crime.pk)
+        self.assertEqual(crime.number, "")
+
+    def test_duplicate_number_within_one_file_creates_distinct_records(self):
+        dataset = Dataset(headers=["Number", "Crime"])
+        dataset.append(["DUP-001", "assault"])
+        dataset.append(["DUP-001", "homicide"])
+
+        result = CrimeResource().import_data(
+            dataset,
+            dry_run=False,
+            raise_errors=True,
+        )
+
+        self.assertFalse(result.has_errors())
+        self.assertEqual(Crime.objects.count(), 2)
+        self.assertEqual(
+            set(Crime.objects.values_list("crime", flat=True)),
+            {"assault", "homicide"},
+        )
+        self.assertEqual(result.totals["new"], 2)
+        self.assertEqual(result.totals["update"], 0)
+
+    def test_large_dataset_uses_fast_preview_without_generated_case_numbers(self):
+        dataset = Dataset(headers=["Case Number", "Crime"])
+        for row_number in range(501):
+            dataset.append(["", f"crime-{row_number}"])
+
+        resource = CrimeResource()
+        resource.before_import(dataset)
+
+        numbers = dataset["Number"]
+        self.assertTrue(resource._meta.skip_diff)
+        self.assertTrue(all(number == "" for number in numbers))
+        self.assertTrue(resource.normalization_summary["row_diffs_omitted"])
+
+    def test_normalization_removes_completely_empty_rows(self):
+        dataset = Dataset(headers=["Case Number", "Crime", ""])
+        dataset.append(["PAD-001", "assault", ""])
+        dataset.append(["", "", ""])
+
+        resource = CrimeResource()
+        resource.before_import(dataset)
+
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(resource.normalization_summary["ignored_empty_rows"], 1)
 
     def test_reimport_reuses_existing_people_and_weapons(self):
         Person.objects.create(first_name="Angelo", last_name="Badoer")
@@ -112,9 +272,11 @@ class CrimeResourceImportTestCase(TestCase):
                 "Assailant_Name": "Grimani, Giovanni",
             }
         )
+        crime = Crime.objects.get(number="MV-003")
 
         self.import_rows(
             {
+                "Database ID": crime.pk,
                 "Number": "MV-003",
                 "Crime": "assault",
                 "Victim_First_Name": "Marco",
@@ -124,7 +286,7 @@ class CrimeResourceImportTestCase(TestCase):
             }
         )
 
-        crime = Crime.objects.get(number="MV-003")
+        crime.refresh_from_db()
         self.assertEqual([str(v) for v in crime.victim.all()], ["Marco Rossi"])
         self.assertEqual([str(p) for p in crime.perpetrator.all()], ["Luca Contarini"])
 
@@ -209,6 +371,188 @@ class CrimeResourceImportTestCase(TestCase):
 
         self.assertFalse(result.has_errors())
         self.assertEqual(Crime.objects.get(number="MV-008").import_batch, batch)
+
+    def test_import_batch_is_not_attached_to_preexisting_crime(self):
+        crime = Crime.objects.create(number="MV-009", crime="assault")
+        batch = ImportBatch.objects.create(
+            original_filename="source.csv",
+            import_profile="canonical",
+        )
+
+        dataset = Dataset(headers=["Database ID", "Number", "Crime"])
+        dataset.append([crime.pk, "MV-009", "homicide"])
+        result = CrimeResource(import_batch=batch).import_data(
+            dataset,
+            dry_run=False,
+            raise_errors=True,
+        )
+
+        self.assertFalse(result.has_errors())
+        crime.refresh_from_db()
+        self.assertEqual(crime.crime, "homicide")
+        self.assertIsNone(crime.import_batch)
+
+
+class CrimeAdminImportBatchTestCase(TestCase):
+    """Confirmed admin imports create auditable, safely reversible batches."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            username="importer",
+            email="importer@example.com",
+            password="test",
+        )
+        self.factory = RequestFactory()
+        self.crime_admin = CrimeAdmin(Crime, admin.site)
+        self.batch_admin = ImportBatchAdmin(ImportBatch, admin.site)
+
+    def request(self, data=None):
+        request = self.factory.post("/admin/", data or {})
+        request.user = self.user
+        request.session = {}
+        request._messages = FallbackStorage(request)
+        return request
+
+    def form(self, filename="padua.csv"):
+        return SimpleNamespace(
+            cleaned_data={
+                "resource": "0",
+                "original_file_name": filename,
+            }
+        )
+
+    def padua_dataset(self):
+        dataset = Dataset(
+            headers=["Case Number", "Date (Modern Format)", "Victim_Name", "City"]
+        )
+        dataset.append(["", "1621-09-29", "Francesco Ferro", "Padua"])
+        return dataset
+
+    def test_confirmed_import_creates_batch_with_counts_and_provenance(self):
+        result = self.crime_admin.process_dataset(
+            self.padua_dataset(),
+            self.form(),
+            self.request(),
+        )
+
+        self.assertFalse(result.has_errors())
+        batch = ImportBatch.objects.get()
+        crime = Crime.objects.get()
+        self.assertEqual(batch.original_filename, "padua.csv")
+        self.assertEqual(batch.import_profile, "canonical")
+        self.assertEqual(batch.uploaded_by, self.user)
+        self.assertEqual(len(batch.content_sha256), 64)
+        self.assertEqual(batch.rows_total, 1)
+        self.assertEqual(batch.rows_created, 1)
+        self.assertEqual(batch.rows_updated, 0)
+        self.assertEqual(batch.status, ImportBatch.IMPORTED)
+        self.assertIn("Case Number -> Number", batch.notes)
+        self.assertEqual(crime.import_batch, batch)
+
+    def test_reimport_without_database_ids_creates_a_new_batch_of_records(self):
+        self.crime_admin.process_dataset(
+            self.padua_dataset(), self.form(), self.request()
+        )
+        self.crime_admin.process_dataset(
+            self.padua_dataset(), self.form(), self.request()
+        )
+
+        self.assertEqual(Crime.objects.count(), 2)
+        first_batch, second_batch = ImportBatch.objects.order_by("pk")
+        self.assertEqual(first_batch.rows_created, 1)
+        self.assertEqual(second_batch.rows_created, 1)
+        self.assertEqual(second_batch.rows_updated, 0)
+        self.assertEqual(second_batch.crimes.count(), 1)
+
+    def test_database_id_update_is_counted_but_not_owned_by_batch(self):
+        crime = Crime.objects.create(number="EXISTING", crime="assault")
+        dataset = Dataset(headers=["Database ID", "Number", "Crime"])
+        dataset.append([crime.pk, "EXISTING", "homicide"])
+
+        self.crime_admin.process_dataset(dataset, self.form(), self.request())
+
+        batch = ImportBatch.objects.get()
+        crime.refresh_from_db()
+        self.assertEqual(crime.crime, "homicide")
+        self.assertEqual(batch.rows_created, 0)
+        self.assertEqual(batch.rows_updated, 1)
+        self.assertEqual(batch.crimes.count(), 0)
+        self.assertIn("will not be deleted by rollback", batch.notes)
+
+    def test_confirmed_batch_rollback_deletes_only_created_crimes(self):
+        preexisting = Crime.objects.create(number="EXISTING", crime="assault")
+        self.crime_admin.process_dataset(
+            self.padua_dataset(), self.form(), self.request()
+        )
+        batch = ImportBatch.objects.get()
+
+        response = self.batch_admin.rollback_batches(
+            self.request({"confirm_rollback": "yes"}),
+            ImportBatch.objects.filter(pk=batch.pk),
+        )
+
+        self.assertIsNone(response)
+        self.assertEqual(list(Crime.objects.all()), [preexisting])
+        batch.refresh_from_db()
+        self.assertEqual(batch.status, ImportBatch.ROLLED_BACK)
+        self.assertIn("Updates to pre-existing records were not reverted", batch.notes)
+
+
+class CrimeAdminImportGuideTestCase(TestCase):
+    """The canonical import documentation stays private and resource-driven."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            username="guide-admin",
+            email="guide@example.com",
+            password="test",
+        )
+        self.guide_url = reverse("admin:mapping_violence_crime_import_guide")
+        self.template_url = reverse("admin:mapping_violence_crime_import_template")
+
+    def test_import_guide_and_template_require_admin_login(self):
+        guide_response = self.client.get(self.guide_url)
+        template_response = self.client.get(self.template_url)
+
+        self.assertEqual(guide_response.status_code, 302)
+        self.assertEqual(template_response.status_code, 302)
+        self.assertIn(reverse("admin:login"), guide_response.url)
+        self.assertIn(reverse("admin:login"), template_response.url)
+
+    def test_import_guide_explains_database_identity_and_links_template(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.guide_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<code>Database ID</code>", html=True)
+        self.assertContains(response, "Leave")
+        self.assertContains(response, self.template_url)
+        self.assertContains(response, "Case Number")
+        self.assertContains(response, "Case_number")
+
+    def test_downloaded_template_headers_are_generated_from_resource(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.template_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        headers = next(csv.reader(StringIO(response.content.decode())))
+        self.assertEqual(headers, canonical_import_headers())
+        self.assertEqual(headers[0], "Database ID")
+        self.assertIn("Category of Space", headers)
+        self.assertNotIn("Input by", headers)
+
+    def test_crime_list_and_import_page_link_to_guide(self):
+        self.client.force_login(self.user)
+
+        changelist = self.client.get(reverse("admin:mapping_violence_crime_changelist"))
+        import_page = self.client.get(reverse("admin:mapping_violence_crime_import"))
+
+        self.assertContains(changelist, self.guide_url)
+        self.assertContains(import_page, self.guide_url)
+        self.assertContains(import_page, self.template_url)
 
 
 class MiduraCrimeResourceTestCase(TestCase):
@@ -388,6 +732,7 @@ class CrimeExportCsvTestCase(TestCase):
         rows = self.read_csv_response(response)
         self.assertEqual(len(rows), 1)
         row = rows[0]
+        self.assertEqual(row["Database ID"], str(crime.pk))
         self.assertEqual(row["Number"], "MV-004")
         self.assertEqual(row["Date (Modern Format)"], "1615-10-23")
         self.assertEqual(row["City"], "Venice")
