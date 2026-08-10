@@ -1,0 +1,13 @@
+{% extends "admin/import_export/import.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div class="bg-blue-50 mb-6 px-4 py-3 rounded-default text-blue-700 text-sm dark:bg-blue-500/20 dark:text-blue-300">
+        {% url "admin:mapping_violence_crime_import_guide" as guide_url %}
+        {% url "admin:mapping_violence_crime_import_template" as template_url %}
+        Review the <a href="{{ guide_url }}" class="font-semibold underline">import guide</a>
+        or <a href="{{ template_url }}" class="font-semibold underline">download the canonical CSV template</a>
+        before uploading a new dataset.
+    </div>
+    {{ block.super }}
+{% endblock content %}

@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+    <div class="flex items-center mb-6 text-sm">
+        <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+        <span class="mx-2">›</span>
+        <a href="{{ changelist_url }}">Crimes</a>
+        <span class="mx-2">›</span>
+        <span>Import guide</span>
+    </div>
+{% endblock breadcrumbs %}
+
+{% block content %}
+    <div class="max-w-6xl">
+        <div class="border border-base-200 mb-6 p-5 rounded-default shadow-xs dark:border-base-800">
+            <h2 class="font-semibold mb-3 text-font-important-light text-lg dark:text-font-important-dark">
+                Import identity
+            </h2>
+            <ul class="list-disc ml-5 space-y-2 text-sm">
+                <li>Leave <code>Database ID</code> blank to create a new crime record.</li>
+                <li>Use a <code>Database ID</code> from an export to update that exact record.</li>
+                <li><code>Number</code> is archival metadata; it may be blank or repeated.</li>
+                <li>An unknown <code>Database ID</code> is rejected instead of creating an explicit primary key.</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mb-6">
+            <a href="{{ template_url }}"
+               class="bg-primary-600 border border-transparent font-medium px-3 py-2 rounded-default text-sm text-white">
+                Download blank CSV template
+            </a>
+            <a href="{{ import_url }}"
+               class="bg-white border border-base-200 font-medium px-3 py-2 rounded-default text-sm dark:bg-base-900 dark:border-base-700">
+                Open importer
+            </a>
+        </div>
+
+        <div class="border border-base-200 mb-6 p-5 rounded-default shadow-xs dark:border-base-800">
+            <h2 class="font-semibold mb-3 text-font-important-light text-lg dark:text-font-important-dark">
+                Workflow and file conventions
+            </h2>
+            <ul class="list-disc ml-5 space-y-2 text-sm">
+                <li>CSV files should use UTF-8 encoding and retain the header row.</li>
+                <li>All columns are optional; include only information supported by the source.</li>
+                <li>Use semicolons between multiple people or weapons in one cell.</li>
+                <li>The preview reports new, updated, and invalid rows before confirmation.</li>
+                <li>Imports over 500 rows omit cell-by-cell HTML diffs to avoid request timeouts.</li>
+                <li>Each confirmed upload creates an Import Batch that can roll back newly created crimes.</li>
+                <li>Rollback does not reverse changes made to records that existed before the import.</li>
+            </ul>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="border border-base-200 border-separate border-spacing-0 rounded-default shadow-xs text-sm w-full dark:border-base-800">
+                <thead class="bg-base-50 dark:bg-white/[.02]">
+                    <tr>
+                        <th class="font-semibold px-3 py-2 text-left">CSV header</th>
+                        <th class="font-semibold px-3 py-2 text-left">Description</th>
+                        <th class="font-semibold px-3 py-2 text-left">Example</th>
+                        <th class="font-semibold px-3 py-2 text-left">Accepted aliases</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in guide_fields %}
+                        <tr class="{% cycle '' 'bg-base-50 dark:bg-white/[.02]' %}">
+                            <td class="border-t border-base-200 px-3 py-2 align-top dark:border-base-800">
+                                <code>{{ field.header }}</code>
+                            </td>
+                            <td class="border-t border-base-200 px-3 py-2 align-top dark:border-base-800">
+                                {{ field.description }}
+                            </td>
+                            <td class="border-t border-base-200 px-3 py-2 align-top dark:border-base-800">
+                                {% if field.example %}<code>{{ field.example }}</code>{% else %}—{% endif %}
+                            </td>
+                            <td class="border-t border-base-200 px-3 py-2 align-top dark:border-base-800">
+                                {% if field.aliases %}
+                                    {% for alias in field.aliases %}
+                                        <code>{{ alias }}</code>{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}

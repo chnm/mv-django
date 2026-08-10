@@ -1,0 +1,9 @@
+{% extends "admin/import_export/change_list_import_export.html" %}
+{% load i18n %}
+
+{% block actions-items %}
+    {% trans "Import guide" as title %}
+    {% url "admin:mapping_violence_crime_import_guide" as link %}
+    {% include "unfold/helpers/tab_action.html" with title=title link=link %}
+    {{ block.super }}
+{% endblock actions-items %}

@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+    <p>
+        This will delete {{ crime_count }} crime record{{ crime_count|pluralize }}
+        created by the selected import batch{{ queryset|length|pluralize:"es" }}.
+    </p>
+    <p>
+        Changes that these imports made to records that already existed cannot be
+        automatically reverted and will be preserved.
+    </p>
+
+    <ul>
+        {% for batch in queryset %}
+            <li>{{ batch }}</li>
+        {% endfor %}
+    </ul>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for batch in queryset %}
+            <input type="hidden"
+                   name="{{ action_checkbox_name }}"
+                   value="{{ batch.pk }}">
+        {% endfor %}
+        <input type="hidden" name="action" value="rollback_batches">
+        <input type="hidden" name="confirm_rollback" value="yes">
+        <input type="submit" value="Confirm rollback">
+        <a href="{% url 'admin:mapping_violence_importbatch_changelist' %}">Cancel</a>
+    </form>
+{% endblock content %}
