@@ -1,32 +1,101 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
 
+{% block breadcrumbs %}
+    <div class="flex items-center mb-6 text-sm">
+        <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+        <span class="mx-2">›</span>
+        <a href="{% url 'admin:mapping_violence_importbatch_changelist' %}">
+            {% trans "Import batches" %}
+        </a>
+        <span class="mx-2">›</span>
+        <span>{% trans "Confirm rollback" %}</span>
+    </div>
+{% endblock breadcrumbs %}
+
 {% block content %}
-    <p>
-        This will delete {{ crime_count }} crime record{{ crime_count|pluralize }}
-        created by the selected import batch{{ queryset|length|pluralize:"es" }}.
-    </p>
-    <p>
-        Changes that these imports made to records that already existed cannot be
-        automatically reverted and will be preserved.
-    </p>
+    <div class="max-w-3xl">
+        <div class="border border-base-200 overflow-hidden rounded-default shadow-xs dark:border-base-800">
+            <div class="bg-red-50 border-b border-red-200 p-5 dark:bg-red-500/10 dark:border-red-800">
+                <div class="flex gap-3">
+                    <span class="material-symbols-outlined text-red-600 dark:text-red-500">warning</span>
+                    <div>
+                        <h1 class="font-semibold text-font-important-light text-lg dark:text-font-important-dark">
+                            {% trans "Confirm import rollback" %}
+                        </h1>
+                        <p class="mt-1 text-red-700 text-sm dark:text-red-400">
+                            {% trans "This action cannot be undone." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-    <ul>
-        {% for batch in queryset %}
-            <li>{{ batch }}</li>
-        {% endfor %}
-    </ul>
+            <div class="p-5">
+                <p class="font-semibold text-font-important-light dark:text-font-important-dark">
+                    {{ crime_count }} violence event{{ crime_count|pluralize }} will be permanently deleted.
+                </p>
+                <p class="mt-1 text-sm">
+                    These records were created by the selected import
+                    batch{{ queryset|length|pluralize:"es" }}.
+                </p>
 
-    <form method="post">
-        {% csrf_token %}
-        {% for batch in queryset %}
-            <input type="hidden"
-                   name="{{ action_checkbox_name }}"
-                   value="{{ batch.pk }}">
-        {% endfor %}
-        <input type="hidden" name="action" value="rollback_batches">
-        <input type="hidden" name="confirm_rollback" value="yes">
-        <input type="submit" value="Confirm rollback">
-        <a href="{% url 'admin:mapping_violence_importbatch_changelist' %}">Cancel</a>
-    </form>
+                <div class="bg-base-50 border border-base-200 mt-5 p-4 rounded-default text-sm dark:bg-white/[.02] dark:border-base-800">
+                    <div class="flex gap-3">
+                        <span class="material-symbols-outlined text-base-500">info</span>
+                        <div>
+                            <p class="font-medium text-font-important-light dark:text-font-important-dark">
+                                Updates to existing records will be preserved
+                            </p>
+                            <p class="mt-1">
+                                Changes these imports made to violence events that already existed
+                                cannot be automatically reverted.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="font-semibold mt-6 text-font-important-light text-sm dark:text-font-important-dark">
+                    Selected import batch{{ queryset|length|pluralize:"es" }}
+                </h2>
+                <ul class="border border-base-200 mt-3 rounded-default text-sm dark:border-base-800">
+                    {% for batch in queryset %}
+                        <li class="p-4 {% if not forloop.first %}border-t border-base-200 dark:border-base-800{% endif %}">
+                            <a href="{% url 'admin:mapping_violence_importbatch_change' batch.pk %}"
+                               class="font-medium text-primary-600 dark:text-primary-500">
+                                {{ batch.original_filename|default:"Unnamed import" }}
+                            </a>
+                            <div class="mt-1 text-font-subtle-light text-xs dark:text-font-subtle-dark">
+                                {{ batch.get_status_display }}
+                                {% if batch.source_dataset %} · {{ batch.source_dataset }}{% endif %}
+                                · {{ batch.rows_created }} created
+                                {% if batch.rows_updated %} · {{ batch.rows_updated }} updated{% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <form method="post" class="border-base-200 border-t px-5 py-4 dark:border-base-800">
+                {% csrf_token %}
+                {% for batch in queryset %}
+                    <input type="hidden"
+                           name="{{ action_checkbox_name }}"
+                           value="{{ batch.pk }}">
+                {% endfor %}
+                <input type="hidden" name="action" value="rollback_batches">
+                <input type="hidden" name="confirm_rollback" value="yes">
+
+                <div class="flex flex-col gap-3 items-center w-full sm:flex-row">
+                    <a href="{% url 'admin:mapping_violence_importbatch_changelist' %}"
+                       class="bg-white border border-base-200 flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm w-full hover:bg-base-50 sm:w-auto dark:bg-base-900 dark:border-base-700 dark:hover:bg-base-800">
+                        {% trans "Cancel" %}
+                    </a>
+                    <button type="submit"
+                            class="bg-red-600 cursor-pointer flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-white w-full sm:ml-auto sm:w-auto dark:bg-red-500/20 dark:text-red-500">
+                        {% trans "Confirm rollback" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 {% endblock content %}

@@ -14,6 +14,7 @@ from django.forms.models import ModelChoiceIterator
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import path, reverse
+from django.utils.html import format_html
 from import_export.admin import ImportExportModelAdmin
 from import_export.results import RowResult
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
@@ -874,7 +875,36 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
                 "notes",
             ]
         )
+        result.import_batch = batch
         return result
+
+    def add_success_message(self, result, request):
+        """Include a direct link to the audit batch after a confirmed import."""
+        super().add_success_message(result, request)
+        batch = getattr(result, "import_batch", None)
+        if batch is None:
+            return
+
+        batch_url = reverse(
+            "admin:mapping_violence_importbatch_change",
+            args=[batch.pk],
+            current_app=self.admin_site.name,
+        )
+        batch_list_url = reverse(
+            "admin:mapping_violence_importbatch_changelist",
+            current_app=self.admin_site.name,
+        )
+        messages.info(
+            request,
+            format_html(
+                'Import batch recorded: <a href="{}">{}</a>. '
+                'Review its details, or use the <a href="{}">Import batches</a> '
+                "list to roll back records it created.",
+                batch_url,
+                batch,
+                batch_list_url,
+            ),
+        )
 
     @admin.action(description="Reassign selected crimes to a user")
     def reassign_input_by(self, request, queryset):

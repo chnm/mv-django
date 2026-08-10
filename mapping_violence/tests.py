@@ -3,6 +3,7 @@ from datetime import date
 from io import StringIO
 from types import SimpleNamespace
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
@@ -469,6 +470,39 @@ class CrimeAdminImportBatchTestCase(TestCase):
         self.assertEqual(batch.status, ImportBatch.IMPORTED)
         self.assertIn("Case Number -> Number", batch.notes)
         self.assertEqual(crime.import_batch, batch)
+        self.assertEqual(result.import_batch, batch)
+
+    def test_success_message_links_to_import_batch(self):
+        request = self.request()
+        result = self.crime_admin.process_dataset(
+            self.padua_dataset(),
+            self.form(),
+            request,
+        )
+        batch = ImportBatch.objects.get()
+
+        self.crime_admin.add_success_message(result, request)
+
+        rendered_messages = " ".join(str(message) for message in request._messages)
+        self.assertIn(
+            reverse("admin:mapping_violence_importbatch_change", args=[batch.pk]),
+            rendered_messages,
+        )
+        self.assertIn(
+            reverse("admin:mapping_violence_importbatch_changelist"),
+            rendered_messages,
+        )
+        self.assertIn("Import batches", rendered_messages)
+
+    def test_import_batches_are_listed_below_violence_events_in_sidebar(self):
+        data_management = settings.UNFOLD["SIDEBAR"]["navigation"][0]["items"]
+
+        self.assertEqual(data_management[0]["title"], "Violence Events")
+        self.assertEqual(data_management[1]["title"], "Import batches")
+        self.assertEqual(
+            data_management[1]["link"],
+            "/admin/mapping_violence/importbatch/",
+        )
 
     def test_reimport_without_database_ids_creates_a_new_batch_of_records(self):
         self.crime_admin.process_dataset(
@@ -517,6 +551,24 @@ class CrimeAdminImportBatchTestCase(TestCase):
         batch.refresh_from_db()
         self.assertEqual(batch.status, ImportBatch.ROLLED_BACK)
         self.assertIn("Updates to pre-existing records were not reverted", batch.notes)
+
+    def test_batch_rollback_confirmation_explains_destructive_scope(self):
+        self.crime_admin.process_dataset(
+            self.padua_dataset(), self.form(), self.request()
+        )
+        batch = ImportBatch.objects.get()
+
+        response = self.batch_admin.rollback_batches(
+            self.request(),
+            ImportBatch.objects.filter(pk=batch.pk),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Confirm import rollback")
+        self.assertContains(response, "This action cannot be undone")
+        self.assertContains(response, "1 violence event will be permanently deleted")
+        self.assertContains(response, "Updates to existing records will be preserved")
+        self.assertContains(response, "padua.csv")
 
 
 class CrimeAdminImportGuideTestCase(TestCase):
