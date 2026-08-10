@@ -22,6 +22,9 @@ from .models import (
     Weapon,
 )
 
+LARGE_IMPORT_PREVIEW_THRESHOLD = 500
+LARGE_IMPORT_PREVIEW_SAMPLE_SIZE = 20
+
 
 def _is_blankish(value):
     return str(value or "").strip().lower() in {"", "nan", "none", "null"}
@@ -838,10 +841,46 @@ class CrimeResource(resources.ModelResource):
         # Rendering a field-by-field HTML diff for thousands of rows can exceed
         # common web request timeouts. Large imports still perform all parsing,
         # validation, and create/update classification.
-        if len(dataset) > 500:
+        if len(dataset) > LARGE_IMPORT_PREVIEW_THRESHOLD:
             self._meta.skip_diff = True
             self.normalization_summary["row_diffs_omitted"] = True
+            # django-import-export does not pass dry_run to before_import(), so
+            # retain this bounded snapshot for both phases and expose it only
+            # when after_import() confirms that this is the dry-run preview.
+            self._large_preview_headers = list(dataset.headers or [])
+            self._large_preview_values = [
+                list(row) for row in dataset[:LARGE_IMPORT_PREVIEW_SAMPLE_SIZE]
+            ]
         return super().before_import(dataset, **kwargs)
+
+    def after_import(self, dataset, result, **kwargs):
+        """Attach a compact large-file sample to the confirmation result."""
+        super().after_import(dataset, result, **kwargs)
+        if not (
+            kwargs.get("dry_run")
+            and self.normalization_summary.get("row_diffs_omitted")
+        ):
+            return
+        if result.has_errors() or result.has_validation_errors():
+            return
+
+        valid_rows = result.valid_rows()
+        sample_rows = valid_rows[:LARGE_IMPORT_PREVIEW_SAMPLE_SIZE]
+        sample_values = getattr(self, "_large_preview_values", [])
+
+        result.large_import_preview = True
+        result.preview_headers = getattr(self, "_large_preview_headers", [])
+        result.preview_rows = [
+            {"import_type": row_result.import_type, "values": values}
+            for row_result, values in zip(
+                sample_rows,
+                sample_values,
+                strict=False,
+            )
+        ]
+        result.preview_count = len(sample_rows)
+        result.preview_remaining = max(len(valid_rows) - len(sample_rows), 0)
+        result.preview_error_count = result.totals["error"] + result.totals["invalid"]
 
     def skip_row(self, instance, original, row, import_validation_errors=None):
         """Silently skip empty rows instead of raising an error."""

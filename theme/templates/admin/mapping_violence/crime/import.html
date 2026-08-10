@@ -1,5 +1,21 @@
-{% extends "admin/import_export/import.html" %}
-{% load i18n %}
+{% extends "admin/import_export/base.html" %}
+
+{% load admin_urls i18n import_export_tags static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "import_export/import.css" %}" />
+{% endblock extrastyle %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+    {% if confirm_form %}
+        {{ confirm_form.media }}
+    {% else %}
+        {{ form.media }}
+    {% endif %}
+{% endblock extrahead %}
 
 {% block content %}
     <div class="bg-blue-50 mb-6 px-4 py-3 rounded-default text-blue-700 text-sm dark:bg-blue-500/20 dark:text-blue-300">
@@ -9,5 +25,22 @@
         or <a href="{{ template_url }}" class="font-semibold underline">download the canonical CSV template</a>
         before uploading a new dataset.
     </div>
-    {{ block.super }}
+
+    {% if confirm_form %}
+        {% include "admin/import_export/import_confirm.html" %}
+    {% else %}
+        {% include "admin/import_export/import_form.html" %}
+    {% endif %}
+
+    {% if result %}
+        {% if result.has_errors %}
+            {% include "admin/import_export/import_errors.html" %}
+        {% elif result.has_validation_errors %}
+            {% include "admin/import_export/import_validation.html" %}
+        {% elif result.large_import_preview %}
+            {% include "admin/mapping_violence/crime/import_preview.html" %}
+        {% else %}
+            {% include "admin/import_export/import_preview.html" %}
+        {% endif %}
+    {% endif %}
 {% endblock content %}

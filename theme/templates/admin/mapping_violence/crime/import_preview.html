@@ -1,0 +1,75 @@
+{% load i18n import_export_tags unfold %}
+
+<div class="bg-blue-50 border border-blue-200 my-6 p-4 rounded-default text-blue-900 text-sm dark:bg-blue-500/10 dark:border-blue-800 dark:text-blue-200">
+    <h2 class="font-semibold mb-2 text-lg">{% translate "Large import preview" %}</h2>
+    <p class="font-semibold mb-1">
+        All {{ result.total_rows }} rows were parsed and validated.
+    </p>
+    <p>
+        To keep this page responsive, the full cell-by-cell HTML diff is omitted for files over 500 rows.
+        Review the totals and the first {{ result.preview_count }} valid rows below before confirming the import.
+        {% if result.preview_remaining %}
+            {{ result.preview_remaining }} additional valid rows are not shown in the sample.
+        {% endif %}
+    </p>
+</div>
+
+<div class="gap-3 grid grid-cols-2 mb-6 sm:grid-cols-3 lg:grid-cols-5">
+    <div class="border border-base-200 p-3 rounded-default dark:border-base-800">
+        <div class="text-base-500 text-xs uppercase">Total rows</div>
+        <div class="font-semibold text-2xl">{{ result.total_rows }}</div>
+    </div>
+    <div class="border border-base-200 p-3 rounded-default dark:border-base-800">
+        <div class="text-base-500 text-xs uppercase">New</div>
+        <div class="font-semibold text-2xl">{{ result.totals.new }}</div>
+    </div>
+    <div class="border border-base-200 p-3 rounded-default dark:border-base-800">
+        <div class="text-base-500 text-xs uppercase">Updates</div>
+        <div class="font-semibold text-2xl">{{ result.totals.update }}</div>
+    </div>
+    <div class="border border-base-200 p-3 rounded-default dark:border-base-800">
+        <div class="text-base-500 text-xs uppercase">Skipped</div>
+        <div class="font-semibold text-2xl">{{ result.totals.skip }}</div>
+    </div>
+    <div class="border border-base-200 p-3 rounded-default dark:border-base-800">
+        <div class="text-base-500 text-xs uppercase">Errors</div>
+        <div class="font-semibold text-2xl">{{ result.preview_error_count }}</div>
+    </div>
+</div>
+
+<div class="overflow-x-auto">
+    <table class="border-base-200 border-spacing-none border-separate w-full lg:border lg:rounded-default lg:shadow-xs lg:dark:border-base-800">
+        <thead class="hidden lg:table-header-group text-base-900 dark:text-base-100">
+            <tr>
+                <th class="align-middle capitalize font-semibold px-3 py-2 text-left">Status</th>
+                {% for field in result.preview_headers %}
+                    <th class="align-middle capitalize font-semibold px-3 py-2 text-left">
+                        {{ field }}
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in result.preview_rows %}
+                <tr class="{{ row.import_type }} {% cycle '' 'bg-base-50 dark:bg-white/[.02]' %} block border mb-3 rounded-default shadow-xs lg:table-row lg:border-none lg:mb-0 lg:shadow-none dark:border-base-800">
+                    <td class="align-middle flex border-t border-base-200 font-normal px-3 py-2 text-left before:block before:capitalize before:content-[attr(data-label)] before:mr-auto lg:before:hidden lg:py-3 lg:table-cell dark:border-base-800">
+                        {% if row.import_type == "new" %}
+                            {% translate "New" %}
+                        {% elif row.import_type == "skip" %}
+                            {% translate "Skipped" %}
+                        {% elif row.import_type == "delete" %}
+                            {% translate "Delete" %}
+                        {% elif row.import_type == "update" %}
+                            {% translate "Update" %}
+                        {% endif %}
+                    </td>
+                    {% for field in row.values %}
+                        <td data-label="{{ result.preview_headers|index:forloop.counter0 }}" class="align-middle flex border-t border-base-200 font-normal px-3 py-2 text-left before:block before:capitalize before:content-[attr(data-label)] before:mr-auto lg:before:hidden lg:py-3 lg:table-cell dark:border-base-800">
+                            {{ field }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
