@@ -300,6 +300,11 @@ UNFOLD = {
                         "link": "/admin/mapping_violence/crime/",
                     },
                     {
+                        "title": "Import batches",
+                        "icon": "upload_file",
+                        "link": "/admin/mapping_violence/importbatch/",
+                    },
+                    {
                         "title": "People",
                         "icon": "people",
                         "link": "/admin/mapping_violence/person/",

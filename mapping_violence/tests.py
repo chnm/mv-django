@@ -3,9 +3,11 @@ from datetime import date
 from io import StringIO
 from types import SimpleNamespace
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -229,12 +231,32 @@ class CrimeResourceImportTestCase(TestCase):
             dataset.append(["", f"crime-{row_number}"])
 
         resource = CrimeResource()
-        resource.before_import(dataset)
+        result = resource.import_data(dataset, dry_run=True, raise_errors=True)
 
         numbers = dataset["Number"]
         self.assertTrue(resource._meta.skip_diff)
         self.assertTrue(all(number == "" for number in numbers))
         self.assertTrue(resource.normalization_summary["row_diffs_omitted"])
+        self.assertTrue(result.large_import_preview)
+        self.assertEqual(result.preview_headers, ["Number", "Crime"])
+        self.assertEqual(result.preview_count, 20)
+        self.assertEqual(result.preview_remaining, 481)
+        self.assertEqual(
+            result.preview_rows[0],
+            {"import_type": "new", "values": ["", "crime-0"]},
+        )
+        self.assertEqual(len(result.valid_rows()), 501)
+
+        small_dataset = Dataset(headers=["Number", "Crime"])
+        small_dataset.append(["SMALL-1", "assault"])
+        small_resource = CrimeResource()
+        small_result = small_resource.import_data(
+            small_dataset,
+            dry_run=True,
+            raise_errors=True,
+        )
+        self.assertFalse(small_resource._meta.skip_diff)
+        self.assertIsNotNone(small_result.valid_rows()[0].diff)
 
     def test_normalization_removes_completely_empty_rows(self):
         dataset = Dataset(headers=["Case Number", "Crime", ""])
@@ -448,6 +470,39 @@ class CrimeAdminImportBatchTestCase(TestCase):
         self.assertEqual(batch.status, ImportBatch.IMPORTED)
         self.assertIn("Case Number -> Number", batch.notes)
         self.assertEqual(crime.import_batch, batch)
+        self.assertEqual(result.import_batch, batch)
+
+    def test_success_message_links_to_import_batch(self):
+        request = self.request()
+        result = self.crime_admin.process_dataset(
+            self.padua_dataset(),
+            self.form(),
+            request,
+        )
+        batch = ImportBatch.objects.get()
+
+        self.crime_admin.add_success_message(result, request)
+
+        rendered_messages = " ".join(str(message) for message in request._messages)
+        self.assertIn(
+            reverse("admin:mapping_violence_importbatch_change", args=[batch.pk]),
+            rendered_messages,
+        )
+        self.assertIn(
+            reverse("admin:mapping_violence_importbatch_changelist"),
+            rendered_messages,
+        )
+        self.assertIn("Import batches", rendered_messages)
+
+    def test_import_batches_are_listed_below_violence_events_in_sidebar(self):
+        data_management = settings.UNFOLD["SIDEBAR"]["navigation"][0]["items"]
+
+        self.assertEqual(data_management[0]["title"], "Violence Events")
+        self.assertEqual(data_management[1]["title"], "Import batches")
+        self.assertEqual(
+            data_management[1]["link"],
+            "/admin/mapping_violence/importbatch/",
+        )
 
     def test_reimport_without_database_ids_creates_a_new_batch_of_records(self):
         self.crime_admin.process_dataset(
@@ -496,6 +551,24 @@ class CrimeAdminImportBatchTestCase(TestCase):
         batch.refresh_from_db()
         self.assertEqual(batch.status, ImportBatch.ROLLED_BACK)
         self.assertIn("Updates to pre-existing records were not reverted", batch.notes)
+
+    def test_batch_rollback_confirmation_explains_destructive_scope(self):
+        self.crime_admin.process_dataset(
+            self.padua_dataset(), self.form(), self.request()
+        )
+        batch = ImportBatch.objects.get()
+
+        response = self.batch_admin.rollback_batches(
+            self.request(),
+            ImportBatch.objects.filter(pk=batch.pk),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Confirm import rollback")
+        self.assertContains(response, "This action cannot be undone")
+        self.assertContains(response, "1 violence event will be permanently deleted")
+        self.assertContains(response, "Updates to existing records will be preserved")
+        self.assertContains(response, "padua.csv")
 
 
 class CrimeAdminImportGuideTestCase(TestCase):
@@ -553,6 +626,32 @@ class CrimeAdminImportGuideTestCase(TestCase):
         self.assertContains(changelist, self.guide_url)
         self.assertContains(import_page, self.guide_url)
         self.assertContains(import_page, self.template_url)
+
+    def test_large_import_confirmation_shows_totals_and_sample_rows(self):
+        self.client.force_login(self.user)
+        csv_rows = ["Case Number,Crime"]
+        csv_rows.extend(f",crime-{row_number}" for row_number in range(501))
+        upload = SimpleUploadedFile(
+            "large-import.csv",
+            "\n".join(csv_rows).encode(),
+            content_type="text/csv",
+        )
+
+        response = self.client.post(
+            reverse("admin:mapping_violence_crime_import"),
+            {"resource": "0", "format": "0", "import_file": upload},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Large import preview")
+        self.assertContains(response, "All 501 rows were parsed and validated.")
+        self.assertContains(response, "crime-0")
+        self.assertContains(response, "crime-19")
+        self.assertNotContains(response, "crime-20")
+        self.assertContains(
+            response,
+            "481 additional valid rows are not shown in the sample.",
+        )
 
 
 class MiduraCrimeResourceTestCase(TestCase):

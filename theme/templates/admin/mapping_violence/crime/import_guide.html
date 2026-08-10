@@ -45,7 +45,10 @@
                 <li>All columns are optional; include only information supported by the source.</li>
                 <li>Use semicolons between multiple people or weapons in one cell.</li>
                 <li>The preview reports new, updated, and invalid rows before confirmation.</li>
-                <li>Imports over 500 rows omit cell-by-cell HTML diffs to avoid request timeouts.</li>
+                <li>
+                    Imports over 500 rows show create/update/error totals and a 20-row sample instead of a full
+                    cell-by-cell HTML diff, avoiding request timeouts without leaving the confirmation screen blank.
+                </li>
                 <li>Each confirmed upload creates an Import Batch that can roll back newly created crimes.</li>
                 <li>Rollback does not reverse changes made to records that existed before the import.</li>
             </ul>
