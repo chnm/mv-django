@@ -1,4 +1,5 @@
 import csv
+import json
 from datetime import date
 from io import StringIO
 from types import SimpleNamespace
@@ -6,6 +7,7 @@ from types import SimpleNamespace
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.core import serializers
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -18,6 +20,7 @@ from mapping_violence.models import (
     ExternalPersonIdentifier,
     ImportBatch,
     Person,
+    PersonRelationType,
     SourceDataset,
     Weapon,
 )
@@ -27,6 +30,36 @@ from mapping_violence.resources import (
     canonical_import_headers,
     normalize_midura_dataset,
 )
+
+
+class PersonRelationTypeNaturalKeyTestCase(TestCase):
+    """Regression tests for fixture-safe relationship type natural keys."""
+
+    def test_json_fixture_round_trip_uses_name_as_the_natural_key(self):
+        relation_type = PersonRelationType.objects.create(
+            name="Sibling",
+            converse_name="Sibling",
+            category=PersonRelationType.IMMEDIATE_FAMILY,
+        )
+
+        serialized = serializers.serialize(
+            "json",
+            [relation_type],
+            use_natural_primary_keys=True,
+        )
+        fixture = json.loads(serialized)
+
+        self.assertEqual(relation_type.natural_key(), ("Sibling",))
+        self.assertNotIn("pk", fixture[0])
+        self.assertEqual(fixture[0]["fields"]["name"], "Sibling")
+
+        relation_type.delete()
+        for deserialized in serializers.deserialize("json", serialized):
+            deserialized.save()
+
+        restored = PersonRelationType.objects.get_by_natural_key("Sibling")
+        self.assertEqual(restored.converse_name, "Sibling")
+        self.assertEqual(restored.category, PersonRelationType.IMMEDIATE_FAMILY)
 
 
 class CrimeResourceImportTestCase(TestCase):

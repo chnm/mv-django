@@ -612,8 +612,8 @@ class CrimeImage(models.Model):
 
 class PersonRelationTypeManager(models.Manager):
     def get_by_natural_key(self, name):
-        "natural key lookup, based on name"
-        return self.get(name_en=name)
+        """Look up a relationship type by its stable fixture key."""
+        return self.get(name=name)
 
 
 class PersonRelationType(models.Model):
@@ -655,6 +655,10 @@ class PersonRelationType(models.Model):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        """Use the unique relationship name for fixture serialization."""
+        return (self.name,)
 
     def relation_set(self):
         # own relationships QuerySet as required by MergeRelationTypesMixin
