@@ -676,7 +676,6 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
                     "assailant_description",
                     "judge",
                 ),
-                "classes": ("collapse",),
             },
         ),
         ("Case Details", {"fields": ("motive", "relationship", "weapon")}),
