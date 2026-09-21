@@ -4,6 +4,7 @@ from itertools import groupby
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import helpers
+from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
@@ -531,6 +532,22 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
         "import_batch",
     )
     actions = ["reassign_input_by", "assign_to_editor", "set_status"]
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        """Hide the pencil/trash buttons on related fields.
+
+        Those buttons edit or delete the shared record (e.g. the Location
+        named "Venice"), not this case's assignment to it. Editors read
+        "Change selected location" as reassigning the case and end up moving
+        every case attached to that location. Adding a new record stays
+        allowed; editing lookups belongs in their own admin.
+        """
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        widget = getattr(formfield, "widget", None)
+        if isinstance(widget, RelatedFieldWidgetWrapper):
+            widget.can_change_related = False
+            widget.can_delete_related = False
+        return formfield
 
     def get_urls(self):
         custom_urls = [

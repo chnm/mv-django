@@ -866,3 +866,22 @@ class CrimeExportCsvTestCase(TestCase):
         self.assertFalse(result.has_errors())
         self.assertEqual(Crime.objects.count(), 1)
         self.assertEqual(Crime.objects.get(number="MV-005").crime, "homicide")
+
+
+class CrimeAdminRelatedWidgetTestCase(TestCase):
+    """The case form must not offer to edit or delete shared lookup records.
+
+    Regression: the pencil next to "address" edited the Location itself, so
+    renaming Venice -> Padua moved every case ever assigned to Venice.
+    """
+
+    def test_related_fields_only_allow_add(self):
+        request = RequestFactory().get("/admin/")
+        request.user = get_user_model()(is_superuser=True, is_staff=True)
+        form = CrimeAdmin(Crime, admin.site).get_form(request)()
+
+        for name in ("address", "judge", "historical_date", "connected_event"):
+            widget = form.fields[name].widget
+            self.assertFalse(widget.can_change_related, name)
+            self.assertFalse(widget.can_delete_related, name)
+            self.assertTrue(widget.can_add_related, name)
