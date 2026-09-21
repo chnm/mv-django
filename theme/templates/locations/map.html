@@ -822,7 +822,7 @@
             '<span class="legend-dot" style="background:#e6ab02;border:2px solid #c99200;box-sizing:border-box;"></span>' +
             'Precise location</div>';
             html += '<div class="legend-item">' +
-            '<span class="legend-dot" style="background:rgba(42,157,143,0.15);border:2px dashed #21867a;box-sizing:border-box;"></span>' +
+            '<span class="legend-dot" style="background:' + cityColor() + '26;border:2px dashed ' + cityColor() + ';box-sizing:border-box;"></span>' +
             'City-level (approx.)</div>';
 
             if (colorBy !== "none") {
@@ -874,11 +874,21 @@
         let currentBasemap = 'light';
         BASEMAPS[currentBasemap].addTo(map);
 
+        // City-level (approximate) marker color, per basemap
+        const CITY_COLORS = { light: "#7A143C", dark: "#C83C64" };
+        function cityColor() { return CITY_COLORS[currentBasemap]; }
+
         function setBasemap(name) {
             if (name === currentBasemap) return;
             map.removeLayer(BASEMAPS[currentBasemap]);
             BASEMAPS[name].addTo(map);
             currentBasemap = name;
+            const layer = clusterGroup || markersLayer;
+            if (layer) layer.eachLayer(m => {
+                if (m.options._precision === 'city') m.setStyle({ fillColor: cityColor(), color: cityColor() });
+            });
+            const dot = document.querySelector('#legend-box .legend-dot[style*="dashed"]');
+            if (dot) { dot.style.background = cityColor() + '26'; dot.style.borderColor = cityColor(); }
         }
 
         document.getElementById('basemap-select').addEventListener('change', function() {
@@ -1090,8 +1100,8 @@
                     const n = cluster.crimes.length;
                     const radius = bubbleRadius(n) * 1.2;
                     const marker = L.circleMarker([cluster.lat, cluster.lng], {
-                        radius, fillColor: "#2a9d8f", fillOpacity: 0.15,
-                        color: "#21867a", weight: 2.5, opacity: 0.7, dashArray: "5 4",
+                        radius, fillColor: cityColor(), fillOpacity: 0.15,
+                        color: cityColor(), weight: 2.5, opacity: 0.7, dashArray: "5 4",
                         _precision: 'city',
                     });
                     const locCount = cluster.locationNames.size;
@@ -1138,8 +1148,8 @@
                     const n = cluster.crimes.length;
                     const radius = bubbleRadius(n) * 1.2;
                     const marker = L.circleMarker([cluster.lat, cluster.lng], {
-                        radius, fillColor: "#2a9d8f", fillOpacity: 0.15,
-                        color: "#21867a", weight: 2.5, opacity: 0.7, dashArray: "5 4",
+                        radius, fillColor: cityColor(), fillOpacity: 0.15,
+                        color: cityColor(), weight: 2.5, opacity: 0.7, dashArray: "5 4",
                         _precision: 'city',
                     });
                     const locCount = cluster.locationNames.size;
