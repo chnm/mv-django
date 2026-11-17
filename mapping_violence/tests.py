@@ -866,3 +866,33 @@ class CrimeExportCsvTestCase(TestCase):
         self.assertFalse(result.has_errors())
         self.assertEqual(Crime.objects.count(), 1)
         self.assertEqual(Crime.objects.get(number="MV-005").crime, "homicide")
+
+
+class CrimeFilterSearchTestCase(TestCase):
+    """The `q` filter searches crime text on the data table and CSV export."""
+
+    def setUp(self):
+        city = City.objects.create(name="Venice")
+        location = Location.objects.create(name="Rialto Bridge", city=city)
+        self.match = Crime.objects.create(
+            number="S-001",
+            crime="assault",
+            address=location,
+            description_of_case="Stabbed near the fish market in Módena.",
+        )
+        Crime.objects.create(number="S-002", crime="theft", address=location)
+
+    def test_data_table_filters_by_q(self):
+        response = self.client.get(reverse("crime_list"), {"q": "modena stabbed"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "S-001")
+        self.assertNotContains(response, "S-002")
+
+    def test_export_filters_by_q(self):
+        response = self.client.get(reverse("crime_export_csv"), {"q": "fish MARKET"})
+        content = "".join(
+            chunk.decode() if isinstance(chunk, bytes) else chunk
+            for chunk in response.streaming_content
+        )
+        rows = list(csv.DictReader(StringIO(content)))
+        self.assertEqual([r["Number"] for r in rows], ["S-001"])

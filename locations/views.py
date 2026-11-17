@@ -6,6 +6,7 @@ from django_ratelimit.decorators import ratelimit
 
 from locations.models import Location
 from mapping_violence.context_helpers import get_filter_context
+from mapping_violence.search import crime_search_q
 
 
 def map_view(request):
@@ -33,6 +34,7 @@ def locations_geojson(request):
     urban_rural = request.GET.get("urban_rural")
     person = request.GET.get("person")
     fatality = request.GET.get("fatality")
+    q = request.GET.get("q", "").strip()
 
     if country:
         locations = locations.filter(city__country=country)
@@ -73,6 +75,9 @@ def locations_geojson(request):
     if fatality and fatality.lower() in ("true", "1", "on"):
         locations = locations.filter(crime__fatality=True)
 
+    if q:
+        locations = locations.filter(crime_search_q(q, "crime__"))
+
     # Get unique locations with crime counts
     locations = locations.annotate(crime_count=Count("crime", distinct=True)).distinct()
 
@@ -104,6 +109,8 @@ def locations_geojson(request):
                 ).distinct()
         if fatality and fatality.lower() in ("true", "1", "on"):
             crimes_query = crimes_query.filter(fatality=True)
+        if q:
+            crimes_query = crimes_query.filter(crime_search_q(q)).distinct()
 
         crimes_data = []
         for crime in crimes_query.order_by("date", "year").prefetch_related(

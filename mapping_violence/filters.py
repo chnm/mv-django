@@ -4,10 +4,13 @@ from django.db.models import Q
 from locations.models import URBAN_RURAL_CHOICES, City, Location
 
 from .models import WEAPON_CATEGORY_CHOICES, Crime, Weapon
+from .search import crime_search_q
 
 
 class CrimeFilter(django_filters.FilterSet):
     """Shared filter for Crime data — used by both data table and map."""
+
+    q = django_filters.CharFilter(method="filter_q", label="Search")
 
     number = django_filters.CharFilter(lookup_expr="icontains", label="Case Number")
 
@@ -87,6 +90,12 @@ class CrimeFilter(django_filters.FilterSet):
         empty_label="All",
     )
 
+    def filter_q(self, queryset, name, value):
+        """Free-text search across crime fields (see mapping_violence.search)."""
+        if not value.strip():
+            return queryset
+        return queryset.filter(crime_search_q(value)).distinct()
+
     def filter_by_person(self, queryset, name, value):
         """Filter crimes involving specific persons.
 
@@ -132,6 +141,7 @@ class CrimeFilter(django_filters.FilterSet):
     class Meta:
         model = Crime
         fields = [
+            "q",
             "number",
             "country",
             "city",
