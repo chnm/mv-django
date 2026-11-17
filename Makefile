@@ -28,10 +28,6 @@ migrate:
 show-migrations:
 	uv run manage.py showmigrations
 
-# CSS
-tailwind :
-	uv run manage.py tailwind start
-
 # Database Reset & Cleanup
 # ========================
 
@@ -112,4 +108,3 @@ help:
 	@echo "  superuser       - Create superuser account"
 	@echo "  collectstatic   - Collect static files"
 	@echo "  models-graph    - Generate model relationship diagram"
-	@echo "  tailwind        - Start Tailwind CSS watcher"

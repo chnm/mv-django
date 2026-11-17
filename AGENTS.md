@@ -50,13 +50,13 @@ Core capabilities:
 
 ## Tech Stack
 
-**Python** 3.12 · **Django** 5.1+ · **PostgreSQL** 16 · **Wagtail** 7.1 · **Tailwind CSS** · **Leaflet** · **Alpine.js**
+**Python** 3.12 · **Django** 5.1+ · **PostgreSQL** 16 · **Wagtail** 7.1 · **Hand-written CSS** · **Leaflet**
 
 ### Package Management
 
 - **`uv`** — Python package manager and runner (replaces pip/poetry). All Python commands use `uv run <command>`.
 - `pyproject.toml` is the single source of truth for dependencies and tool config.
-- No `.nvmrc`/Node version pinning; Tailwind build is managed via `python-tailwind` which wraps npm internally.
+- No Node.js toolchain: CSS is hand-written and served as-is.
 
 Key `pyproject.toml` scripts are not defined; use `make` targets (see [Serving the Application](#serving-the-application)) or `uv run manage.py <command>` directly.
 
@@ -76,11 +76,10 @@ Key `pyproject.toml` scripts are not defined; use `make` targets (see [Serving t
 
 ### Frontend
 
-- **Tailwind CSS** — utility-first styling; source in `theme/static_src/`, compiled to `theme/static/css/`
-- **Alpine.js** — lightweight reactivity for map panels and sidebar (loaded from CDN)
+- **Hand-written CSS** — `theme/static/css/base.css` (design tokens as custom properties, reset, form controls, nav, footer), `prose.css` (long-form CMS content), `pages/*.css` (page-specific styles, linked from each template's `extra_css` block)
 - **Leaflet 1.9.4** — interactive map (loaded from CDN)
 - Django templates with `{% block %}` inheritance from `templates/base.html`
-- No JS build pipeline beyond Tailwind; no bundler (Vite/Webpack/etc.)
+- No JS or CSS build pipeline; no bundler (Vite/Webpack/etc.)
 
 ### Database
 
@@ -94,7 +93,7 @@ Key `pyproject.toml` scripts are not defined; use `make` targets (see [Serving t
 
 ## Project Initialization
 
-**Prerequisites:** Python 3.12+, `uv`, PostgreSQL 16, Node.js (for Tailwind)
+**Prerequisites:** Python 3.12+, `uv`, PostgreSQL 16
 
 ```bash
 # 1. Clone
@@ -127,11 +126,7 @@ make fixtures           # loads weapon_types.json
 # 7. Create superuser
 make superuser
 
-# 8. Install Tailwind dependencies and build CSS
-uv run manage.py tailwind install
-make tailwind           # starts watcher; run in a separate terminal
-
-# 9. Start dev server
+# 8. Start dev server
 make preview            # http://localhost:8000
 ```
 
@@ -167,9 +162,8 @@ mapping_violence/
 ├── content/                 # Wagtail CMS app
 │   ├── models.py            # HomePageContent, ProjectPerson snippets; GeneralPage
 │   └── migrations/
-├── theme/                   # Tailwind CSS
-│   ├── static_src/          # Tailwind source (tailwind.config.js, src/styles.css)
-│   └── static/css/          # Compiled output
+├── theme/                   # Frontend theme
+│   └── static/css/          # Hand-written CSS (base.css, prose.css, pages/)
 ├── templates/               # Root-level templates (base.html, error pages, account/)
 ├── theme/templates/         # App-specific templates
 │   ├── crimes/              # list.html, detail.html
@@ -203,8 +197,7 @@ graph TD
     Admin --> ORM
     Wagtail --> ORM
     ORM --> PG["PostgreSQL 16"]
-    Views --> Templates["Django Templates\n+ Tailwind CSS"]
-    Templates --> AlpineJS["Alpine.js\n(map drawer)"]
+    Views --> Templates["Django Templates\n+ hand-written CSS"]
     Templates --> Leaflet["Leaflet\n(interactive map)"]
     Leaflet -->|"fetch /api/locations.geojson"| GeoJSON["locations_geojson view"]
     GeoJSON --> ORM
@@ -323,7 +316,6 @@ make migrate     # python manage.py migrate
 **Development:**
 ```bash
 make preview     # http://localhost:8000
-make tailwind    # run in a second terminal to watch/compile CSS changes
 ```
 
 **Production:**
@@ -401,12 +393,12 @@ When a pre-commit hook reformats a file on the first commit attempt, re-`git add
 - Don't enable public user signup — `NoSignupAdapter` is intentional; researcher accounts are invite-only
 - Don't use `.values()` on Crime querysets in `locations_geojson` — it breaks M2M field access
 - Don't create new top-level URL namespaces without updating `config/urls.py`
-- Don't install new frontend JS frameworks — Alpine.js and Leaflet cover current needs; keep the frontend simple
+- Don't install new frontend JS frameworks — vanilla JS and Leaflet cover current needs; keep the frontend simple
 
 **Common pitfalls:**
 - djhtml reformats templates on first commit; always re-stage after pre-commit modifies files
 - `Crime.date` is a standard `DateField`; `Crime.historical_date` is a FK to `HistoricalDate` for uncertain dates — they are parallel, not redundant
-- The `theme` app must be in `INSTALLED_APPS` for `python-tailwind` to function; don't remove it
+- The `theme` app must stay in `INSTALLED_APPS`: it provides `theme/templates/` and `theme/static/css/`
 - Static files in development are served by Django's `staticfiles` app, not WhiteNoise; WhiteNoise activates in production when `DEBUG=False`
 
 ---

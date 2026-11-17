@@ -2,37 +2,37 @@
 {% load i18n %}
 {% block title %}{% trans "Log in" %}{% endblock %}
 {% block content_auth_form %}
-  <div class="text-center mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">{% trans "Log in" %}</h1>
+  <div class="account-heading">
+    <h1 class="account-title">{% trans "Log in" %}</h1>
   </div>
 
-  <form method="post" class="space-y-6">
+  <form method="post" class="account-form">
     {% csrf_token %}
     {% if form.non_field_errors %}
-      <div class="mb-4 p-4 rounded-lg border-l-4 border-red-500 bg-red-50 text-red-700">
+      <div class="account-alert">
         {% for error in form.non_field_errors %}
-          <p class="text-sm">{{ error }}</p>
+          <p class="account-alert__text">{{ error }}</p>
         {% endfor %}
       </div>
     {% endif %}
     {% for field in form %}
       <div>
-        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="{{ field.id_for_label }}" class="account-label">
           {{ field.label }}
         </label>
         {% if field.field.widget.input_type == 'password' %}
           <input type="password" name="{{ field.name }}" id="{{ field.id_for_label }}"
-                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                 class="account-input"
                  {% if field.value %}value="{{ field.value }}"{% endif %}
                  {% if field.field.required %}required{% endif %}>
         {% else %}
           <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" id="{{ field.id_for_label }}"
-                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                 class="account-input"
                  {% if field.value %}value="{{ field.value }}"{% endif %}
                  {% if field.field.required %}required{% endif %}>
         {% endif %}
         {% if field.errors %}
-          <div class="mt-1 text-sm text-red-600">
+          <div class="account-field-error">
             {% for error in field.errors %}
               <p>{{ error }}</p>
             {% endfor %}
@@ -42,18 +42,18 @@
     {% endfor %}
 
     <div>
-      <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+      <button type="submit" class="account-btn account-btn--submit">
         {% trans "Log in" %}
       </button>
     </div>
   </form>
 
-  <div class="mt-6 text-center space-y-2">
-    <p class="text-sm text-gray-500">
+  <div class="account-footer">
+    <p class="account-footer__text account-footer__text--muted">
       {% trans "Access is by invitation only." %}
     </p>
-    <p class="text-sm text-gray-600">
-      <a href="{% url 'password_reset' %}" class="text-blue-600 hover:text-blue-800 underline">{% trans "Forgot password?" %}</a>
+    <p class="account-footer__text">
+      <a href="{% url 'password_reset' %}" class="account-link">{% trans "Forgot password?" %}</a>
     </p>
   </div>
 {% endblock content_auth_form %}

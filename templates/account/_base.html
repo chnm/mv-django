@@ -1,17 +1,21 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/pages/account.css' %}">
+{% endblock extra_css %}
 {% block content %}
-  <div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md mx-auto">
+  <div class="account-page">
+    <div class="account-container">
       {% block content_auth_info %}
-        <div class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">
-            <a href="{% url 'index' %}" class="text-blue-600 hover:text-blue-800">Mapping Early Modern Violence</a>
+        <div class="account-brand">
+          <h2 class="account-brand__title">
+            <a href="{% url 'index' %}">Mapping Early Modern Violence</a>
           </h2>
         </div>
         {% include "includes/messages.html" %}
       {% endblock content_auth_info %}
 
-      <div class="bg-white py-8 px-4 shadow-lg rounded-lg sm:px-10">
+      <div class="account-card">
         {% block content_auth_form %}
         {% endblock content_auth_form %}
       </div>

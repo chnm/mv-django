@@ -23,7 +23,7 @@ Mapping Violence is a collaborative research project that examines violent crime
 - **Backend**: Django 5.1+ with Python 3.12
 - **CMS**: Wagtail 7.1 for content administration
 - **Database**: PostgreSQL 16 with PostGIS support
-- **Frontend**: Tailwind CSS with Django templates
+- **Frontend**: Django templates with hand-written CSS (no build step)
 - **Authentication**: Django Allauth with social login support
 - **Development**: `uv` for dependency management, Black for code formatting
 
@@ -58,12 +58,7 @@ cd mapping_violence
 uv sync
 ```
 
-3. Install frontend dependencies:
-```bash
-npm install
-```
-
-4. Set up environment variables:
+3. Set up environment variables:
 ```bash
 cp .env.example .env
 # Edit .env with your database credentials and other settings
@@ -104,16 +99,7 @@ uv run djhtml templates/
 
 ### Frontend Development
 
-Frontend assets are managed with Tailwind CSS:
-
-```bash
-# Start Tailwind development server
-cd theme/static_src
-npm run dev
-
-# Build for production
-npm run build
-```
+CSS is hand-written with no build step: edit the files in `theme/static/css/` directly (`base.css` for tokens, reset, nav and footer; `prose.css` for long-form CMS content; `pages/*.css` for page-specific styles).
 
 ### Testing
 
@@ -131,7 +117,7 @@ mapping_violence/
 ├── content/            # Wagtail CMS pages and content
 ├── locations/          # Geographic models and utilities
 ├── historical_dates/   # Custom date handling for uncertain dates
-├── theme/             # Frontend theme and Tailwind configuration
+├── theme/             # Frontend theme: hand-written CSS and app templates
 ├── templates/         # Django templates
 ├── static/           # Static assets
 ├── fixtures/         # Initial data fixtures

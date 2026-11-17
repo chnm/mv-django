@@ -58,7 +58,7 @@
         {% block pagination %}
             {% if table.page and table.paginator.num_pages > 1 %}
                 <nav aria-label="Table navigation">
-                    <ul class="pagination justify-content-center">
+                    <ul class="pagination">
                         {% if table.page.has_previous %}
                             {% block pagination.previous %}
                                 <li class="previous page-item">

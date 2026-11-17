@@ -1,13 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/account.css' %}">
+{% endblock extra_css %}
 
 {% block title %}Page not found - Mapping Early Modern Violence{% endblock %}
 
 {% block content %}
-    <div style="max-width: 600px; margin: 4rem auto; padding: 2rem 1rem; text-align: center;">
-        <h1 style="font-size: 2rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">Page not found</h1>
-        <p style="font-size: 1rem; color: #4b5563; margin-bottom: 1.5rem;">
+    <div class="error-page">
+        <h1 class="error-page__title">Page not found</h1>
+        <p class="error-page__text">
             The page you're looking for doesn't exist or has been moved.
         </p>
-        <a href="{% url 'index' %}" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Return to the home page</a>
+        <a href="{% url 'index' %}" class="error-page__link">Return to the home page</a>
     </div>
 {% endblock %}

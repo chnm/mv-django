@@ -73,8 +73,6 @@ INSTALLED_APPS = [
     "modelcluster",
     "taggit",
     "django_extensions",
-    # tailwind
-    "tailwind",
     "theme",
     # local apps
     "schema_viewer",
@@ -200,8 +198,6 @@ TIME_ZONE = "UTC"
 
 USE_I18N = True
 USE_TZ = True
-# Theme
-TAILWIND_APP_NAME = "theme"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

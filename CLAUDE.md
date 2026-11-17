@@ -25,8 +25,7 @@ make mm                             # makemigrations
 make migrate                        # migrate
 make fixtures                       # load weapon_types.json seed data
 
-# CSS (required when changing templates)
-make tailwind                       # starts Tailwind watcher (npm-based, from theme/static_src/)
+# CSS: hand-written, no build step. Edit theme/static/css/*.css directly.
 ```
 
 Pre-commit hooks run ruff, ruff-format, isort, and djhtml automatically. When hooks reformat files on the first attempt, re-`git add` the modified files and commit again.
@@ -44,7 +43,7 @@ Pre-commit hooks run ruff, ruff-format, isort, and djhtml automatically. When ho
 | `historical_dates` | EDTF-based uncertain date handling; provides `HistoricalDateField` used in Crime, Event, Witness |
 | `content` | Wagtail CMS — `HomePageContent` snippet, `ProjectPerson` snippet (team/advisory board), `GeneralPage` StreamField pages |
 | `config` | Django settings, root URL conf, allauth adapter (signup disabled; invite-only) |
-| `theme` | Tailwind CSS source (static_src/) and compiled output |
+| `theme` | Hand-written CSS (`static/css/base.css`, `prose.css`, `pages/*.css`) and app templates |
 
 ### Key model relationships
 
@@ -89,7 +88,7 @@ Uses **django-unfold** (not stock Django admin). `CrimeAdmin` extends `ImportExp
 
 ### Map frontend
 
-`/map/` uses Leaflet with Alpine.js. Features: floating filter panel (top-left), display options panel, Leaflet.markercluster with toggle, bubble sizing (sqrt scale, small on top), light/dark basemap toggle, and a slide-out case sidebar (right). Filter state (country, city, crime type, weapon category, year range, color-by mode) is persisted to URL query params via `history.replaceState`. The GeoJSON endpoint returns per-crime data including `fatality`, `victim_gender`, and `perpetrator_gender` for client-side color-by rendering.
+`/map/` uses Leaflet with vanilla JavaScript (no Alpine.js). Features: floating filter panel (top-left), display options panel, Leaflet.markercluster with toggle, bubble sizing (sqrt scale, small on top), light/dark basemap toggle, and a slide-out case sidebar (right). Filter state (country, city, crime type, weapon category, year range, color-by mode) is persisted to URL query params via `history.replaceState`. The GeoJSON endpoint returns per-crime data including `fatality`, `victim_gender`, and `perpetrator_gender` for client-side color-by rendering.
 
 ### Data loading
 

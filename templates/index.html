@@ -2,22 +2,27 @@
 {% load static %}
 {% load wagtailimages_tags %}
 
-{% block nav_classes %}nav-hero bg-transparent absolute top-0 left-0 right-0 z-20{% endblock %}
+{% block nav_classes %}site-nav site-nav--floating{% endblock %}
 {% block nav_style %}{% endblock %}
 {% block nav_overlay %}{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/prose.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+{% endblock %}
+
 {% block content %}
         <!-- Hero Section (extends behind nav) -->
-    <div class="bg-cover bg-center relative" style="background-image: url('{% static 'images/website_image.jpg' %}')">
-        <div class="absolute inset-0 bg-black bg-opacity-70"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 pb-16 sm:pb-20 lg:pb-24 relative z-10">
-            <div class="text-center">
+    <div class="home-hero" style="background-image: url('{% static 'images/website_image.jpg' %}')">
+        <div class="home-hero__overlay"></div>
+        <div class="wrap home-hero__inner">
+            <div>
                 {% if home_content %}
-                    <div style="color: white;" class="text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0 [&_*]:!text-white">
+                    <div style="color: white;" class="home-hero__lede">
                         {{ home_content.lede|safe }}
                     </div>
                 {% else %}
-                    <p style="color: white;" class="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 sm:px-0">
+                    <p style="color: white;" class="home-hero__lede">
                         Explore patterns of violence and conflict across Italy through interactive maps and scholarly research.
                     </p>
                 {% endif %}
@@ -26,57 +31,57 @@
     </div>
 
 	<!-- About Section -->
-    <div id="about" class="py-12 sm:py-16 bg-white-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8 sm:mb-12">
-                <div class="grid lg:grid-cols-3 gap-8 mb-8">
+    <div id="about" class="home-about">
+        <div class="wrap">
+            <div class="home-about__body">
+                <div class="home-about__grid">
             {# About text column #}
-                    <div class="lg:col-span-2">
+                    <div class="home-about__text">
                         {% if home_content %}
-                            <div class="prose prose-lg max-w-none text-gray-900">
+                            <div class="prose prose-lg home-about__prose">
                                 {{ home_content.main_content|safe }}
                             </div>
                         {% else %}
-                            <p class="pb-4 text-xl sm:text-xl text-gray-900 max-w-3xl mx-auto">
+                            <p class="home-about__lead">
                                 This digital history project maps instances of violence across early modern Italy, providing researchers and the public with new ways to understand historical patterns of conflict.
                             </p>
 
-                            <p class="pb-4 text-base sm:text-lg text-gray-700 max-w-3xl mx-auto">
+                            <p class="home-about__para">
                                 This project's main comparative and collaborative work aim will facilitate understanding the social, cultural, and political impacts of crime in various contexts. Due to the extensiveness of Italian judicial archives, multiple political configurations and governmental structures useful for comparisons, and some of the largest urban centers pre-1750, early modern Italy provides a valuable laboratory for the study of crime and violence. In addition, for most cities, chronicles, letters, and avvisi provide narrative commentary and context. Our central research questions include but are not limited to: What patterns in violent crime can we discern using GIS analysis and large datasets? How do spatial factors influence acts of violence? Has the spatial dimensions of violent crimes informed policing and punishment? How do relations between space and violence alter over time, and what can comparisons reveal?
                             </p>
 
-                            <p class="pb-4 text-base sm:text-lg text-gray-700 max-w-3xl mx-auto">
+                            <p class="home-about__para">
                                 The cathedral in Florence, the ponte dei pugni in Venice, the streets of Verona, the contrade di Siena–all of these are infamous sites of assassinations, battles, street fights, and violent rivalries during the premodern period in Italy. While Italy had higher rates of violence during the premodern period, the reasons for this are imperfectly understood. An understanding of the social, political, economic, and cultural factors which led to the amount and types of violence could provide insight into violent crime today, particularly in urban centers. Spatial analysis using digital tools will be particularly fruitful.
                             </p>
 
-                            <p class="pb-4 text-base sm:text-lg text-gray-700 max-w-3xl mx-auto">
+                            <p class="home-about__para">
                                 Using datasets compiled from court records, letters, chronicles, diplomatic dispatches, poems, histories, and family papers, from Bologna, Florence, Modena, Venice, Verona, Padua, and Vicenza, this project aims to allow researchers to to identify and analyze patterns and long-term trends in violence between 1500 and 1700. A central outcome of the project will be a database with publicly available datasets that enables researchers to obtain and contribute data for their own research purposes and pedagogical uses. A related aim of the project is to train students and researchers in GIS and spatial methodologies, making these tools more accessible.
                             </p>
                         {% endif %}
                     </div>
 
             {# Contributors column #}
-                    <div class="lg:col-span-1">
+                    <div class="home-about__people">
                         {% if project_team %}
-                            <h2 class="text-xl font-semibold text-black mb-4">Project Team</h2>
-                            <div class="space-y-4 mb-6">
+                            <h2 class="home-people__heading">Project Team</h2>
+                            <div class="home-people home-people--team">
                                 {% for person in project_team %}
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
+                                    <div class="home-person">
+                                        <div class="home-person__avatar">
                                             {% if person.profile_photo %}
-                                                {% image person.profile_photo width-40 height-40 class="w-full h-full object-cover" %}
+                                                {% image person.profile_photo width-40 height-40 class="home-person__photo" %}
                                             {% else %}
-                                                <div class="w-full h-full bg-white-300 flex items-center justify-center">
-                                                    <span class="text-xs text-gray-700">{{ person.name|first }}</span>
+                                                <div class="home-person__initial">
+                                                    <span class="home-person__initial-text">{{ person.name|first }}</span>
                                                 </div>
                                             {% endif %}
                                         </div>
                                         <div>
-                                            <p class="text-base font-medium text-black">{{ person.name }}</p>
+                                            <p class="home-person__name">{{ person.name }}</p>
                                             {% if person.role %}
-                                                <p class="text-sm text-gray-700">{{ person.role }}</p>
+                                                <p class="home-person__role">{{ person.role }}</p>
                                             {% endif %}
-                                            <p class="text-xs text-gray-500">{{ person.university }}</p>
+                                            <p class="home-person__affil">{{ person.university }}</p>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -84,25 +89,25 @@
                         {% endif %}
 
                         {% if advisory_board %}
-                            <h2 class="text-xl font-semibold text-black mb-4">Advisory Board</h2>
-                            <div class="space-y-4">
+                            <h2 class="home-people__heading">Advisory Board</h2>
+                            <div class="home-people">
                                 {% for person in advisory_board %}
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex-shrink-0 w-10 h-10 bg-lavender-100 rounded-full overflow-hidden">
+                                    <div class="home-person">
+                                        <div class="home-person__avatar home-person__avatar--lavender">
                                             {% if person.profile_photo %}
-                                                {% image person.profile_photo width-40 height-40 class="w-full h-full object-cover" %}
+                                                {% image person.profile_photo width-40 height-40 class="home-person__photo" %}
                                             {% else %}
-                                                <div class="w-full h-full bg-white-300 flex items-center justify-center">
-                                                    <span class="text-xs text-gray-700">{{ person.name|first }}</span>
+                                                <div class="home-person__initial">
+                                                    <span class="home-person__initial-text">{{ person.name|first }}</span>
                                                 </div>
                                             {% endif %}
                                         </div>
                                         <div>
-                                            <p class="text-base font-medium text-black">{{ person.name }}</p>
+                                            <p class="home-person__name">{{ person.name }}</p>
                                             {% if person.role %}
-                                                <p class="text-sm text-gray-700">{{ person.role }}</p>
+                                                <p class="home-person__role">{{ person.role }}</p>
                                             {% endif %}
-                                            <p class="text-xs text-gray-500">{{ person.university }}</p>
+                                            <p class="home-person__affil">{{ person.university }}</p>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -110,46 +115,46 @@
                         {% endif %}
 
                         {% if not project_team and not advisory_board %}
-                            <h2 class="text-xl font-semibold text-black mb-4">Contributors</h2>
-                            <div class="space-y-4">
-                                <div class="flex items-start space-x-3">
-                                    <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-madden.jpg" class="w-full h-full object-cover" alt="Amanda Madden"/>
+                            <h2 class="home-people__heading">Contributors</h2>
+                            <div class="home-people">
+                                <div class="home-person">
+                                    <div class="home-person__avatar">
+                                        <img src="/static/images/head-madden.jpg" class="home-person__photo" alt="Amanda Madden"/>
                                     </div>
                                     <div>
-                                        <p class="text-base font-medium text-black">Amanda Madden</p>
-                                        <p class="text-sm text-gray-700">Lead Researcher</p>
-                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                        <p class="home-person__name">Amanda Madden</p>
+                                        <p class="home-person__role">Lead Researcher</p>
+                                        <p class="home-person__affil">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
                                     </div>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-rose.jpg" class="w-full h-full object-cover" alt="Colin Rose"/>
+                                <div class="home-person">
+                                    <div class="home-person__avatar">
+                                        <img src="/static/images/head-rose.jpg" class="home-person__photo" alt="Colin Rose"/>
                                     </div>
                                     <div>
-                                        <p class="text-base font-medium text-black">Colin Rose</p>
-                                        <p class="text-sm text-gray-700">Co-Principal Investigator</p>
-                                        <p class="text-xs text-gray-500">Brock University, Canada, <br>2024—present</p>
+                                        <p class="home-person__name">Colin Rose</p>
+                                        <p class="home-person__role">Co-Principal Investigator</p>
+                                        <p class="home-person__affil">Brock University, Canada, <br>2024—present</p>
                                     </div>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-heppler.jpg" class="w-full h-full object-cover" alt="Jason A. Heppler"/>
+                                <div class="home-person">
+                                    <div class="home-person__avatar">
+                                        <img src="/static/images/head-heppler.jpg" class="home-person__photo" alt="Jason A. Heppler"/>
                                     </div>
                                     <div>
-                                        <p class="text-base font-medium text-black">Jason A. Heppler</p>
-                                        <p class="text-sm text-gray-700">Senior Developer-Scholar</p>
-                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
+                                        <p class="home-person__name">Jason A. Heppler</p>
+                                        <p class="home-person__role">Senior Developer-Scholar</p>
+                                        <p class="home-person__affil">Roy Rosenzweig Center for History and New Media, <br>2024—present</p>
                                     </div>
                                 </div>
-                                <div class="flex items-start space-x-3">
-                                    <div class="flex-shrink-0 w-10 h-10 bg-lemon-100 rounded-full overflow-hidden">
-                                        <img src="/static/images/head-buck.jpg" class="w-full h-full object-cover" alt="Brandan P. Buck"/>
+                                <div class="home-person">
+                                    <div class="home-person__avatar">
+                                        <img src="/static/images/head-buck.jpg" class="home-person__photo" alt="Brandan P. Buck"/>
                                     </div>
                                     <div>
-                                        <p class="text-base font-medium text-black">Brandan P. Buck</p>
-                                        <p class="text-sm text-gray-700">GIS Consultant</p>
-                                        <p class="text-xs text-gray-500">Roy Rosenzweig Center for History and New Media, <br>2024</p>
+                                        <p class="home-person__name">Brandan P. Buck</p>
+                                        <p class="home-person__role">GIS Consultant</p>
+                                        <p class="home-person__affil">Roy Rosenzweig Center for History and New Media, <br>2024</p>
                                     </div>
                                 </div>
                             </div>
@@ -158,38 +163,38 @@
                 </div>
             </div>
 
-            <hr class="pb-6 pt-6">
+            <hr class="home-rule">
 
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                <a href="{% url 'map' %}" class="text-center block p-6 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 no-underline group">
-                    <div class="bg-lemon-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-amalfi">
-                        <svg class="w-8 h-8 text-lemon-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="home-cards">
+                <a href="{% url 'map' %}" class="home-card">
+                    <div class="home-card__icon home-card__icon--map">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-semibold text-black mb-3">Interactive Mapping</h3>
-                    <p class="text-lg text-gray-700 mb-4">Explore historical violence through interactive maps with detailed geographic and temporal data.</p>
-                    <span class="text-sm font-medium text-gray-500 group-hover:text-black transition-colors duration-200">Explore the map &rarr;</span>
+                    <h3 class="home-card__title">Interactive Mapping</h3>
+                    <p class="home-card__text">Explore historical violence through interactive maps with detailed geographic and temporal data.</p>
+                    <span class="home-card__cta">Explore the map &rarr;</span>
                 </a>
-                <a href="/blog/" class="text-center block p-6 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 no-underline group">
-                    <div class="bg-mediterranean-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-coastal">
-                        <svg class="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="/blog/" class="home-card">
+                    <div class="home-card__icon home-card__icon--research">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-semibold text-black mb-3">Scholarly Research</h3>
-                    <p class="text-lg text-gray-700 mb-4">Access research and analysis on patterns of early modern violence.</p>
-                    <span class="text-sm font-medium text-gray-500 group-hover:text-black transition-colors duration-200">Read more &rarr;</span>
+                    <h3 class="home-card__title">Scholarly Research</h3>
+                    <p class="home-card__text">Access research and analysis on patterns of early modern violence.</p>
+                    <span class="home-card__cta">Read more &rarr;</span>
                 </a>
-                <a href="{% url 'crime_list' %}" class="text-center block p-6 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 no-underline group">
-                    <div class="bg-lavender-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-soft">
-                        <svg class="w-8 h-8 text-lavender-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{% url 'crime_list' %}" class="home-card">
+                    <div class="home-card__icon home-card__icon--data">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-semibold text-black mb-3">Open Data</h3>
-                    <p class="text-lg text-gray-700 mb-4">Access and download our curated dataset for your own research and analysis.</p>
-                    <span class="text-sm font-medium text-gray-500 group-hover:text-black transition-colors duration-200">Browse the data &rarr;</span>
+                    <h3 class="home-card__title">Open Data</h3>
+                    <p class="home-card__text">Access and download our curated dataset for your own research and analysis.</p>
+                    <span class="home-card__cta">Browse the data &rarr;</span>
                 </a>
             </div>
         </div>

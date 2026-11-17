@@ -1,12 +1,18 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Preview: {{ content.title }}{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/prose.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+{% endblock %}
+
 {% block content %}
-    <div class="container mx-auto px-4 py-8">
-        <div class="prose max-w-none">
-            <h1 class="text-3xl font-bold mb-4">{{ content.title }}</h1>
-            <div class="text-xl text-gray-600 mb-6">{{ content.lede }}</div>
+    <div class="home-preview">
+        <div class="prose home-preview__prose">
+            <h1 class="home-preview__title">{{ content.title }}</h1>
+            <div class="home-preview__lede">{{ content.lede }}</div>
             <div class="content">{{ content.main_content|safe }}</div>
         </div>
     </div>
