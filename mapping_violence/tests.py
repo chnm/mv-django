@@ -21,6 +21,7 @@ from mapping_violence.models import (
     ImportBatch,
     Person,
     SourceDataset,
+    StatusLog,
     Weapon,
 )
 from mapping_violence.resources import (
@@ -652,6 +653,27 @@ class CrimeAdminImportGuideTestCase(TestCase):
             response,
             "481 additional valid rows are not shown in the sample.",
         )
+
+
+class CrimeAdminDeleteTestCase(TestCase):
+    """Crimes with status history can be deleted from the admin."""
+
+    def test_delete_crime_with_status_log(self):
+        user = get_user_model().objects.create_superuser(
+            username="delete-admin", email="delete@example.com", password="test"
+        )
+        crime = Crime.objects.create()
+        StatusLog.objects.create(crime=crime, from_status="triage", to_status="done")
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("admin:mapping_violence_crime_delete", args=[crime.pk]),
+            {"post": "yes"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Crime.objects.filter(pk=crime.pk).exists())
+        self.assertFalse(StatusLog.objects.exists())
 
 
 class MiduraCrimeResourceTestCase(TestCase):

@@ -738,6 +738,14 @@ class CrimeAdmin(ImportExportModelAdmin, ModelAdmin):
             return obj.assigned_to == request.user or obj.input_by == request.user
         return super().has_change_permission(request, obj)
 
+    def get_deleted_objects(self, objs, request):
+        deleted, model_count, perms_needed, protected = super().get_deleted_objects(
+            objs, request
+        )
+        # StatusLogAdmin is read-only, but logs must still cascade with their crime.
+        perms_needed.discard(StatusLog._meta.verbose_name)
+        return deleted, model_count, perms_needed, protected
+
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))
         if _is_editor(request.user):
