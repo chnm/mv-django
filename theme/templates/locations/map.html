@@ -704,22 +704,12 @@
         }
 
         // ── Search ──────────────────────────────────────────────────────────
+        // Text search is applied server-side via the `q` param (see loadLocations);
+        // here we only scope to the selected location and sort.
         function applySearchAndRender() {
-            const query = document.getElementById('case-search').value.trim().toLowerCase();
             let crimes = currentLocationName
                 ? allLoadedCrimes.filter(c => c.location_name === currentLocationName)
                 : allLoadedCrimes;
-
-            if (query) {
-                crimes = crimes.filter(c => {
-                    const haystack = [
-                        c.number ? 'Case #' + c.number : 'Event #' + c.id,
-                        c.crime, c.location_name, c.city,
-                        c.year ? String(c.year) : '',
-                    ].join(' ').toLowerCase();
-                    return haystack.includes(query);
-                });
-            }
 
             crimes = sortCrimes(crimes, currentSort);
             displayedCrimes = crimes;
@@ -732,7 +722,6 @@
             const chipEl   = document.getElementById('location-chip');
             const chipName = document.getElementById('location-chip-name');
             currentLocationName = locationName;
-            document.getElementById('case-search').value = '';
 
             if (locationName) {
                 titleEl.textContent = 'Cases at';
@@ -916,8 +905,10 @@
 
             const personEl = document.getElementById('filter-person');
             const personIds = personEl.tomselect ? personEl.tomselect.getValue() : '';
+            const q = document.getElementById('case-search').value.trim();
 
             pushUrlState({
+                q,
                 country, city, location: locationId,
                 crime_type: crimeType,
                 weapon_category: weaponCat,
@@ -943,6 +934,7 @@
             if (urbanRural) params.append('urban_rural', urbanRural);
             if (personIds)  params.append('person', personIds);
             if (fatality)   params.append('fatality', 'true');
+            if (q)          params.append('q', q);
 
             const url = '{% url "locations_geojson" %}' + (params.toString() ? '?' + params.toString() : '');
 
@@ -1017,7 +1009,6 @@
                     titleEl.textContent = allLoadedCrimes.length + ' case' + (allLoadedCrimes.length !== 1 ? 's' : '');
                     document.getElementById('location-chip').style.display = 'none';
                     currentLocationName = null;
-                    document.getElementById('case-search').value = '';
                     displayedCrimes = sortCrimes(allLoadedCrimes, currentSort);
                     renderCaseRows(displayedCrimes);
 
@@ -1161,7 +1152,11 @@
         });
 
         document.getElementById('sort-btn').addEventListener('click', cycleSort);
-        document.getElementById('case-search').addEventListener('input', applySearchAndRender);
+        let searchTimer = null;
+        document.getElementById('case-search').addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(loadLocations, 300);
+        });
 
         document.getElementById('color-by-select').addEventListener('change', function () {
             document.getElementById('gender-field-group').style.display =
@@ -1186,6 +1181,7 @@
             populateCityDropdown('', '');
             populateLocationDropdown('', '');
             document.getElementById('filter-fatality').checked = false;
+            document.getElementById('case-search').value = '';
             const ts = document.getElementById('filter-person').tomselect;
             if (ts) ts.clear();
             document.getElementById('color-by-select').value = 'none';
@@ -1218,6 +1214,8 @@
             const basemap = p.get('basemap') || 'light';
             document.getElementById('basemap-select').value = basemap;
             setBasemap(basemap);
+
+            document.getElementById('case-search').value = p.get('q') || '';
 
             loadLocations();
         })();

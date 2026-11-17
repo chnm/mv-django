@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from locations.models import City, Location
+from mapping_violence.models import Crime
 
 
 class CityModelTestCase(TestCase):
@@ -199,3 +200,43 @@ class LocationRelationshipTestCase(TestCase):
         self.assertEqual(city_locations.count(), 2)
         self.assertIn(location1, city_locations)
         self.assertIn(location2, city_locations)
+
+
+class LocationsGeoJSONSearchTestCase(TestCase):
+    """The `q` param on /api/locations.geojson searches crime text fields."""
+
+    def setUp(self):
+        city = City.objects.create(
+            name="Venice", latitude=Decimal("45.4408"), longitude=Decimal("12.3155")
+        )
+        self.location = Location.objects.create(name="Rialto Bridge", city=city)
+        Crime.objects.create(
+            number="001",
+            crime="assault",
+            address=self.location,
+            description_of_case="A merchant was stabbed near the fish market in Módena.",
+        )
+        Crime.objects.create(number="002", crime="theft", address=self.location)
+
+    def crimes_for(self, q):
+        response = self.client.get("/api/locations.geojson", {"q": q})
+        self.assertEqual(response.status_code, 200)
+        features = response.json()["features"]
+        return [c["number"] for f in features for c in f["properties"]["crimes"]]
+
+    def test_q_matches_description(self):
+        self.assertEqual(self.crimes_for("FISH market"), ["001"])
+
+    def test_q_matches_location_name(self):
+        self.assertEqual(sorted(self.crimes_for("rialto")), ["001", "002"])
+
+    def test_q_no_match_returns_no_features(self):
+        self.assertEqual(self.crimes_for("gondola"), [])
+
+    def test_q_is_accent_insensitive_both_ways(self):
+        self.assertEqual(self.crimes_for("modena"), ["001"])
+        self.assertEqual(self.crimes_for("Módena"), ["001"])
+
+    def test_q_requires_every_word_in_any_order(self):
+        self.assertEqual(self.crimes_for("market stabbed"), ["001"])
+        self.assertEqual(self.crimes_for("market gondola"), [])
