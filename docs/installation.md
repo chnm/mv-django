@@ -79,35 +79,9 @@ uv run pre-commit install
 
 Before each commit, `pre-commit` will execute and run our linting checks. If any task fails, it will attempt to resolve the issue automatically and ask you to re-stage the changed files.
 
-### Build the frontend
+### Frontend
 
-The frontend uses Tailwind CSS and is managed through Django's tailwind integration. Node.js 22.17.0 is required.
-
-We recommend using [nvm](https://github.com/nvm-sh/nvm) for Node.js version management:
-
-```sh
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | sh
-nvm install 22.17.0
-nvm use 22.17.0
-```
-
-Install frontend dependencies:
-
-```sh
-npm install
-```
-
-To start the Tailwind CSS compiler in development mode:
-
-```sh
-make tailwind
-```
-
-Or using Poetry directly:
-
-```sh
-uv run manage.py tailwind start
-```
+The CSS is hand-written and needs no build step or Node.js. Edit the files in `theme/static/css/` directly; the development server serves them as-is.
 
 ### Set up and run the Docker containers
 
@@ -138,9 +112,6 @@ make mm
 
 # Apply database migrations
 make migrate
-
-# Start Tailwind CSS compiler
-make tailwind
 
 # Load initial data fixtures
 make fixtures

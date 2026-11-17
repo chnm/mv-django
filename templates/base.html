@@ -1,4 +1,4 @@
-{% load static tailwind_tags %}
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,34 +13,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
 
-        {% tailwind_css %}
-        <style>
-            /* Ensure nav sits above map and other high-z-index content */
-            body > nav { z-index: 1100; }
-
-            /* Dark nav theme for non-home pages (hero image background) */
-            .nav-hero .nav-link,
-            .nav-hero .dropdown-toggle,
-            .nav-hero h1 { color: #ffffff; }
-            .nav-hero .nav-link:hover,
-            .nav-hero .dropdown-toggle:hover,
-            .nav-hero h1 a:hover { color: #e5e7eb; }
-            .nav-hero .nav-link.is-active { border-color: #ffffff; color: #ffffff; }
-            .nav-hero #mobile-menu-button {
-                background: rgba(255,255,255,0.15);
-                color: #ffffff;
-                border-color: rgba(255,255,255,0.3);
-            }
-            .nav-hero #mobile-menu-button:hover {
-                background: rgba(255,255,255,0.25);
-            }
-            .nav-hero #mobile-menu ul {
-                background: rgba(0,0,0,0.8);
-                border-color: rgba(255,255,255,0.1);
-            }
-            .nav-hero .mobile-link { color: #e5e7eb; }
-            .nav-hero .mobile-link:hover { color: #ffffff; }
-        </style>
+        <link rel="stylesheet" href="{% static 'css/base.css' %}">
         {% block extra_css %}{% endblock %}
 
         <!-- Matomo -->
@@ -61,46 +34,46 @@
 
     </head>
 
-    <body class="bg-white-100 font-serif leading-normal tracking-normal">
+    <body>
         <!-- Navigation -->
-        <nav class="{% block nav_classes %}nav-hero bg-cover bg-center relative shadow-lg{% endblock %}" {% block nav_style %}style="background-image: url('{% static 'images/website_image.jpg' %}')"{% endblock %}>
-            {% block nav_overlay %}<div class="absolute inset-0 bg-black bg-opacity-70"></div>{% endblock %}
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="flex justify-between h-20">
-                    <div class="flex items-center">
-                        <h1 class="text-lg sm:text-xl lg:text-2xl font-display font-bold text-gray-800 mr-8">
-                            <a href="{% url "index" %}" class="hover:opacity-80 transition-colors duration-200">
+        <nav class="{% block nav_classes %}site-nav site-nav--image{% endblock %}" {% block nav_style %}style="background-image: url('{% static 'images/website_image.jpg' %}')"{% endblock %}>
+            {% block nav_overlay %}<div class="site-nav__overlay"></div>{% endblock %}
+            <div class="wrap site-nav__inner">
+                <div class="site-nav__bar">
+                    <div class="site-nav__brand">
+                        <h1 class="site-nav__title">
+                            <a href="{% url "index" %}">
                                 Mapping Early Modern Violence
                             </a>
                         </h1>
                     </div>
                     <!-- Desktop Navigation -->
-                    <ul class="hidden md:flex items-center space-x-8 list-none m-0 p-0">
+                    <ul class="site-nav__links">
                         {% for nav_item in nav_data %}
                             {% if nav_item.has_children %}
                                 <!-- Dropdown Menu -->
-                                <li class="relative dropdown">
-                                    <a href="{{ nav_item.page.url }}" class="dropdown-toggle nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium flex items-center transition-all duration-200">
+                                <li class="dropdown">
+                                    <a href="{{ nav_item.page.url }}" class="nav-link nav-link--dropdown dropdown-toggle">
                                         {{ nav_item.page.title }}
-                                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="nav-link__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </a>
-                                    <ul class="dropdown-menu absolute left-0 top-full w-48 py-2 z-50 hidden border-l border-r border-b border-gray-200 list-none m-0 p-0" style="background-color: #ffffff;">
+                                    <ul class="dropdown-menu hidden">
                                         {% for child in nav_item.children %}
-                                            <li class="{% if child.has_children %}relative submenu-parent{% endif %}">
-                                                <a href="{{ child.page.url }}" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150 {% if child.has_children %}flex items-center justify-between{% endif %}">
+                                            <li class="{% if child.has_children %}submenu-parent{% endif %}">
+                                                <a href="{{ child.page.url }}" class="dropdown-menu__link{% if child.has_children %} dropdown-menu__link--parent{% endif %}">
                                                     {{ child.page.title }}
                                                     {% if child.has_children %}
-                                                        <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="dropdown-menu__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                                         </svg>
                                                     {% endif %}
                                                 </a>
                                                 {% if child.has_children %}
-                                                    <ul class="submenu absolute left-full top-0 w-48 py-2 hidden border border-gray-200 list-none m-0 p-0" style="background-color: #ffffff;">
+                                                    <ul class="submenu hidden">
                                                         {% for grandchild in child.children %}
-                                                            <li><a href="{{ grandchild.page.url }}" class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150">{{ grandchild.page.title }}</a></li>
+                                                            <li><a href="{{ grandchild.page.url }}" class="dropdown-menu__link">{{ grandchild.page.title }}</a></li>
                                                         {% endfor %}
                                                     </ul>
                                                 {% endif %}
@@ -111,28 +84,28 @@
                             {% else %}
                                 <!-- Regular Link -->
                                 <li>
-                                    <a href="{{ nav_item.page.url }}" class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == nav_item.page.slug %}is-active text-gray-900 border-gray-400{% endif %}">
+                                    <a href="{{ nav_item.page.url }}" class="nav-link nav-link--underline{% if request.resolver_match.url_name == nav_item.page.slug %} is-active{% endif %}">
                                         {{ nav_item.page.title }}
                                     </a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                         <li>
-                            <a href="{% url 'map' %}" class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}is-active text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'map' %}" class="nav-link nav-link--underline{% if request.resolver_match.url_name == 'map' %} is-active{% endif %}">
                                 Map
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'crime_list' %}" class="nav-link text-gray-700 hover:text-gray-900 px-3 py-2 text-base font-medium border-b-2 border-transparent hover:border-burgundy-500 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}is-active text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'crime_list' %}" class="nav-link nav-link--underline{% if request.resolver_match.url_name == 'crime_list' %} is-active{% endif %}">
                                 Data
                             </a>
                         </li>
                         {% block nav_links %}{% endblock %}
                     </ul>
                     <!-- Mobile menu button -->
-                    <div class="md:hidden flex items-center">
-                        <button id="mobile-menu-button" aria-label="Toggle navigation menu" class="bg-white text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2 rounded-lg shadow-sm border border-gray-200 hover:border-gray-400 transition-all duration-200">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="site-nav__toggle">
+                        <button id="mobile-menu-button" aria-label="Toggle navigation menu" class="site-nav__toggle-button">
+                            <svg class="site-nav__toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                                 <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -140,25 +113,25 @@
                     </div>
                 </div>
                 <!-- Mobile Navigation Menu -->
-                <div id="mobile-menu" class="md:hidden hidden">
-                    <ul class="px-4 pt-4 pb-6 space-y-1 bg-white border-t border-gray-200 list-none m-0 p-0">
+                <div id="mobile-menu" class="site-nav__mobile hidden">
+                    <ul class="site-nav__mobile-list">
                         {% for nav_item in nav_data %}
                             <li>
-                                <a href="{{ nav_item.page.url }}" class="mobile-link text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200">
+                                <a href="{{ nav_item.page.url }}" class="mobile-link">
                                     {{ nav_item.page.title }}
                                 </a>
                                 {% if nav_item.has_children %}
-                                    <ul class="list-none m-0 p-0 pl-4">
+                                    <ul class="site-nav__mobile-sublist">
                                         {% for child in nav_item.children %}
                                             <li>
-                                                <a href="{{ child.page.url }}" class="mobile-link text-gray-600 hover:text-gray-900 block px-3 py-2 text-base font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200">
+                                                <a href="{{ child.page.url }}" class="mobile-link mobile-link--child">
                                                     {{ child.page.title }}
                                                 </a>
                                                 {% if child.has_children %}
-                                                    <ul class="list-none m-0 p-0 pl-4">
+                                                    <ul class="site-nav__mobile-sublist">
                                                         {% for grandchild in child.children %}
                                                             <li>
-                                                                <a href="{{ grandchild.page.url }}" class="mobile-link text-gray-500 hover:text-gray-900 block px-3 py-2 text-sm font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200">
+                                                                <a href="{{ grandchild.page.url }}" class="mobile-link mobile-link--grandchild">
                                                                     {{ grandchild.page.title }}
                                                                 </a>
                                                             </li>
@@ -172,12 +145,12 @@
                             </li>
                         {% endfor %}
                         <li>
-                            <a href="{% url 'map' %}" class="mobile-link text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'map' %}text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'map' %}" class="mobile-link{% if request.resolver_match.url_name == 'map' %} is-active{% endif %}">
                                 Map
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'crime_list' %}" class="mobile-link text-gray-700 hover:text-gray-900 block px-3 py-3 text-lg font-medium border-l-4 border-transparent hover:border-gray-400 transition-all duration-200 {% if request.resolver_match.url_name == 'crime_list' %}text-gray-900 border-gray-400{% endif %}">
+                            <a href="{% url 'crime_list' %}" class="mobile-link{% if request.resolver_match.url_name == 'crime_list' %} is-active{% endif %}">
                                 Data
                             </a>
                         </li>
@@ -188,77 +161,75 @@
         </nav>
 
         <!-- Main Content -->
-        <main class="text-lg">
+        <main class="site-main">
             {% block content %}{% endblock %}
         </main>
 
         <!-- Image Gallery Lightbox Modal -->
-        <div id="gallery-lightbox-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden">
-            <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div id="gallery-lightbox-modal" class="lightbox hidden">
+            <div class="lightbox__stage">
                 <!-- Close button -->
-                <button onclick="closeGalleryLightbox()" aria-label="Close image gallery"
-                        class="absolute top-4 right-4 z-10 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onclick="closeGalleryLightbox()" aria-label="Close image gallery" class="lightbox__close">
+                    <svg class="lightbox__close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
 
                 <!-- Image container -->
-                <div class="flex flex-col items-center max-w-full max-h-full">
+                <div class="lightbox__figure">
                     <img id="gallery-lightbox-image"
                          src=""
                          alt=""
-                         class="max-w-full max-h-[90vh] object-contain">
+                         class="lightbox__image">
 
                     <!-- Caption -->
-                    <div id="gallery-lightbox-caption"
-                         class="mt-4 text-white text-center max-w-2xl bg-black bg-opacity-50 p-4 rounded-lg"></div>
+                    <div id="gallery-lightbox-caption" class="lightbox__caption"></div>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-gray-300 pt-12 font-sans">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid md:grid-cols-[1fr_auto_auto] gap-16">
+        <footer class="site-footer">
+            <div class="wrap">
+                <div class="site-footer__grid">
                     <!-- Logo column -->
                     <div>
-                        <div class="flex items-center gap-6 mb-4">
-                            <a href="https://rrchnm.org"><img class="w-48 h-auto" src="/static/images/rrchnm-logo-white.png" alt="Roy Rosenzweig Center for History and New Media logo"/></a>
-                            <a href="https://gmu.edu"><img class="w-56 h-auto" src="/static/images/gmu-logo-light.png" alt="George Mason University logo"/></a>
+                        <div class="site-footer__logos">
+                            <a href="https://rrchnm.org"><img class="site-footer__logo site-footer__logo--rrchnm" src="/static/images/rrchnm-logo-white.png" alt="Roy Rosenzweig Center for History and New Media logo"/></a>
+                            <a href="https://gmu.edu"><img class="site-footer__logo site-footer__logo--gmu" src="/static/images/gmu-logo-light.png" alt="George Mason University logo"/></a>
                         </div>
                     </div>
                     <!-- Project column -->
                     <div>
-                        <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-4">Project</h3>
-                        <ul class="list-none m-0 p-0 space-y-2">
-                            <li><a href="/about/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">About</a></li>
-                            <li><a href="/blog/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Blog</a></li>
-                            <li><a href="/guides-to-the-documents/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Guides to the Documents</a></li>
-                            <li><a href="{% url 'api_docs' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">API Docs</a></li>
+                        <h3 class="site-footer__heading">Project</h3>
+                        <ul class="site-footer__list">
+                            <li><a href="/about/" class="site-footer__link">About</a></li>
+                            <li><a href="/blog/" class="site-footer__link">Blog</a></li>
+                            <li><a href="/guides-to-the-documents/" class="site-footer__link">Guides to the Documents</a></li>
+                            <li><a href="{% url 'api_docs' %}" class="site-footer__link">API Docs</a></li>
                         </ul>
                     </div>
                     <!-- Research column -->
                     <div>
-                        <h3 class="text-white text-sm font-semibold uppercase tracking-wider mb-4">Research</h3>
-                        <ul class="list-none m-0 p-0 space-y-2">
-                            <li><a href="{% url 'map' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Map</a></li>
-                            <li><a href="{% url 'crime_list' %}" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Data</a></li>
-                            <li><a href="/research-resources/" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm">Research Resources</a></li>
+                        <h3 class="site-footer__heading">Research</h3>
+                        <ul class="site-footer__list">
+                            <li><a href="{% url 'map' %}" class="site-footer__link">Map</a></li>
+                            <li><a href="{% url 'crime_list' %}" class="site-footer__link">Data</a></li>
+                            <li><a href="/research-resources/" class="site-footer__link">Research Resources</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
             {% block footer_content %}
                 {% if user.is_authenticated %}
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm mt-10 py-4 border-t border-gray-700">
-                        <p>Logged in as <code class="text-gray-300">{{ user.username }}</code> &middot; <a class="underline hover:text-white" href="/admin/">Admin</a> | <a class="underline hover:text-white" href="{% url 'logout' %}">Logout</a></p>
+                    <div class="wrap site-footer__account">
+                        <p>Logged in as <code>{{ user.username }}</code> &middot; <a href="/admin/">Admin</a> | <a href="{% url 'logout' %}">Logout</a></p>
                     </div>
                 {% endif %}
             {% endblock footer_content %}
             {% block copyright %}
-                <div class="bg-gray-900 text-gray-400 text-center text-sm py-4 mt-4">
-                    &copy; 2025&mdash;{% now "Y" %} | Roy Rosenzweig Center for History and New Media | <a class="underline hover:no-underline" href="mailto:chnm@gmu.edu">Contact us</a>
+                <div class="site-footer__copyright">
+                    &copy; 2025&mdash;{% now "Y" %} | Roy Rosenzweig Center for History and New Media | <a href="mailto:chnm@gmu.edu">Contact us</a>
                 </div>
             {% endblock copyright%}
         </footer>
@@ -350,7 +321,7 @@
 
             // Close lightbox when clicking outside the image
             document.getElementById('gallery-lightbox-modal').addEventListener('click', function(e) {
-                if (e.target === this || e.target.closest('.relative.w-full.h-full') === e.currentTarget.firstElementChild) {
+                if (e.target === this || e.target.closest('.lightbox__stage') === e.currentTarget.firstElementChild) {
                     closeGalleryLightbox();
                 }
             });

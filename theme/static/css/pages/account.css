@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Account pages (login, password reset/change), profile, error pages and the
+   flash-message partial. Loaded after base.css.
+   Note: the old Tailwind build had no `white` colour, so `bg-white` and
+   `text-white` were no-ops. The card and button/heading text colours below
+   reproduce that (transparent card, inherited text colour).
+   ========================================================================== */
+
+/* --- Page shell ---------------------------------------------------------- */
+.account-page { min-height: 100vh; background-color: var(--gray-50); padding: 3rem 1rem; }
+@media (min-width: 640px) { .account-page { padding-left: 1.5rem; padding-right: 1.5rem; } }
+@media (min-width: 1024px) { .account-page { padding-left: 2rem; padding-right: 2rem; } }
+.account-container { max-width: 28rem; margin-left: auto; margin-right: auto; }
+.account-container--wide { max-width: 56rem; }
+
+.account-brand { text-align: center; margin-bottom: 2rem; }
+.account-brand__title { font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem; }
+.account-brand__title a { color: var(--blue-600); }
+.account-brand__title a:hover { color: var(--blue-800); }
+
+.account-card { padding: 2rem 1rem; box-shadow: var(--shadow-lg); border-radius: 0.5rem; }
+@media (min-width: 640px) { .account-card { padding-left: 2.5rem; padding-right: 2.5rem; } }
+
+/* --- Headings and text --------------------------------------------------- */
+.account-heading { text-align: center; margin-bottom: 1.5rem; }
+.account-title { font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: var(--gray-900); }
+.account-heading__hint { margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-600); }
+
+/* Centered status panels (logged out, password changed, errors ...) */
+.account-status { text-align: center; }
+.account-status__icon { display: flex; align-items: center; justify-content: center; width: 4rem; height: 4rem; margin: 0 auto 1.5rem; border-radius: 9999px; }
+.account-status__icon--success { background-color: var(--green-100); color: var(--green-600); }
+.account-status__icon--danger { background-color: var(--red-100); color: var(--red-600); }
+.account-status__glyph { width: 2rem; height: 2rem; }
+.account-status .account-title { margin-bottom: 1rem; }
+.account-status__text { color: var(--gray-600); margin-bottom: 2rem; }
+.account-status__text--last { margin-bottom: 0; }
+
+/* --- Links and buttons --------------------------------------------------- */
+.account-link { color: var(--blue-600); text-decoration-line: underline; }
+.account-link:hover { color: var(--blue-800); }
+
+.account-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  background-color: var(--blue-600);
+}
+.account-btn:hover { background-color: var(--blue-700); }
+.account-btn:focus { outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--blue-500); }
+.account-btn--inline { display: inline-flex; align-items: center; }
+.account-btn--submit { display: flex; justify-content: center; width: 100%; box-shadow: var(--shadow-sm); }
+.account-btn--submit:focus { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--blue-500), var(--shadow-sm); }
+
+/* --- Forms --------------------------------------------------------------- */
+.account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+.account-label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; color: var(--gray-700); }
+.account-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.375rem;
+  box-shadow: var(--shadow-sm);
+}
+.account-input::placeholder { color: var(--gray-400); }
+.account-input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 0 #fff, 0 0 0 1px var(--blue-500), var(--shadow-sm);
+}
+.account-field-error { margin-top: 0.25rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--red-600); }
+.account-help { margin-top: 0.25rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-500); }
+.account-alert { margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid var(--red-500); background-color: var(--red-50); color: var(--red-700); }
+.account-alert__text { font-size: 0.875rem; line-height: 1.25rem; }
+
+.account-footer { margin-top: 1.5rem; text-align: center; }
+.account-footer > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.account-footer__text { font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-600); }
+.account-footer__text--muted { color: var(--gray-500); }
+
+/* --- Profile ------------------------------------------------------------- */
+.profile-card { overflow: hidden; border-radius: 0.5rem; box-shadow: var(--shadow-lg); }
+.profile-header { padding: 2rem 1.5rem; background-image: linear-gradient(to right, var(--blue-600), var(--blue-800)); }
+.profile-header__inner { display: flex; align-items: center; }
+.profile-header__inner > :not([hidden]) ~ :not([hidden]) { margin-left: 1rem; }
+.profile-avatar-wrap { flex-shrink: 0; }
+.profile-avatar { display: flex; align-items: center; justify-content: center; width: 4rem; height: 4rem; border-radius: 9999px; }
+.profile-avatar__icon { width: 2rem; height: 2rem; }
+.profile-header__title { font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+.profile-header__subtitle { color: var(--blue-100); }
+.profile-body { padding: 2rem 1.5rem; }
+.profile-grid { display: grid; gap: 2rem; }
+@media (min-width: 768px) { .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.profile-heading { margin-bottom: 1rem; font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; color: var(--gray-900); }
+.profile-list > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.profile-item { padding: 1rem; border-radius: 0.5rem; background-color: var(--gray-50); }
+.profile-item__label { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; color: var(--gray-600); }
+.profile-item__value { margin-top: 0.25rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-900); }
+.profile-actions > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+.profile-action {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background-color: var(--blue-600);
+  text-align: center;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: var(--ease);
+  transition-duration: 0.2s;
+}
+.profile-action:hover { background-color: var(--blue-700); }
+.profile-action--danger { background-color: var(--red-600); }
+.profile-action--danger:hover { background-color: var(--red-700); }
+.profile-status { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200); }
+.profile-status__grid { display: grid; gap: 1rem; }
+@media (min-width: 640px) { .profile-status__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.profile-stat { padding: 1rem; border-radius: 0.5rem; text-align: center; }
+.profile-stat--blue { background-color: var(--blue-50); }
+.profile-stat--purple { background-color: var(--purple-50); }
+.profile-stat--green { background-color: var(--green-50); }
+.profile-stat__value { font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+.profile-stat--blue .profile-stat__value { color: var(--blue-600); }
+.profile-stat--purple .profile-stat__value { color: var(--purple-600); }
+.profile-stat--green .profile-stat__value { color: var(--green-600); }
+.profile-stat__label { font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-600); }
+
+/* --- Error pages (403, 404, CSRF) ---------------------------------------- */
+.error-page { max-width: 600px; margin: 4rem auto; padding: 2rem 1rem; text-align: center; }
+.error-page__title { font-size: 2rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem; }
+.error-page__text { font-size: 1rem; color: var(--gray-600); margin-bottom: 1.5rem; }
+.error-page__link { color: var(--blue-600); text-decoration: underline; font-weight: 500; }
+
+/* --- Flash messages (includes/messages.html) ----------------------------- */
+.messages { margin-bottom: 1.5rem; }
+.messages__item { margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid var(--blue-500); background-color: var(--blue-50); color: var(--blue-700); }
+.messages__item--error { border-color: var(--red-500); background-color: var(--red-50); color: var(--red-700); }
+.messages__item--warning { border-color: var(--yellow-500); background-color: var(--yellow-50); color: var(--yellow-700); }
+.messages__item--success { border-color: var(--green-500); background-color: var(--green-50); color: var(--green-700); }
+.messages__body { display: flex; }
+.messages__icon-wrap { flex-shrink: 0; }
+.messages__icon { width: 1.25rem; height: 1.25rem; color: var(--blue-500); }
+.messages__icon--error { color: var(--red-500); }
+.messages__icon--warning { color: var(--yellow-500); }
+.messages__icon--success { color: var(--green-500); }
+.messages__text { margin-left: 0.75rem; }
+.messages__message { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }

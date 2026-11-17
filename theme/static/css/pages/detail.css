@@ -1,0 +1,158 @@
+/* Crime detail page (crimes/detail.html). Values ported 1:1 from the Tailwind build. */
+
+.detail-page { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+.detail-wrap { max-width: 72rem; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+@media (min-width: 640px) { .detail-wrap { padding-left: 1.5rem; padding-right: 1.5rem; } }
+@media (min-width: 1024px) { .detail-wrap { padding-left: 2rem; padding-right: 2rem; } }
+
+/* Shared text tones */
+.detail-text--dark { color: var(--gray-900); }
+.detail-text--mid { color: var(--gray-600); }
+.detail-text--muted { color: var(--gray-500); }
+.detail-link { color: var(--mediterranean-600); }
+.detail-link:hover { text-decoration-line: underline; }
+
+/* Top strip */
+.detail-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; row-gap: 0.5rem; margin-bottom: 1.5rem; }
+.detail-back { font-size: 0.875rem; line-height: 1.25rem; color: var(--mediterranean-600); }
+.detail-back:hover { color: var(--mediterranean-800); }
+.detail-crumbs { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.75rem; row-gap: 0.25rem; font-size: 0.875rem; line-height: 1.25rem; }
+.detail-crumbs__sep { color: var(--gray-300); }
+
+/* Case header */
+.detail-header { margin-bottom: 2rem; }
+.detail-title { margin-bottom: 0.75rem; font-family: var(--font-display); font-weight: 700; font-size: 1.875rem; line-height: 2.25rem; color: var(--gray-900); }
+@media (min-width: 640px) { .detail-title { font-size: 2.25rem; line-height: 2.5rem; } }
+.detail-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.detail-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; line-height: 1rem; }
+.detail-tag--crime {
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500;
+  background-color: var(--burgundy-100); color: var(--burgundy-700);
+  transition-property: var(--transition-colors); transition-timing-function: var(--ease); transition-duration: 0.15s;
+}
+.detail-tag--crime:hover { background-color: var(--burgundy-200); }
+.detail-tag--category { background-color: var(--gray-100); color: var(--gray-600); }
+.detail-tag--fatal { font-weight: 600; background-color: var(--red-100); color: var(--red-700); }
+.detail-tag--convicted { background-color: var(--gray-800); color: var(--white-50); }
+.detail-tag--pardoned { background-color: var(--green-100); color: var(--green-700); }
+
+/* Two-column body */
+@media (min-width: 1024px) { .detail-body { display: flex; gap: 2.5rem; } }
+.detail-aside { flex-shrink: 0; margin-bottom: 2.5rem; }
+@media (min-width: 1024px) { .detail-aside { width: 18rem; margin-bottom: 0; } }
+@media (min-width: 1024px) { .detail-facts { position: sticky; top: 1.5rem; } }
+.detail-facts > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+.detail-facts__heading {
+  margin-bottom: 0.75rem; padding-bottom: 0.375rem; border-bottom: 1px solid var(--gray-200);
+  font-size: 0.75rem; line-height: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-400);
+}
+
+/* When */
+.detail-dl { font-size: 0.875rem; line-height: 1.25rem; }
+.detail-dl > :not([hidden]) ~ :not([hidden]) { margin-top: 0.375rem; }
+.detail-dl__row { display: flex; gap: 0.5rem; }
+.detail-dl__term { width: 6rem; flex-shrink: 0; color: var(--gray-500); }
+.detail-dl__value { color: var(--gray-900); }
+
+/* Where */
+.detail-where { font-size: 0.875rem; line-height: 1.25rem; }
+.detail-where > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+.detail-note { font-size: 0.75rem; line-height: 1rem; font-style: italic; color: var(--gray-500); }
+.detail-note--loc { margin-top: 0.5rem; }
+.detail-note--person { margin-top: 0.25rem; }
+
+/* People */
+.detail-people { font-size: 0.875rem; line-height: 1.25rem; }
+.detail-people > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+.detail-people__label { margin-bottom: 0.25rem; font-size: 0.75rem; line-height: 1rem; text-transform: uppercase; letter-spacing: 0.025em; color: var(--gray-400); }
+.detail-people__link { display: block; }
+
+/* Weapon / connected event */
+.detail-weapon { font-size: 0.875rem; line-height: 1.25rem; }
+.detail-weapon > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+.detail-weapon__cat { font-size: 0.75rem; line-height: 1rem; }
+.detail-event { font-size: 0.875rem; line-height: 1.25rem; }
+
+/* Browse buttons */
+.detail-browse { padding-top: 1rem; border-top: 1px solid var(--gray-200); }
+.detail-browse > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.detail-browse__link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.5rem 0.75rem; border: 1px solid var(--mediterranean-200); border-radius: 0.25rem;
+  font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; color: var(--mediterranean-700);
+  transition-property: var(--transition-colors); transition-timing-function: var(--ease); transition-duration: 0.15s;
+}
+.detail-browse__link:hover { background-color: var(--mediterranean-50); border-color: var(--mediterranean-400); }
+.detail-browse__arrow { margin-left: 0.5rem; }
+
+/* Main column */
+.detail-main { flex: 1 1 0%; min-width: 0; }
+.detail-main > :not([hidden]) ~ :not([hidden]) { margin-top: 2.5rem; }
+.detail-section__heading {
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+  font-size: 0.75rem; line-height: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-400);
+}
+.detail-section__heading--tight { margin-bottom: 0.5rem; }
+.detail-section__rule { flex: 1 1 0%; height: 1px; background-color: var(--gray-200); }
+.detail-prose { color: var(--gray-800); line-height: 1.625; }
+.detail-hint { margin-bottom: 1rem; font-size: 0.75rem; line-height: 1rem; color: var(--gray-400); }
+
+/* Legal record / archival sources */
+.detail-records { font-size: 0.875rem; line-height: 1.25rem; }
+.detail-records > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
+@media (min-width: 640px) { .detail-records__row { display: flex; gap: 1rem; } }
+.detail-records__term { flex-shrink: 0; color: var(--gray-500); }
+@media (min-width: 640px) { .detail-records__term { width: 10rem; } }
+.detail-records__value { color: var(--gray-900); }
+
+/* Outcome */
+.detail-outcome > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.detail-flags { display: flex; flex-wrap: wrap; column-gap: 1.5rem; row-gap: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; }
+.detail-flag { display: flex; align-items: center; gap: 0.375rem; }
+.detail-flag__dot { width: 0.5rem; height: 0.5rem; flex-shrink: 0; border-radius: 9999px; }
+.detail-flag__dot--red { background-color: var(--red-600); }
+.detail-flag__dot--dark { background-color: var(--gray-800); }
+.detail-flag__dot--green { background-color: var(--green-600); }
+.detail-flag__dot--off { border: 1px solid var(--gray-300); }
+.detail-flag__label { color: var(--gray-900); }
+.detail-flag__label--off { color: var(--gray-400); }
+.detail-line { font-size: 0.875rem; line-height: 1.25rem; }
+
+/* Witnesses */
+.detail-witnesses > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.detail-witness { font-size: 0.875rem; line-height: 1.25rem; }
+.detail-witness__name { font-weight: 500; color: var(--gray-900); }
+.detail-witness__date { color: var(--gray-500); }
+.detail-witness__claims { margin-top: 0.25rem; color: var(--gray-700); }
+
+/* Images */
+.detail-images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+@media (min-width: 640px) { .detail-images { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.detail-image__link {
+  display: block; overflow: hidden; border: 1px solid var(--gray-200); border-radius: 0.5rem;
+  transition-property: var(--transition-colors); transition-timing-function: var(--ease); transition-duration: 0.15s;
+}
+.detail-image__link:hover { border-color: var(--gray-400); }
+.detail-image__img { width: 100%; height: 10rem; object-fit: cover; transition-property: opacity; transition-timing-function: var(--ease); transition-duration: 0.15s; }
+.detail-image:hover .detail-image__img { opacity: 0.9; }
+.detail-image__caption { margin-top: 0.375rem; font-size: 0.75rem; line-height: 1rem; color: var(--gray-500); }
+
+/* Related cases */
+.detail-related > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.detail-related__item {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+  padding: 0.75rem 1rem; border: 1px solid var(--gray-200); border-radius: 0.5rem;
+  transition-property: var(--transition-colors); transition-timing-function: var(--ease); transition-duration: 0.15s;
+}
+.detail-related__item:hover { background-color: var(--gray-50); }
+.detail-related__body { flex: 1 1 0%; min-width: 0; }
+.detail-related__link { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+.detail-related__type { font-size: 0.75rem; line-height: 1rem; color: var(--gray-500); }
+.detail-related__via { margin-top: 0.125rem; font-size: 0.75rem; line-height: 1rem; color: var(--gray-400); }
+.detail-related__meta { flex-shrink: 0; text-align: right; }
+.detail-related__date { font-size: 0.75rem; line-height: 1rem; color: var(--gray-500); }
+.detail-related__city { font-size: 0.75rem; line-height: 1rem; color: var(--gray-400); }
+
+/* Map */
+.detail-map { margin-top: 1.5rem; overflow: hidden; border: 1px solid var(--gray-200); border-radius: 0.5rem; }
+#crime-map { height: 200px; width: 100%; }

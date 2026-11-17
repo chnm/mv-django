@@ -1,0 +1,469 @@
+/* ==========================================================================
+   Mapping Early Modern Violence — base stylesheet
+   Hand-written replacement for the former Tailwind build. Values are ported
+   1:1 from the compiled Tailwind output so the design is unchanged.
+
+   Breakpoints (min-width): sm 640px · md 768px · lg 1024px · xl 1280px
+   Page-specific styles live in css/pages/*.css and load after this file.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design tokens
+   -------------------------------------------------------------------------- */
+:root {
+  --font-serif: "Crimson Text", "Libre Baskerville", serif;
+  --font-sans: Inter, "Source Sans Pro", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Libre Baskerville", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --black: #000000;
+
+  /* Neutral grays (Tailwind default `gray`) */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* Crisp whites (project palette) */
+  --white-50: #ffffff;
+  --white-100: #fefefe;
+  --white-200: #fdfdfd;
+  --white-300: #fafafa;
+  --white-400: #f5f5f5;
+  --white-500: #f0f0f0;
+  --white-600: #e5e5e5;
+  --white-700: #d4d4d4;
+  --white-800: #a3a3a3;
+  --white-900: #525252;
+
+  /* Burgundy (primary) */
+  --burgundy-50: #fef2f2;
+  --burgundy-100: #fde8e8;
+  --burgundy-200: #fbcccc;
+  --burgundy-300: #f89999;
+  --burgundy-400: #f36666;
+  --burgundy-500: #e53333;
+  --burgundy-600: #800020;
+  --burgundy-700: #731d1d;
+  --burgundy-800: #661919;
+  --burgundy-900: #551414;
+
+  /* Sage green */
+  --green-50: #f7faf7;
+  --green-100: #f0f7f0;
+  --green-200: #ddeedd;
+  --green-300: #c5e2c5;
+  --green-400: #acd6ac;
+  --green-500: #9caf88;
+  --green-600: #8c9e7a;
+  --green-700: #7c8e6b;
+  --green-800: #6b7d5c;
+  --green-900: #5a6c4d;
+
+  /* Gold / lemon (the `yellow` and `lemon` palettes are identical) */
+  --yellow-50: #fffef7;
+  --yellow-100: #fffae0;
+  --yellow-200: #fff3b8;
+  --yellow-300: #ffe985;
+  --yellow-400: #ffdc4d;
+  --yellow-500: #ffd700;
+  --yellow-600: #e6c200;
+  --yellow-700: #cc9f00;
+  --yellow-800: #a67f00;
+  --yellow-900: #7a5f00;
+
+  /* Lavender */
+  --lavender-50: #faf8ff;
+  --lavender-100: #f3efff;
+  --lavender-200: #e8dbff;
+  --lavender-300: #d8c2ff;
+  --lavender-400: #c7a3ff;
+  --lavender-500: #b586f0;
+  --lavender-600: #b19cd9;
+  --lavender-700: #9882c7;
+  --lavender-800: #7c6ba8;
+  --lavender-900: #5d5082;
+
+  /* Mediterranean blue (secondary) */
+  --mediterranean-50: #f0f9ff;
+  --mediterranean-100: #e0f2fe;
+  --mediterranean-200: #bae6fd;
+  --mediterranean-300: #7dd3fc;
+  --mediterranean-400: #38bdf8;
+  --mediterranean-500: #0ea5e9;
+  --mediterranean-600: #0077be;
+  --mediterranean-700: #0369a1;
+  --mediterranean-800: #075985;
+  --mediterranean-900: #0c4a6e;
+
+  /* Tailwind default accents still in use (status colors, links) */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --purple-50: #faf5ff;
+  --purple-600: #9333ea;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-amalfi: 0 4px 6px -1px rgba(255, 215, 0, 0.1), 0 2px 4px -1px rgba(255, 215, 0, 0.06);
+  --shadow-amalfi-lg: 0 10px 15px -3px rgba(255, 215, 0, 0.1), 0 4px 6px -2px rgba(255, 215, 0, 0.05);
+  --shadow-coastal: 0 1px 3px 0 rgba(0, 119, 190, 0.1), 0 1px 2px 0 rgba(0, 119, 190, 0.06);
+  --shadow-soft: 0 4px 6px -1px rgba(177, 156, 217, 0.1), 0 2px 4px -1px rgba(177, 156, 217, 0.06);
+
+  /* Motion */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-colors: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset (ported from Tailwind preflight)
+   -------------------------------------------------------------------------- */
+*, ::before, ::after { box-sizing: border-box; border: 0 solid var(--gray-200); }
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+body { margin: 0; line-height: inherit; }
+hr { height: 0; color: inherit; border-top-width: 1px; }
+abbr:where([title]) { text-decoration: underline dotted; }
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+a { color: inherit; text-decoration: inherit; }
+b, strong { font-weight: bolder; }
+code, kbd, pre, samp { font-family: var(--font-mono); font-size: 1em; }
+small { font-size: 80%; }
+sub, sup { font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+sub { bottom: -0.25em; }
+sup { top: -0.5em; }
+table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+button, input, optgroup, select, textarea { font-family: inherit; font-size: 100%; font-weight: inherit; line-height: inherit; letter-spacing: inherit; color: inherit; margin: 0; padding: 0; }
+button, select { text-transform: none; }
+button, input:where([type="button"]), input:where([type="reset"]), input:where([type="submit"]) { -webkit-appearance: button; background-color: transparent; background-image: none; }
+:-moz-focusring { outline: auto; }
+:-moz-ui-invalid { box-shadow: none; }
+progress { vertical-align: baseline; }
+::-webkit-inner-spin-button, ::-webkit-outer-spin-button { height: auto; }
+[type="search"] { -webkit-appearance: textfield; outline-offset: -2px; }
+::-webkit-search-decoration { -webkit-appearance: none; }
+::-webkit-file-upload-button { -webkit-appearance: button; font: inherit; }
+summary { display: list-item; }
+blockquote, dd, dl, figure, h1, h2, h3, h4, h5, h6, hr, p, pre { margin: 0; }
+fieldset { margin: 0; padding: 0; }
+legend { padding: 0; }
+menu, ol, ul { list-style: none; margin: 0; padding: 0; }
+dialog { padding: 0; }
+textarea { resize: vertical; }
+input::placeholder, textarea::placeholder { opacity: 1; color: var(--gray-400); }
+[role="button"], button { cursor: pointer; }
+:disabled { cursor: default; }
+audio, canvas, embed, iframe, img, object, svg, video { display: block; vertical-align: middle; }
+img, video { max-width: 100%; height: auto; }
+[hidden]:where(:not([hidden="until-found"])) { display: none; }
+
+/* --------------------------------------------------------------------------
+   3. Form controls (ported from @tailwindcss/forms)
+   -------------------------------------------------------------------------- */
+[type="text"], [type="email"], [type="url"], [type="password"], [type="number"], [type="date"],
+[type="datetime-local"], [type="month"], [type="search"], [type="tel"], [type="time"], [type="week"],
+[multiple], textarea, select, input:where(:not([type])) {
+  appearance: none;
+  background-color: #fff;
+  border-color: var(--gray-500);
+  border-width: 1px;
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+[type="text"]:focus, [type="email"]:focus, [type="url"]:focus, [type="password"]:focus, [type="number"]:focus, [type="date"]:focus,
+[type="datetime-local"]:focus, [type="month"]:focus, [type="search"]:focus, [type="tel"]:focus, [type="time"]:focus, [type="week"]:focus,
+[multiple]:focus, textarea:focus, select:focus, input:where(:not([type])):focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--blue-600);
+  border-color: var(--blue-600);
+}
+input::placeholder, textarea::placeholder { color: var(--gray-500); opacity: 1; }
+::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+::-webkit-date-and-time-value { min-height: 1.5em; text-align: inherit; }
+::-webkit-datetime-edit { display: inline-flex; }
+::-webkit-datetime-edit, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-meridiem-field,
+::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-year-field { padding-top: 0; padding-bottom: 0; }
+select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  print-color-adjust: exact;
+}
+[multiple], [size]:where(select:not([size="1"])) {
+  background-image: none;
+  background-position: 0 0;
+  background-repeat: unset;
+  background-size: initial;
+  padding-right: 0.75rem;
+  print-color-adjust: unset;
+}
+[type="checkbox"], [type="radio"] {
+  appearance: none;
+  padding: 0;
+  print-color-adjust: exact;
+  display: inline-block;
+  vertical-align: middle;
+  background-origin: border-box;
+  user-select: none;
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+  color: var(--blue-600);
+  background-color: #fff;
+  border-color: var(--gray-500);
+  border-width: 1px;
+}
+[type="checkbox"] { border-radius: 0; }
+[type="radio"] { border-radius: 100%; }
+[type="checkbox"]:focus, [type="radio"]:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--blue-600);
+}
+[type="checkbox"]:checked, [type="radio"]:checked {
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: 50%;
+  background-repeat: no-repeat;
+}
+[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 16 16'%3E%3Cpath d='M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0'/%3E%3C/svg%3E");
+}
+[type="radio"]:checked {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3C/svg%3E");
+}
+[type="checkbox"]:checked:focus, [type="checkbox"]:checked:hover, [type="radio"]:checked:focus, [type="radio"]:checked:hover {
+  border-color: transparent;
+  background-color: currentColor;
+}
+[type="checkbox"]:indeterminate {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3E%3C/svg%3E");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: 50%;
+  background-repeat: no-repeat;
+}
+[type="checkbox"]:indeterminate:focus, [type="checkbox"]:indeterminate:hover { border-color: transparent; background-color: currentColor; }
+@media (forced-colors: active) {
+  [type="checkbox"]:checked, [type="radio"]:checked, [type="checkbox"]:indeterminate { appearance: auto; }
+}
+[type="file"] { background: unset; border-color: inherit; border-width: 0; border-radius: 0; padding: 0; font-size: unset; line-height: inherit; }
+[type="file"]:focus { outline: 1px solid ButtonText; outline: 1px auto -webkit-focus-ring-color; }
+
+/* --------------------------------------------------------------------------
+   4. Page shell
+   -------------------------------------------------------------------------- */
+body {
+  background-color: var(--white-100);
+  font-family: var(--font-serif);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+/* Centered page column: max-w-7xl with responsive side gutters */
+.wrap {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) { .wrap { padding-left: 1.5rem; padding-right: 1.5rem; } }
+@media (min-width: 1024px) { .wrap { padding-left: 2rem; padding-right: 2rem; } }
+
+.site-main { font-size: 1.125rem; line-height: 1.75rem; }
+
+/* --------------------------------------------------------------------------
+   5. Site navigation
+   -------------------------------------------------------------------------- */
+body > nav { z-index: 1100; } /* above the map and other high-z-index content */
+
+.site-nav { position: relative; }
+/* Default: hero photograph behind a dark overlay */
+.site-nav--image { background-size: cover; background-position: center; box-shadow: var(--shadow-lg); }
+/* Home page: floats over the page's own hero */
+.site-nav--floating { position: absolute; top: 0; left: 0; right: 0; z-index: 20; background-color: transparent; }
+.site-nav__overlay { position: absolute; inset: 0; background-color: rgb(0 0 0 / 0.7); }
+.site-nav__inner { position: relative; z-index: 10; }
+.site-nav__bar { display: flex; justify-content: space-between; height: 5rem; }
+.site-nav__brand { display: flex; align-items: center; }
+
+.site-nav__title {
+  margin-right: 2rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: #ffffff;
+}
+@media (min-width: 640px) { .site-nav__title { font-size: 1.25rem; line-height: 1.75rem; } }
+@media (min-width: 1024px) { .site-nav__title { font-size: 1.5rem; line-height: 2rem; } }
+.site-nav__title a { transition-property: var(--transition-colors); transition-timing-function: var(--ease); transition-duration: 0.2s; }
+.site-nav__title a:hover { opacity: 0.8; color: #e5e7eb; }
+
+/* Desktop links */
+.site-nav__links { display: none; align-items: center; }
+@media (min-width: 768px) { .site-nav__links { display: flex; } }
+.site-nav__links > :not([hidden]) ~ :not([hidden]) { margin-left: 2rem; }
+
+.nav-link {
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+  color: #ffffff;
+  transition-property: all;
+  transition-timing-function: var(--ease);
+  transition-duration: 0.2s;
+}
+.nav-link:hover { color: #e5e7eb; }
+.nav-link--underline { border-bottom: 2px solid transparent; }
+.nav-link--underline:hover { border-color: var(--burgundy-500); }
+.nav-link.is-active, .nav-link.is-active:hover { border-color: #ffffff; color: #ffffff; }
+.nav-link--dropdown { display: flex; align-items: center; }
+.nav-link__icon { width: 1rem; height: 1rem; margin-left: 0.25rem; }
+
+.dropdown { position: relative; }
+.dropdown-menu {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 50;
+  width: 12rem;
+  padding: 0.5rem 0;
+  background-color: #ffffff;
+  border-left: 1px solid var(--gray-200);
+  border-right: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+.submenu-parent { position: relative; }
+.submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 12rem;
+  padding: 0.5rem 0;
+  background-color: #ffffff;
+  border: 1px solid var(--gray-200);
+}
+.dropdown-menu__link {
+  display: block;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--gray-700);
+  transition-property: var(--transition-colors);
+  transition-timing-function: var(--ease);
+  transition-duration: 0.15s;
+}
+.dropdown-menu__link:hover { background-color: var(--gray-50); color: var(--gray-900); }
+.dropdown-menu__link--parent { display: flex; align-items: center; justify-content: space-between; }
+.dropdown-menu__icon { width: 0.75rem; height: 0.75rem; margin-left: 0.5rem; }
+
+/* Mobile toggle + menu */
+.site-nav__toggle { display: flex; align-items: center; }
+@media (min-width: 768px) { .site-nav__toggle { display: none; } }
+.site-nav__toggle-button {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+  transition-property: all;
+  transition-timing-function: var(--ease);
+  transition-duration: 0.2s;
+}
+.site-nav__toggle-button:hover { background: rgba(255, 255, 255, 0.25); }
+.site-nav__toggle-button:focus { outline: 2px solid transparent; outline-offset: 2px; }
+.site-nav__toggle-icon { width: 1.5rem; height: 1.5rem; }
+
+@media (min-width: 768px) { .site-nav__mobile { display: none; } }
+.site-nav__mobile ul { background: rgba(0, 0, 0, 0.8); }
+.site-nav__mobile-list { padding: 1rem 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.site-nav__mobile-list > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+.site-nav__mobile-sublist { padding-left: 1rem; }
+.mobile-link {
+  display: block;
+  padding: 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 500;
+  color: #e5e7eb;
+  border-left: 4px solid transparent;
+  transition-property: all;
+  transition-timing-function: var(--ease);
+  transition-duration: 0.2s;
+}
+.mobile-link:hover { color: #ffffff; border-color: var(--gray-400); }
+.mobile-link.is-active { border-color: var(--gray-400); }
+.mobile-link--child { padding: 0.5rem 0.75rem; font-size: 1rem; line-height: 1.5rem; }
+.mobile-link--grandchild { padding: 0.5rem 0.75rem; font-size: 0.875rem; line-height: 1.25rem; }
+
+/* --------------------------------------------------------------------------
+   6. Image gallery lightbox
+   -------------------------------------------------------------------------- */
+.lightbox { position: fixed; inset: 0; z-index: 50; background-color: rgb(0 0 0 / 0.75); }
+.lightbox__stage { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+/* Note: the close button's text colour was never set in the Tailwind build (text-white was not generated), so it inherits. */
+.lightbox__close { position: absolute; top: 1rem; right: 1rem; z-index: 10; padding: 0.5rem; border-radius: 9999px; background-color: rgb(0 0 0 / 0.5); }
+.lightbox__close:hover { color: var(--gray-300); }
+.lightbox__close-icon { width: 1.5rem; height: 1.5rem; }
+.lightbox__figure { display: flex; flex-direction: column; align-items: center; max-width: 100%; max-height: 100%; }
+.lightbox__image { max-width: 100%; max-height: 90vh; object-fit: contain; }
+.lightbox__caption { margin-top: 1rem; max-width: 42rem; padding: 1rem; border-radius: 0.5rem; text-align: center; background-color: rgb(0 0 0 / 0.5); }
+
+/* --------------------------------------------------------------------------
+   7. Site footer
+   -------------------------------------------------------------------------- */
+.site-footer { padding-top: 3rem; background-color: var(--gray-800); color: var(--gray-300); font-family: var(--font-sans); }
+.site-footer__grid { display: grid; gap: 4rem; }
+@media (min-width: 768px) { .site-footer__grid { grid-template-columns: 1fr auto auto; } }
+.site-footer__logos { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; }
+.site-footer__logo { height: auto; }
+.site-footer__logo--rrchnm { width: 12rem; }
+.site-footer__logo--gmu { width: 14rem; }
+.site-footer__heading { margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.site-footer__list > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.site-footer__link { font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-300); transition-property: var(--transition-colors); transition-timing-function: var(--ease); transition-duration: 0.2s; }
+.site-footer__account { margin-top: 2.5rem; padding-top: 1rem; padding-bottom: 1rem; border-top: 1px solid var(--gray-700); text-align: center; font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-400); }
+.site-footer__account code { color: var(--gray-300); }
+.site-footer__account a { text-decoration-line: underline; }
+.site-footer__copyright { margin-top: 1rem; padding: 1rem 0; background-color: var(--gray-900); text-align: center; font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-400); }
+.site-footer__copyright a { text-decoration-line: underline; }
+.site-footer__copyright a:hover { text-decoration-line: none; }
+
+/* --------------------------------------------------------------------------
+   8. Utilities
+   -------------------------------------------------------------------------- */
+/* Toggled by JavaScript (menus, lightbox, icons). Declared last so it wins over
+   same-specificity component rules in this file; page stylesheets that set
+   `display` on a toggled element must handle `.hidden` themselves. */
+.hidden { display: none; }
+/* Visually hidden, still read by screen readers */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }

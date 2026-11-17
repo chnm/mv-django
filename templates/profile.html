@@ -1,52 +1,56 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Profile{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/pages/account.css' %}">
+{% endblock extra_css %}
 {% block content %}
-  <div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl mx-auto">
+  <div class="account-page">
+    <div class="account-container account-container--wide">
 
       {% include "includes/messages.html" %}
 
-      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div class="profile-card">
       <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8">
-          <div class="flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="profile-header">
+          <div class="profile-header__inner">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar">
+                <svg class="profile-avatar__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
               </div>
             </div>
             <div>
-              <h1 class="text-2xl font-bold text-white">Profile</h1>
-              <p class="text-blue-100">Manage your account settings and preferences</p>
+              <h1 class="profile-header__title">Profile</h1>
+              <p class="profile-header__subtitle">Manage your account settings and preferences</p>
             </div>
           </div>
         </div>
 
       <!-- Content -->
-        <div class="px-6 py-8">
-          <div class="grid md:grid-cols-2 gap-8">
+        <div class="profile-body">
+          <div class="profile-grid">
           <!-- Account Information -->
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
-              <div class="space-y-4">
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <dt class="text-sm font-medium text-gray-600">Username</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ user.username }}</dd>
+              <h2 class="profile-heading">Account Information</h2>
+              <div class="profile-list">
+                <div class="profile-item">
+                  <dt class="profile-item__label">Username</dt>
+                  <dd class="profile-item__value">{{ user.username }}</dd>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <dt class="text-sm font-medium text-gray-600">Email</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ user.email }}</dd>
+                <div class="profile-item">
+                  <dt class="profile-item__label">Email</dt>
+                  <dd class="profile-item__value">{{ user.email }}</dd>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <dt class="text-sm font-medium text-gray-600">Member Since</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ user.date_joined|date:"F j, Y" }}</dd>
+                <div class="profile-item">
+                  <dt class="profile-item__label">Member Since</dt>
+                  <dd class="profile-item__value">{{ user.date_joined|date:"F j, Y" }}</dd>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <dt class="text-sm font-medium text-gray-600">Last Login</dt>
-                  <dd class="mt-1 text-sm text-gray-900">
+                <div class="profile-item">
+                  <dt class="profile-item__label">Last Login</dt>
+                  <dd class="profile-item__value">
                     {% if user.last_login %}
                       {{ user.last_login|date:"F j, Y g:i A" }}
                     {% else %}
@@ -59,12 +63,12 @@
 
           <!-- Quick Actions -->
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div class="space-y-3">
-                <a href="{% url 'password_change' %}" class="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+              <h2 class="profile-heading">Quick Actions</h2>
+              <div class="profile-actions">
+                <a href="{% url 'password_change' %}" class="profile-action">
                   Change Password
                 </a>
-                <a href="{% url 'logout' %}" class="block w-full bg-red-600 text-white text-center py-2 px-4 rounded-md hover:bg-red-700 transition duration-200">
+                <a href="{% url 'logout' %}" class="profile-action profile-action--danger">
                   Log Out
                 </a>
               </div>
@@ -72,26 +76,26 @@
           </div>
 
         <!-- Additional Information -->
-          <div class="mt-8 pt-8 border-t border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Status</h2>
-            <div class="grid sm:grid-cols-3 gap-4">
-              <div class="bg-blue-50 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-blue-600">
+          <div class="profile-status">
+            <h2 class="profile-heading">Account Status</h2>
+            <div class="profile-status__grid">
+              <div class="profile-stat profile-stat--blue">
+                <div class="profile-stat__value">
                   {% if user.is_active %}Active{% else %}Inactive{% endif %}
                 </div>
-                <div class="text-sm text-gray-600">Account Status</div>
+                <div class="profile-stat__label">Account Status</div>
               </div>
-              <div class="bg-purple-50 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-purple-600">
+              <div class="profile-stat profile-stat--purple">
+                <div class="profile-stat__value">
                   {% if user.is_staff %}Staff{% else %}User{% endif %}
                 </div>
-                <div class="text-sm text-gray-600">Account Type</div>
+                <div class="profile-stat__label">Account Type</div>
               </div>
-              <div class="bg-green-50 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-green-600">
+              <div class="profile-stat profile-stat--green">
+                <div class="profile-stat__value">
                   {{ user.email }}
                 </div>
-                <div class="text-sm text-gray-600">Email</div>
+                <div class="profile-stat__label">Email</div>
               </div>
             </div>
           </div>

@@ -1,0 +1,1062 @@
+/* ==========================================================================
+   Prose (long-form CMS content) — ported 1:1 from @tailwindcss/typography
+   as compiled for this project (.prose, .prose-lg, .prose-xl, .prose-gray;
+   project override: paragraphs at 1.3rem). Load after base.css.
+   ========================================================================== */
+.prose {
+  color:var(--prose-body);
+  max-width:65ch;
+}
+
+.prose :where(p) {
+  margin-top:1.25em;
+  margin-bottom:1.25em;
+  font-size:1.3rem;
+}
+
+.prose :where([class~=lead]) {
+  color:var(--prose-lead);
+  font-size:1.25em;
+  line-height:1.6;
+  margin-top:1.2em;
+  margin-bottom:1.2em;
+}
+
+.prose :where(a) {
+  color:var(--prose-links);
+  text-decoration:underline;
+  font-weight:500;
+}
+
+.prose :where(strong) {
+  color:var(--prose-bold);
+  font-weight:600;
+}
+
+.prose :where(a strong) {
+  color:inherit;
+}
+
+.prose :where(blockquote strong) {
+  color:inherit;
+}
+
+.prose :where(thead th strong) {
+  color:inherit;
+}
+
+.prose :where(ol) {
+  list-style-type:decimal;
+  margin-top:1.25em;
+  margin-bottom:1.25em;
+  padding-inline-start:1.625em;
+}
+
+.prose :where(ol[type=A]) {
+  list-style-type:upper-alpha;
+}
+
+.prose :where(ol[type=a]) {
+  list-style-type:lower-alpha;
+}
+
+.prose :where(ol[type=A s]) {
+  list-style-type:upper-alpha;
+}
+
+.prose :where(ol[type=a s]) {
+  list-style-type:lower-alpha;
+}
+
+.prose :where(ol[type=I]) {
+  list-style-type:upper-roman;
+}
+
+.prose :where(ol[type=i]) {
+  list-style-type:lower-roman;
+}
+
+.prose :where(ol[type=I s]) {
+  list-style-type:upper-roman;
+}
+
+.prose :where(ol[type=i s]) {
+  list-style-type:lower-roman;
+}
+
+.prose :where(ol[type="1"]) {
+  list-style-type:decimal;
+}
+
+.prose :where(ul) {
+  list-style-type:disc;
+  margin-top:1.25em;
+  margin-bottom:1.25em;
+  padding-inline-start:1.625em;
+}
+
+.prose :where(ol>li)::marker {
+  font-weight:400;
+  color:var(--prose-counters);
+}
+
+.prose :where(ul>li)::marker {
+  color:var(--prose-bullets);
+}
+
+.prose :where(dt) {
+  color:var(--prose-headings);
+  font-weight:600;
+  margin-top:1.25em;
+}
+
+.prose :where(hr) {
+  border-color:var(--prose-hr);
+  border-top-width:1px;
+  margin-top:3em;
+  margin-bottom:3em;
+}
+
+.prose :where(blockquote) {
+  font-weight:500;
+  font-style:italic;
+  color:var(--prose-quotes);
+  border-inline-start-width:.25rem;
+  border-inline-start-color:var(--prose-quote-borders);
+  quotes:"\201C""\201D""\2018""\2019";
+  margin-top:1.6em;
+  margin-bottom:1.6em;
+  padding-inline-start:1em;
+}
+
+.prose :where(blockquote p:first-of-type):before {
+  content:open-quote;
+}
+
+.prose :where(blockquote p:last-of-type):after {
+  content:close-quote;
+}
+
+.prose :where(h1) {
+  color:var(--prose-headings);
+  font-weight:800;
+  font-size:2.25em;
+  margin-top:0;
+  margin-bottom:.8888889em;
+  line-height:1.1111111;
+}
+
+.prose :where(h1 strong) {
+  font-weight:900;
+  color:inherit;
+}
+
+.prose :where(h2) {
+  color:var(--prose-headings);
+  font-weight:700;
+  font-size:1.5em;
+  margin-top:2em;
+  margin-bottom:1em;
+  line-height:1.3333333;
+}
+
+.prose :where(h2 strong) {
+  font-weight:800;
+  color:inherit;
+}
+
+.prose :where(h3) {
+  color:var(--prose-headings);
+  font-weight:600;
+  font-size:1.25em;
+  margin-top:1.6em;
+  margin-bottom:.6em;
+  line-height:1.6;
+}
+
+.prose :where(h3 strong) {
+  font-weight:700;
+  color:inherit;
+}
+
+.prose :where(h4) {
+  color:var(--prose-headings);
+  font-weight:600;
+  margin-top:1.5em;
+  margin-bottom:.5em;
+  line-height:1.5;
+}
+
+.prose :where(h4 strong) {
+  font-weight:700;
+  color:inherit;
+}
+
+.prose :where(img) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose :where(picture) {
+  display:block;
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose :where(video) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose :where(kbd) {
+  font-weight:500;
+  font-family:inherit;
+  color:var(--prose-kbd);
+  box-shadow:0 0 0 1px rgb(var(--prose-kbd-shadows)/10%),0 3px 0 rgb(var(--prose-kbd-shadows)/10%);
+  font-size:.875em;
+  border-radius:.3125rem;
+  padding-top:.1875em;
+  padding-inline-end:.375em;
+  padding-bottom:.1875em;
+  padding-inline-start:.375em;
+}
+
+.prose :where(code) {
+  color:var(--prose-code);
+  font-weight:600;
+  font-size:.875em;
+}
+
+.prose :where(code):before {
+  content:"`";
+}
+
+.prose :where(code):after {
+  content:"`";
+}
+
+.prose :where(a code) {
+  color:inherit;
+}
+
+.prose :where(h1 code) {
+  color:inherit;
+}
+
+.prose :where(h2 code) {
+  color:inherit;
+  font-size:.875em;
+}
+
+.prose :where(h3 code) {
+  color:inherit;
+  font-size:.9em;
+}
+
+.prose :where(h4 code) {
+  color:inherit;
+}
+
+.prose :where(blockquote code) {
+  color:inherit;
+}
+
+.prose :where(thead th code) {
+  color:inherit;
+}
+
+.prose :where(pre) {
+  color:var(--prose-pre-code);
+  background-color:var(--prose-pre-bg);
+  overflow-x:auto;
+  font-weight:400;
+  font-size:.875em;
+  line-height:1.7142857;
+  margin-top:1.7142857em;
+  margin-bottom:1.7142857em;
+  border-radius:.375rem;
+  padding-top:.8571429em;
+  padding-inline-end:1.1428571em;
+  padding-bottom:.8571429em;
+  padding-inline-start:1.1428571em;
+}
+
+.prose :where(pre code) {
+  background-color:transparent;
+  border-width:0;
+  border-radius:0;
+  padding:0;
+  font-weight:inherit;
+  color:inherit;
+  font-size:inherit;
+  font-family:inherit;
+  line-height:inherit;
+}
+
+.prose :where(pre code):before {
+  content:none;
+}
+
+.prose :where(pre code):after {
+  content:none;
+}
+
+.prose :where(table) {
+  width:100%;
+  table-layout:auto;
+  margin-top:2em;
+  margin-bottom:2em;
+  font-size:.875em;
+  line-height:1.7142857;
+}
+
+.prose :where(thead) {
+  border-bottom-width:1px;
+  border-bottom-color:var(--prose-th-borders);
+}
+
+.prose :where(thead th) {
+  color:var(--prose-headings);
+  font-weight:600;
+  vertical-align:bottom;
+  padding-inline-end:.5714286em;
+  padding-bottom:.5714286em;
+  padding-inline-start:.5714286em;
+}
+
+.prose :where(tbody tr) {
+  border-bottom-width:1px;
+  border-bottom-color:var(--prose-td-borders);
+}
+
+.prose :where(tbody tr:last-child) {
+  border-bottom-width:0;
+}
+
+.prose :where(tbody td) {
+  vertical-align:baseline;
+}
+
+.prose :where(tfoot) {
+  border-top-width:1px;
+  border-top-color:var(--prose-th-borders);
+}
+
+.prose :where(tfoot td) {
+  vertical-align:top;
+}
+
+.prose :where(th,
+td) {
+  text-align:start;
+}
+
+.prose :where(figure>*) {
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.prose :where(figcaption) {
+  color:var(--prose-captions);
+  font-size:.875em;
+  line-height:1.4285714;
+  margin-top:.8571429em;
+}
+
+.prose {
+  --prose-body:#374151;
+  --prose-headings:#111827;
+  --prose-lead:#4b5563;
+  --prose-links:#111827;
+  --prose-bold:#111827;
+  --prose-counters:#6b7280;
+  --prose-bullets:#d1d5db;
+  --prose-hr:#e5e7eb;
+  --prose-quotes:#111827;
+  --prose-quote-borders:#e5e7eb;
+  --prose-captions:#6b7280;
+  --prose-kbd:#111827;
+  --prose-kbd-shadows:17 24 39;
+  --prose-code:#111827;
+  --prose-pre-code:#e5e7eb;
+  --prose-pre-bg:#1f2937;
+  --prose-th-borders:#d1d5db;
+  --prose-td-borders:#e5e7eb;
+  --prose-invert-body:#d1d5db;
+  --prose-invert-headings:#fff;
+  --prose-invert-lead:#9ca3af;
+  --prose-invert-links:#fff;
+  --prose-invert-bold:#fff;
+  --prose-invert-counters:#9ca3af;
+  --prose-invert-bullets:#4b5563;
+  --prose-invert-hr:#374151;
+  --prose-invert-quotes:#f3f4f6;
+  --prose-invert-quote-borders:#374151;
+  --prose-invert-captions:#9ca3af;
+  --prose-invert-kbd:#fff;
+  --prose-invert-kbd-shadows:255 255 255;
+  --prose-invert-code:#fff;
+  --prose-invert-pre-code:#d1d5db;
+  --prose-invert-pre-bg:rgba(0,0,0,.5);
+  --prose-invert-th-borders:#4b5563;
+  --prose-invert-td-borders:#374151;
+  font-size:1rem;
+  line-height:1.75;
+}
+
+.prose :where(picture>img) {
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.prose :where(li) {
+  margin-top:.5em;
+  margin-bottom:.5em;
+}
+
+.prose :where(ol>li) {
+  padding-inline-start:.375em;
+}
+
+.prose :where(ul>li) {
+  padding-inline-start:.375em;
+}
+
+.prose :where(.prose>ul>li p) {
+  margin-top:.75em;
+  margin-bottom:.75em;
+}
+
+.prose :where(.prose>ul>li>p:first-child) {
+  margin-top:1.25em;
+}
+
+.prose :where(.prose>ul>li>p:last-child) {
+  margin-bottom:1.25em;
+}
+
+.prose :where(.prose>ol>li>p:first-child) {
+  margin-top:1.25em;
+}
+
+.prose :where(.prose>ol>li>p:last-child) {
+  margin-bottom:1.25em;
+}
+
+.prose :where(ul ul,
+ul ol,
+ol ul,
+ol ol) {
+  margin-top:.75em;
+  margin-bottom:.75em;
+}
+
+.prose :where(dl) {
+  margin-top:1.25em;
+  margin-bottom:1.25em;
+}
+
+.prose :where(dd) {
+  margin-top:.5em;
+  padding-inline-start:1.625em;
+}
+
+.prose :where(hr+*) {
+  margin-top:0;
+}
+
+.prose :where(h2+*) {
+  margin-top:0;
+}
+
+.prose :where(h3+*) {
+  margin-top:0;
+}
+
+.prose :where(h4+*) {
+  margin-top:0;
+}
+
+.prose :where(thead th:first-child) {
+  padding-inline-start:0;
+}
+
+.prose :where(thead th:last-child) {
+  padding-inline-end:0;
+}
+
+.prose :where(tbody td,
+tfoot td) {
+  padding-top:.5714286em;
+  padding-inline-end:.5714286em;
+  padding-bottom:.5714286em;
+  padding-inline-start:.5714286em;
+}
+
+.prose :where(tbody td:first-child,
+tfoot td:first-child) {
+  padding-inline-start:0;
+}
+
+.prose :where(tbody td:last-child,
+tfoot td:last-child) {
+  padding-inline-end:0;
+}
+
+.prose :where(figure) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose :where(.prose>:first-child) {
+  margin-top:0;
+}
+
+.prose :where(.prose>:last-child) {
+  margin-bottom:0;
+}
+
+.prose-lg {
+  font-size:1.125rem;
+  line-height:1.7777778;
+}
+
+.prose-lg :where(p) {
+  margin-top:1.3333333em;
+  margin-bottom:1.3333333em;
+}
+
+.prose-lg :where([class~=lead]) {
+  font-size:1.2222222em;
+  line-height:1.4545455;
+  margin-top:1.0909091em;
+  margin-bottom:1.0909091em;
+}
+
+.prose-lg :where(blockquote) {
+  margin-top:1.6666667em;
+  margin-bottom:1.6666667em;
+  padding-inline-start:1em;
+}
+
+.prose-lg :where(h1) {
+  font-size:2.6666667em;
+  margin-top:0;
+  margin-bottom:.8333333em;
+  line-height:1;
+}
+
+.prose-lg :where(h2) {
+  font-size:1.6666667em;
+  margin-top:1.8666667em;
+  margin-bottom:1.0666667em;
+  line-height:1.3333333;
+}
+
+.prose-lg :where(h3) {
+  font-size:1.3333333em;
+  margin-top:1.6666667em;
+  margin-bottom:.6666667em;
+  line-height:1.5;
+}
+
+.prose-lg :where(h4) {
+  margin-top:1.7777778em;
+  margin-bottom:.4444444em;
+  line-height:1.5555556;
+}
+
+.prose-lg :where(img) {
+  margin-top:1.7777778em;
+  margin-bottom:1.7777778em;
+}
+
+.prose-lg :where(picture) {
+  margin-top:1.7777778em;
+  margin-bottom:1.7777778em;
+}
+
+.prose-lg :where(picture>img) {
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.prose-lg :where(video) {
+  margin-top:1.7777778em;
+  margin-bottom:1.7777778em;
+}
+
+.prose-lg :where(kbd) {
+  font-size:.8888889em;
+  border-radius:.3125rem;
+  padding-top:.2222222em;
+  padding-inline-end:.4444444em;
+  padding-bottom:.2222222em;
+  padding-inline-start:.4444444em;
+}
+
+.prose-lg :where(code) {
+  font-size:.8888889em;
+}
+
+.prose-lg :where(h2 code) {
+  font-size:.8666667em;
+}
+
+.prose-lg :where(h3 code) {
+  font-size:.875em;
+}
+
+.prose-lg :where(pre) {
+  font-size:.8888889em;
+  line-height:1.75;
+  margin-top:2em;
+  margin-bottom:2em;
+  border-radius:.375rem;
+  padding-top:1em;
+  padding-inline-end:1.5em;
+  padding-bottom:1em;
+  padding-inline-start:1.5em;
+}
+
+.prose-lg :where(ol) {
+  margin-top:1.3333333em;
+  margin-bottom:1.3333333em;
+  padding-inline-start:1.5555556em;
+}
+
+.prose-lg :where(ul) {
+  margin-top:1.3333333em;
+  margin-bottom:1.3333333em;
+  padding-inline-start:1.5555556em;
+}
+
+.prose-lg :where(li) {
+  margin-top:.6666667em;
+  margin-bottom:.6666667em;
+}
+
+.prose-lg :where(ol>li) {
+  padding-inline-start:.4444444em;
+}
+
+.prose-lg :where(ul>li) {
+  padding-inline-start:.4444444em;
+}
+
+.prose-lg :where(.prose-lg>ul>li p) {
+  margin-top:.8888889em;
+  margin-bottom:.8888889em;
+}
+
+.prose-lg :where(.prose-lg>ul>li>p:first-child) {
+  margin-top:1.3333333em;
+}
+
+.prose-lg :where(.prose-lg>ul>li>p:last-child) {
+  margin-bottom:1.3333333em;
+}
+
+.prose-lg :where(.prose-lg>ol>li>p:first-child) {
+  margin-top:1.3333333em;
+}
+
+.prose-lg :where(.prose-lg>ol>li>p:last-child) {
+  margin-bottom:1.3333333em;
+}
+
+.prose-lg :where(ul ul,
+ul ol,
+ol ul,
+ol ol) {
+  margin-top:.8888889em;
+  margin-bottom:.8888889em;
+}
+
+.prose-lg :where(dl) {
+  margin-top:1.3333333em;
+  margin-bottom:1.3333333em;
+}
+
+.prose-lg :where(dt) {
+  margin-top:1.3333333em;
+}
+
+.prose-lg :where(dd) {
+  margin-top:.6666667em;
+  padding-inline-start:1.5555556em;
+}
+
+.prose-lg :where(hr) {
+  margin-top:3.1111111em;
+  margin-bottom:3.1111111em;
+}
+
+.prose-lg :where(hr+*) {
+  margin-top:0;
+}
+
+.prose-lg :where(h2+*) {
+  margin-top:0;
+}
+
+.prose-lg :where(h3+*) {
+  margin-top:0;
+}
+
+.prose-lg :where(h4+*) {
+  margin-top:0;
+}
+
+.prose-lg :where(table) {
+  font-size:.8888889em;
+  line-height:1.5;
+}
+
+.prose-lg :where(thead th) {
+  padding-inline-end:.75em;
+  padding-bottom:.75em;
+  padding-inline-start:.75em;
+}
+
+.prose-lg :where(thead th:first-child) {
+  padding-inline-start:0;
+}
+
+.prose-lg :where(thead th:last-child) {
+  padding-inline-end:0;
+}
+
+.prose-lg :where(tbody td,
+tfoot td) {
+  padding-top:.75em;
+  padding-inline-end:.75em;
+  padding-bottom:.75em;
+  padding-inline-start:.75em;
+}
+
+.prose-lg :where(tbody td:first-child,
+tfoot td:first-child) {
+  padding-inline-start:0;
+}
+
+.prose-lg :where(tbody td:last-child,
+tfoot td:last-child) {
+  padding-inline-end:0;
+}
+
+.prose-lg :where(figure) {
+  margin-top:1.7777778em;
+  margin-bottom:1.7777778em;
+}
+
+.prose-lg :where(figure>*) {
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.prose-lg :where(figcaption) {
+  font-size:.8888889em;
+  line-height:1.5;
+  margin-top:1em;
+}
+
+.prose-lg :where(.prose-lg>:first-child) {
+  margin-top:0;
+}
+
+.prose-lg :where(.prose-lg>:last-child) {
+  margin-bottom:0;
+}
+
+.prose-xl {
+  font-size:1.25rem;
+  line-height:1.8;
+}
+
+.prose-xl :where(p) {
+  margin-top:1.2em;
+  margin-bottom:1.2em;
+}
+
+.prose-xl :where([class~=lead]) {
+  font-size:1.2em;
+  line-height:1.5;
+  margin-top:1em;
+  margin-bottom:1em;
+}
+
+.prose-xl :where(blockquote) {
+  margin-top:1.6em;
+  margin-bottom:1.6em;
+  padding-inline-start:1.0666667em;
+}
+
+.prose-xl :where(h1) {
+  font-size:2.8em;
+  margin-top:0;
+  margin-bottom:.8571429em;
+  line-height:1;
+}
+
+.prose-xl :where(h2) {
+  font-size:1.8em;
+  margin-top:1.5555556em;
+  margin-bottom:.8888889em;
+  line-height:1.1111111;
+}
+
+.prose-xl :where(h3) {
+  font-size:1.5em;
+  margin-top:1.6em;
+  margin-bottom:.6666667em;
+  line-height:1.3333333;
+}
+
+.prose-xl :where(h4) {
+  margin-top:1.8em;
+  margin-bottom:.6em;
+  line-height:1.6;
+}
+
+.prose-xl :where(img) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose-xl :where(picture) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose-xl :where(picture>img) {
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.prose-xl :where(video) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose-xl :where(kbd) {
+  font-size:.9em;
+  border-radius:.3125rem;
+  padding-top:.25em;
+  padding-inline-end:.4em;
+  padding-bottom:.25em;
+  padding-inline-start:.4em;
+}
+
+.prose-xl :where(code) {
+  font-size:.9em;
+}
+
+.prose-xl :where(h2 code) {
+  font-size:.8611111em;
+}
+
+.prose-xl :where(h3 code) {
+  font-size:.9em;
+}
+
+.prose-xl :where(pre) {
+  font-size:.9em;
+  line-height:1.7777778;
+  margin-top:2em;
+  margin-bottom:2em;
+  border-radius:.5rem;
+  padding-top:1.1111111em;
+  padding-inline-end:1.3333333em;
+  padding-bottom:1.1111111em;
+  padding-inline-start:1.3333333em;
+}
+
+.prose-xl :where(ol) {
+  margin-top:1.2em;
+  margin-bottom:1.2em;
+  padding-inline-start:1.6em;
+}
+
+.prose-xl :where(ul) {
+  margin-top:1.2em;
+  margin-bottom:1.2em;
+  padding-inline-start:1.6em;
+}
+
+.prose-xl :where(li) {
+  margin-top:.6em;
+  margin-bottom:.6em;
+}
+
+.prose-xl :where(ol>li) {
+  padding-inline-start:.4em;
+}
+
+.prose-xl :where(ul>li) {
+  padding-inline-start:.4em;
+}
+
+.prose-xl :where(.prose-xl>ul>li p) {
+  margin-top:.8em;
+  margin-bottom:.8em;
+}
+
+.prose-xl :where(.prose-xl>ul>li>p:first-child) {
+  margin-top:1.2em;
+}
+
+.prose-xl :where(.prose-xl>ul>li>p:last-child) {
+  margin-bottom:1.2em;
+}
+
+.prose-xl :where(.prose-xl>ol>li>p:first-child) {
+  margin-top:1.2em;
+}
+
+.prose-xl :where(.prose-xl>ol>li>p:last-child) {
+  margin-bottom:1.2em;
+}
+
+.prose-xl :where(ul ul,
+ul ol,
+ol ul,
+ol ol) {
+  margin-top:.8em;
+  margin-bottom:.8em;
+}
+
+.prose-xl :where(dl) {
+  margin-top:1.2em;
+  margin-bottom:1.2em;
+}
+
+.prose-xl :where(dt) {
+  margin-top:1.2em;
+}
+
+.prose-xl :where(dd) {
+  margin-top:.6em;
+  padding-inline-start:1.6em;
+}
+
+.prose-xl :where(hr) {
+  margin-top:2.8em;
+  margin-bottom:2.8em;
+}
+
+.prose-xl :where(hr+*) {
+  margin-top:0;
+}
+
+.prose-xl :where(h2+*) {
+  margin-top:0;
+}
+
+.prose-xl :where(h3+*) {
+  margin-top:0;
+}
+
+.prose-xl :where(h4+*) {
+  margin-top:0;
+}
+
+.prose-xl :where(table) {
+  font-size:.9em;
+  line-height:1.5555556;
+}
+
+.prose-xl :where(thead th) {
+  padding-inline-end:.6666667em;
+  padding-bottom:.8888889em;
+  padding-inline-start:.6666667em;
+}
+
+.prose-xl :where(thead th:first-child) {
+  padding-inline-start:0;
+}
+
+.prose-xl :where(thead th:last-child) {
+  padding-inline-end:0;
+}
+
+.prose-xl :where(tbody td,
+tfoot td) {
+  padding-top:.8888889em;
+  padding-inline-end:.6666667em;
+  padding-bottom:.8888889em;
+  padding-inline-start:.6666667em;
+}
+
+.prose-xl :where(tbody td:first-child,
+tfoot td:first-child) {
+  padding-inline-start:0;
+}
+
+.prose-xl :where(tbody td:last-child,
+tfoot td:last-child) {
+  padding-inline-end:0;
+}
+
+.prose-xl :where(figure) {
+  margin-top:2em;
+  margin-bottom:2em;
+}
+
+.prose-xl :where(figure>*) {
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.prose-xl :where(figcaption) {
+  font-size:.9em;
+  line-height:1.5555556;
+  margin-top:1em;
+}
+
+.prose-xl :where(.prose-xl>:first-child) {
+  margin-top:0;
+}
+
+.prose-xl :where(.prose-xl>:last-child) {
+  margin-bottom:0;
+}
+
+.prose-gray {
+  --prose-body:#374151;
+  --prose-headings:#111827;
+  --prose-lead:#4b5563;
+  --prose-links:#111827;
+  --prose-bold:#111827;
+  --prose-counters:#6b7280;
+  --prose-bullets:#d1d5db;
+  --prose-hr:#e5e7eb;
+  --prose-quotes:#111827;
+  --prose-quote-borders:#e5e7eb;
+  --prose-captions:#6b7280;
+  --prose-kbd:#111827;
+  --prose-kbd-shadows:17 24 39;
+  --prose-code:#111827;
+  --prose-pre-code:#e5e7eb;
+  --prose-pre-bg:#1f2937;
+  --prose-th-borders:#d1d5db;
+  --prose-td-borders:#e5e7eb;
+  --prose-invert-body:#d1d5db;
+  --prose-invert-headings:#fff;
+  --prose-invert-lead:#9ca3af;
+  --prose-invert-links:#fff;
+  --prose-invert-bold:#fff;
+  --prose-invert-counters:#9ca3af;
+  --prose-invert-bullets:#4b5563;
+  --prose-invert-hr:#374151;
+  --prose-invert-quotes:#f3f4f6;
+  --prose-invert-quote-borders:#374151;
+  --prose-invert-captions:#9ca3af;
+  --prose-invert-kbd:#fff;
+  --prose-invert-kbd-shadows:255 255 255;
+  --prose-invert-code:#fff;
+  --prose-invert-pre-code:#d1d5db;
+  --prose-invert-pre-bg:rgba(0,0,0,.5);
+  --prose-invert-th-borders:#4b5563;
+  --prose-invert-td-borders:#374151;
+}

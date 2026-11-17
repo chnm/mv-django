@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Home page (templates/index.html) and the HomePageContent / ProjectPerson
+   snippet previews. Values ported 1:1 from the compiled Tailwind build.
+   ========================================================================== */
+
+/* --- Hero (nav floats over it) ------------------------------------------- */
+.home-hero { position: relative; background-size: cover; background-position: 50%; }
+.home-hero__overlay { position: absolute; inset: 0; background-color: rgb(0 0 0 / 0.7); }
+.home-hero__inner { position: relative; z-index: 10; padding-top: 8rem; padding-bottom: 4rem; text-align: center; }
+@media (min-width: 640px) { .home-hero__inner { padding-top: 9rem; padding-bottom: 5rem; } }
+@media (min-width: 1024px) { .home-hero__inner { padding-bottom: 6rem; } }
+.home-hero__lede {
+  max-width: 48rem;
+  margin: 0 auto 1.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+@media (min-width: 640px) { .home-hero__lede { margin-bottom: 2rem; padding-left: 0; padding-right: 0; font-size: 1.5rem; line-height: 2rem; } }
+@media (min-width: 768px) { .home-hero__lede { font-size: 1.875rem; line-height: 2.25rem; } }
+@media (min-width: 1024px) { .home-hero__lede { font-size: 2.25rem; line-height: 2.5rem; } }
+
+/* --- About section --------------------------------------------------------- */
+.home-about { padding-top: 3rem; padding-bottom: 3rem; background-color: var(--white-50); }
+@media (min-width: 640px) { .home-about { padding-top: 4rem; padding-bottom: 4rem; } }
+.home-about__body { margin-bottom: 2rem; }
+@media (min-width: 640px) { .home-about__body { margin-bottom: 3rem; } }
+.home-about__grid { display: grid; gap: 2rem; margin-bottom: 2rem; }
+@media (min-width: 1024px) {
+  .home-about__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-about__text { grid-column: span 2 / span 2; }
+  .home-about__people { grid-column: span 1 / span 1; }
+}
+.home-about__prose { max-width: none; color: var(--gray-900); }
+.home-about__lead, .home-about__para { max-width: 48rem; margin-left: auto; margin-right: auto; padding-bottom: 1rem; }
+.home-about__lead { font-size: 1.25rem; line-height: 1.75rem; color: var(--gray-900); }
+.home-about__para { font-size: 1rem; line-height: 1.5rem; color: var(--gray-700); }
+@media (min-width: 640px) { .home-about__para { font-size: 1.125rem; line-height: 1.75rem; } }
+
+/* --- People lists (team, advisory board, contributors) --------------------- */
+.home-people__heading { margin-bottom: 1rem; font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; color: var(--black); }
+.home-people > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+.home-people--team { margin-bottom: 1.5rem; }
+.home-person { display: flex; align-items: flex-start; }
+.home-person > :not([hidden]) ~ :not([hidden]) { margin-left: 0.75rem; }
+.home-person__avatar { flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 9999px; overflow: hidden; background-color: var(--yellow-100); }
+.home-person__avatar--lavender { background-color: var(--lavender-100); }
+.home-person__photo { width: 100%; height: 100%; object-fit: cover; }
+.home-person__initial { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background-color: var(--white-300); }
+.home-person__initial-text { font-size: 0.75rem; line-height: 1rem; color: var(--gray-700); }
+.home-person__name { font-size: 1rem; line-height: 1.5rem; font-weight: 500; color: var(--black); }
+.home-person__role { font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-700); }
+.home-person__affil { font-size: 0.75rem; line-height: 1rem; color: var(--gray-500); }
+
+.home-rule { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+/* --- Feature cards ----------------------------------------------------------- */
+.home-cards { display: grid; gap: 1.5rem; }
+@media (min-width: 640px) { .home-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; } }
+@media (min-width: 1024px) { .home-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Note: the Tailwind build had no `bg-white`, so cards have no background of their own. */
+.home-card {
+  display: block;
+  padding: 1.5rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  text-decoration-line: none;
+  transition-property: all;
+  transition-timing-function: var(--ease);
+  transition-duration: 0.2s;
+}
+.home-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  transform: translateY(-0.25rem);
+}
+.home-card__icon { display: flex; align-items: center; justify-content: center; width: 4rem; height: 4rem; margin: 0 auto 1rem; border-radius: 9999px; }
+.home-card__icon svg { width: 2rem; height: 2rem; }
+.home-card__icon--map { background-color: var(--yellow-100); box-shadow: var(--shadow-amalfi); color: var(--yellow-600); }
+.home-card__icon--research { background-color: var(--mediterranean-100); box-shadow: var(--shadow-coastal); color: var(--gray-700); }
+.home-card__icon--data { background-color: var(--lavender-100); box-shadow: var(--shadow-soft); color: var(--lavender-600); }
+.home-card__title { margin-bottom: 0.75rem; font-size: 1.5rem; line-height: 2rem; font-weight: 600; color: var(--black); }
+.home-card__text { margin-bottom: 1rem; font-size: 1.125rem; line-height: 1.75rem; color: var(--gray-700); }
+.home-card__cta {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  transition-property: var(--transition-colors);
+  transition-timing-function: var(--ease);
+  transition-duration: 0.2s;
+}
+.home-card:hover .home-card__cta { color: var(--black); }
+
+/* --- Wagtail snippet previews (HomePageContent, ProjectPerson) ------------- */
+.home-preview { width: 100%; margin-left: auto; margin-right: auto; padding: 2rem 1rem; }
+@media (min-width: 640px) { .home-preview { max-width: 640px; } }
+@media (min-width: 768px) { .home-preview { max-width: 768px; } }
+@media (min-width: 1024px) { .home-preview { max-width: 1024px; } }
+@media (min-width: 1280px) { .home-preview { max-width: 1280px; } }
+@media (min-width: 1536px) { .home-preview { max-width: 1536px; } }
+.home-preview__prose { max-width: none; }
+.home-preview__title { margin-bottom: 1rem; font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; }
+.home-preview__lede { margin-bottom: 1.5rem; font-size: 1.25rem; line-height: 1.75rem; color: var(--gray-600); }
+.home-preview__narrow { max-width: 42rem; }
+.home-preview__person { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
+.home-preview__person > :not([hidden]) ~ :not([hidden]) { margin-left: 1.5rem; }
+.home-preview__photo { border-radius: 9999px; }
+.home-preview__nophoto { display: flex; align-items: center; justify-content: center; width: 6rem; height: 6rem; border-radius: 9999px; background-color: var(--gray-300); }
+.home-preview__nophoto-text { font-size: 0.875rem; line-height: 1.25rem; color: var(--gray-500); }
+.home-preview__name { font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+.home-preview__role { font-size: 1.125rem; line-height: 1.75rem; color: var(--gray-600); }
+.home-preview__affil { color: var(--gray-500); }
+.home-preview__type { font-size: 0.875rem; line-height: 1.25rem; color: var(--blue-600); }

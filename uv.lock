@@ -541,18 +541,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-tailwind"
-version = "4.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/df/8a/2eb6adbc65a459c592b10dfb5375ccce220474ea514ef3f897effd4c5b96/django_tailwind-4.3.1.tar.gz", hash = "sha256:7c8be0bf181695c18356a6ba79d0b5c9379ea3336439eaf1b8647ed420631d94", size = 12275, upload-time = "2025-10-29T20:01:47.718Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/47/1a4719918b97013764323eaa7b5a87a414de0d5c2548a68f43e27e7afb3a/django_tailwind-4.3.1-py3-none-any.whl", hash = "sha256:439d183e5c35d49a208a12d9554d0f1cae6c85e5f133b299f0f4a1785aa6f78c", size = 19480, upload-time = "2025-10-29T20:01:46.593Z" },
-]
-
-[[package]]
 name = "django-tasks"
 version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -768,7 +756,6 @@ dependencies = [
     { name = "django-ratelimit" },
     { name = "django-schema-viewer" },
     { name = "django-tables2" },
-    { name = "django-tailwind" },
     { name = "django-unfold" },
     { name = "edtf" },
     { name = "geopy" },
@@ -802,7 +789,6 @@ requires-dist = [
     { name = "django-ratelimit", specifier = ">=4.1.0" },
     { name = "django-schema-viewer", specifier = ">=0.5.3" },
     { name = "django-tables2", specifier = ">=2.7.0" },
-    { name = "django-tailwind", specifier = ">=4.3.1" },
     { name = "django-unfold", specifier = ">=0.69.0" },
     { name = "edtf", specifier = ">=5.0.0" },
     { name = "geopy", specifier = ">=2.4.1" },
